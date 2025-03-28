@@ -1,0 +1,23 @@
+{
+  "name": "erp_pos",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix frontend\" \"npm run dev --prefix backend\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "dependencies": {
+    "bwip-js": "^4.5.3",
+    "canvas": "^3.1.0",
+    "escpos": "^3.0.0-alpha.6",
+    "express": "^4.21.2",
+    "pdfkit": "^0.16.0"
+  }
+}

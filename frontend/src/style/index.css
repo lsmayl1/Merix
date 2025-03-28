@@ -1,0 +1,38 @@
+@import "tailwindcss";
+
+@theme {
+  --color-customborder: #ada3a3;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* Chrome, Safari, Edge, Opera için spin butonlarını kaldır */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Webkit browsers (Chrome, Safari, newer Edge) */
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #949596;
+  border-radius: 10px;
+  min-height: 40px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #e5e7eb;
+}
+
+::-webkit-scrollbar-button:vertical:start:decrement,
+::-webkit-scrollbar-button:vertical:end:increment,
+::-webkit-scrollbar-button:horizontal:start:decrement,
+::-webkit-scrollbar-button:horizontal:end:increment {
+  display: none;
+}
