@@ -21,7 +21,7 @@ const Plu = sequelize.define(
     code: {
       type: DataTypes.STRING(5), // 5 haneli ürün kodu
       allowNull: false,
-      unique: true,
+      unique: false,
     },
     barcode_type: {
       type: DataTypes.INTEGER,

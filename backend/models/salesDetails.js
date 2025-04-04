@@ -17,6 +17,10 @@ const SalesDetails = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
+    buy_price: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+    },
     sell_price: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: false,

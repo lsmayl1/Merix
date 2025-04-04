@@ -1,24 +1,24 @@
 import axios from "axios";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import { Confirm } from "../Confirm";
 import { useApi } from "../Context/useApiContext";
-
-export const AddProduct = ({
-  handleClose,
-
-  handleAddProduct,
-}) => {
+export const AddProduct = ({ handleClose }) => {
   const {
     PutSuccess,
     form,
     setForm,
     FetchById,
-    updateProduct,
     generateBarcode,
     DeleteProduct,
+    refetch,
+    NewProduct,
+    FetchData,
+    PostError,
+    PostProduct,
+    API,
   } = useApi();
-
+  const nameInputRef = useRef(null);
   // Generate barcode based on unit
   const handleBarcode = async () => {
     try {
@@ -33,6 +33,10 @@ export const AddProduct = ({
   const [isEditMode, setIsEditMode] = useState(false);
 
   useEffect(() => {
+    // Focus on the name input field when the component mounts
+    if (nameInputRef.current) {
+      nameInputRef.current.focus();
+    }
     const findProdutcByid = async () => {
       if (!form.product_id) {
         return;
@@ -49,7 +53,8 @@ export const AddProduct = ({
 
   // Handle input changes
   const handleInputChange = (field) => (e) => {
-    setForm({ ...form, [field]: e.target.value });
+    let value = e.target.value;
+    setForm({ ...form, [field]: value });
   };
 
   // Handle unit toggle
@@ -57,26 +62,42 @@ export const AddProduct = ({
     setForm({ ...form, unit });
   };
 
-  const handleConfirm = (option) => {
+  const handleConfirm = async (option) => {
     if (!option) {
       return setShowConfirm(false);
     } else {
       handleClose();
-      DeleteProduct(form.product_id);
+      await DeleteProduct(form.product_id);
+      await refetch();
     }
   };
 
-  const handleEdit = async (product) => {
+  const handleEdit = async (id) => {
     try {
-      await updateProduct(product);
+      const res = await axios.put(`${API}/products/${id}`, form);
+      FetchData();
       handleClose();
-    } catch (error) {
-      console.log(error);
+      toast.success(`${res.data.name} melumatlari deyisdirildi`);
+    } catch (err) {
+      toast.error(`Xeta ${err?.response.data.error}`);
+      console.log(err);
+    }
+  };
+
+  const handleAddProduct = async () => {
+    try {
+      await axios.post(`${API}/products`, form);
+      handleClose();
+      FetchData();
+      toast.success(`${form?.name || "Mehsul"} Elave olundu}`);
+    } catch (err) {
+      toast.error(`Xeta ${err?.response.data.error}`);
+      console.log(err);
     }
   };
 
   return (
-    <div className="absolute inset-0  z-50 flex h-screen w-full drop-shadow-md">
+    <div className="absolute inset-0 backdrop-blur-lg   z-50 flex h-screen w-full drop-shadow-md">
       <ToastContainer />
       {showConfirim && (
         <Confirm
@@ -84,28 +105,34 @@ export const AddProduct = ({
           handleOption={handleConfirm}
         />
       )}
-      <div className="flex w-full justify-center py-32">
-        <div className="flex h-fit w-1/3 flex-col gap-32 rounded-xl border border-[#ADA3A3] bg-white px-4 py-6">
+      <div className="flex w-full justify-center py-16">
+        <div className="flex h-fit w-1/2 flex-col gap-32 rounded-xl border border-newborder bg-white px-4 py-6">
           {/* Form Fields */}
           <div className="flex flex-col gap-12">
             {/* Product Name */}
-            <div className="flex flex-col">
-              <label htmlFor="name">Mehsulun adi</label>
-              <input
-                type="text"
-                value={form.name || ""}
-                onChange={handleInputChange("name")}
-                className="w-1/2 rounded border border-[#ADA3A3] px-4 focus:outline-none"
-              />
+            <div className="w-full flex justify-between items-end gap-16">
+              <div className="flex flex-col w-full">
+                <label htmlFor="name" className="text-xl">
+                  Mehsulun adı
+                </label>
+                <input
+                  ref={nameInputRef}
+                  id="name"
+                  type="text"
+                  value={form.name || ""}
+                  onChange={handleInputChange("name")}
+                  className="rounded w-full border py-2 border-newborder px-4 focus:outline-none"
+                />
+              </div>
             </div>
 
             {/* Unit Selection */}
             <div className="flex flex-col">
-              <label>Vahid</label>
+              <label className="text-xl">Vahid</label>
               <div className="flex w-1/2">
                 <button
                   onClick={handleUnitChange("piece")}
-                  className={`rounded-l-lg border border-[#ADA3A3] px-4 py-1 ${
+                  className={`rounded-l-lg cursor-pointer border border-newborder px-4 py-1 ${
                     form.unit === "piece" ? "bg-gray-400" : ""
                   }`}
                 >
@@ -113,7 +140,7 @@ export const AddProduct = ({
                 </button>
                 <button
                   onClick={handleUnitChange("kg")}
-                  className={`rounded-r-lg border border-[#ADA3A3] px-4 py-1 ${
+                  className={`rounded-r-lg border border-newborder cursor-pointer px-4 py-1 ${
                     form.unit === "kg" ? "bg-gray-400" : ""
                   }`}
                 >
@@ -124,13 +151,13 @@ export const AddProduct = ({
 
             {/* Barcode */}
             <div className="flex w-1/2 flex-col">
-              <label>Barkod</label>
+              <label className="text-xl">Barkod</label>
               <div className="flex items-center gap-2">
                 <input
                   type="text" // Changed to text to avoid number overflow
                   value={form.barcode || ""}
                   onChange={handleInputChange("barcode")}
-                  className="w-9/12 rounded border border-[#ADA3A3] px-4 focus:outline-none"
+                  className="w-9/12 rounded border border-newborder px-4 focus:outline-none"
                 />
                 <button
                   onClick={handleBarcode}
@@ -143,57 +170,104 @@ export const AddProduct = ({
 
             {/* Prices */}
             <div className="flex flex-col gap-2">
-              <div className="flex w-9/12 items-center justify-between rounded-lg border">
-                <span className="w-2/5 border-r px-4">Alis Qiymeti</span>
+              <div className="flex w-9/12 items-center justify-between rounded-lg border border-newborder">
+                <span className="w-2/5 border-r border-newborder px-4">
+                  Alis Qiymeti
+                </span>
                 <div className="flex w-3/5 items-center gap-2">
                   <input
-                    type="text"
-                    value={form.buyPrice || "0.0000"}
+                    type="number"
+                    value={
+                      typeof form?.buyPrice === "number"
+                        ? form?.buyPrice.toFixed(2)
+                        : form?.buyPrice
+                    }
                     onChange={handleInputChange("buyPrice")}
-                    className="w-full text-right focus:outline-none"
+                    className="w-full text-right text-xl focus:outline-none"
                   />
-                  <span className="px-2">₼</span>
+                  <span className="px-2 text-xl">₼</span>
                 </div>
               </div>
-              <div className="flex w-9/12 items-center justify-between rounded-lg border">
-                <span className="w-2/5 border-r px-4">Satis Qiymeti</span>
+              <div className="flex w-9/12 items-center justify-between rounded-lg border border-newborder">
+                <span className="w-2/5 border-r border-newborder px-4">
+                  Satis Qiymeti
+                </span>
                 <div className="flex w-3/5 items-center gap-2">
                   <input
-                    type="text"
-                    value={form.sellPrice || "0.0000"}
+                    type="number"
+                    value={
+                      typeof form?.sellPrice === "number"
+                        ? form?.sellPrice.toFixed(2)
+                        : form?.sellPrice
+                    }
                     onChange={handleInputChange("sellPrice")}
-                    className="w-full text-right focus:outline-none"
+                    className="w-full text-xl text-right focus:outline-none"
                   />
-                  <span className="px-2">₼</span>
+                  <span className="px-2 text-xl">₼</span>
                 </div>
+              </div>
+            </div>
+            {/* Stok */}
+            <div className="flex justify-between items-center w-full">
+              {isEditMode && (
+                <div className="flex gap-2 items-center text-xl ">
+                  <label htmlFor="">Stok da</label>
+                  <span> {form.stock | 0}</span>
+                  <span>{form.unit === "piece" ? "ədəd" : "kg"}</span>
+                </div>
+              )}
+              <div className="w-1/3 items-center gap-4 flex">
+                <label htmlFor="" className="truncate text-nowrap text-xl">
+                  Stok əlavə
+                </label>
+                <input
+                  type="number"
+                  onChange={handleInputChange("newStock")}
+                  className="border focus:outline-none rounded text-center px-1 text-xl border-newborder w-1/2 "
+                />
               </div>
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-end gap-4">
-            {isEditMode && (
+          <div className="flex items-center justify-between gap-4">
+            <button className="rounded-xl cursor-pointer bg-white border border-newborder w-1/4 py-1 px-4     font-semibold ">
+              Cap et
+            </button>
+            <div className="flex items-center gap-4 justify-end w-full">
+              {isEditMode && (
+                <button
+                  onClick={() => {
+                    setShowConfirm(true);
+                  }}
+                  className="rounded-xl cursor-pointer bg-red-500 px-4 py-1 font-semibold text-white"
+                >
+                  Sil
+                </button>
+              )}
               <button
-                onClick={() => {
-                  setShowConfirm(true);
-                }}
-                className="rounded-xl cursor-pointer bg-red-500 px-4 py-1 font-semibold text-white"
+                onClick={handleClose}
+                className="rounded-xl cursor-pointer bg-red-700 px-4 py-1 font-semibold text-white"
               >
-                Sil
+                Legv et
               </button>
-            )}
-            <button
-              onClick={handleClose}
-              className="rounded-xl cursor-pointer bg-red-700 px-4 py-1 font-semibold text-white"
-            >
-              Legv et
-            </button>
-            <button
-              onClick={isEditMode ? () => handleEdit(form) : handleAddProduct}
-              className="rounded-xl cursor-pointer bg-green-700 px-4 py-1 font-semibold text-white"
-            >
-              {isEditMode ? "Deyis" : "Elave et"}
-            </button>
+
+              {isEditMode ? (
+                <button
+                  onClick={() => handleEdit(form.product_id)}
+                  className="rounded-xl cursor-pointer bg-green-700 px-4 py-1 font-semibold text-white"
+                >
+                  Deyis
+                </button>
+              ) : (
+                <button
+                  onClick={handleAddProduct}
+                  className="rounded-xl cursor-pointer bg-green-700 px-4 py-1 font-semibold text-white"
+                >
+                  Elave et
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -4,7 +4,7 @@ export const CloseIcon = (prop) => {
   return (
     <svg
       className={prop.className}
-      fill="#000000"
+      fill="currentColor"
       height="800px"
       width="800px"
       version="1.1"

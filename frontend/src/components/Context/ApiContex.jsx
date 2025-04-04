@@ -1,8 +1,7 @@
 import { QueryClient, useMutation, useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { createContext, useState } from "react";
-
-const API = "http://localhost:3000";
+export const API = "http://localhost:3000";
 export const queryClient = new QueryClient();
 
 export const ApiContext = createContext(null);
@@ -43,28 +42,24 @@ export const ApiProvider = ({ children }) => {
   const [form, setForm] = useState({
     name: "",
     category: "mehsul",
-    barcode: "",
-    buyPrice: 0.0,
-    sellPrice: 0.0,
+    barcode: null,
+    buyPrice: null | 0, // "0.000" (null olduğu için)
+    sellPrice: null | 0, // "0.000" (undefined olduğu için)
     unit: "piece",
   });
 
   // Post Product
-  const postMutation = useMutation({
-    mutationFn: PostProduct,
-    onSuccess: () => {
-      queryClient.invalidateQueries(["products"]);
-    },
-    onError: (error) => {
-      console.error("Mutation hatası:", error);
-    },
-  });
+
   // getProducts
-  const { data, isLoading, error, isSuccess, refetch } = useQuery({
-    queryKey: ["products"],
-    queryFn: FetchData,
-    staleTime: 60 * 1000,
-  });
+  const { data, isLoading, error, isSuccess, refetch, isRefetching } = useQuery(
+    {
+      queryKey: ["products"],
+      queryFn: FetchData,
+      staleTime: 60 * 1000,
+      refetchOnReconnect: false,
+      enabled: false,
+    }
+  );
   // getProductById
   const {
     data: productById,
@@ -97,13 +92,12 @@ export const ApiProvider = ({ children }) => {
     queryFn: () => {
       DeleteProduct(form.product_id);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries(["products"]);
-    },
+
     enabled: false,
   });
 
   const values = {
+    FetchData,
     form,
     setForm,
     data,
@@ -115,10 +109,7 @@ export const ApiProvider = ({ children }) => {
     PutLoading: mutation.isLoading, // Mutation durumu
     PutSuccess: mutation.isSuccess,
     PutError: mutation.error,
-    NewProduct: postMutation.mutate, // Mutation fonksiyonu
-    PostLoading: postMutation.isLoading, // Mutation durumu
-    PostSuccess: postMutation.isSuccess,
-    PostError: postMutation.error,
+    PostProduct,
     FetchById,
     productSuccess,
     productById,
@@ -126,6 +117,8 @@ export const ApiProvider = ({ children }) => {
     generateBarcode,
     DeleteProduct,
     queryClient,
+    isRefetching,
+    API,
   };
   return <ApiContext.Provider value={values}>{children}</ApiContext.Provider>;
 };

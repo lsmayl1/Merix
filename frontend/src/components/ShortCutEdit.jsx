@@ -5,8 +5,11 @@ import { RecycleBin } from "../assets/recycleBin";
 import { CloseIcon } from "../assets/Close";
 
 import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { useApi } from "./Context/useApiContext";
 
 export const ShortCutEdit = ({ data, isLoading, handleClose }) => {
+  const { API } = useApi();
   const [query, setQuery] = useState("");
   const [productAllReadyExist, setProductAllReadyExist] = useState("");
   const [shortCutProducts, setShortCutProducts] = useState(() => {
@@ -19,6 +22,23 @@ export const ShortCutEdit = ({ data, isLoading, handleClose }) => {
     }
     return { products: [] };
   });
+  const [freshProducts, setFreshProducts] = useState([]);
+
+  useEffect(() => {
+    const freshData = async () => {
+      if (shortCutProducts?.products?.length === 0) return;
+      try {
+        const res = await axios.post(`${API}/products/bulk`, {
+          identifiers: shortCutProducts.products,
+        });
+        setFreshProducts(res.data);
+      } catch (error) {
+        console.error("Error fetching fresh data:", error);
+        // Optionally handle the error in state or UI
+      }
+    };
+    freshData();
+  }, [shortCutProducts]);
 
   useEffect(() => {
     // Yerel depolamayı güncelle
@@ -52,22 +72,38 @@ export const ShortCutEdit = ({ data, isLoading, handleClose }) => {
     } else {
       setShortCutProducts((prevState) => ({
         ...prevState,
-        products: [...prevState.products, product],
+        products: [...prevState.products, product.product_id],
       }));
     }
   };
 
   const DeleteProductFromShorCuts = (id) => {
-    const updatedProducts = shortCutProducts.products.filter(
-      (product) => product.product_id !== id
-    );
+    setShortCutProducts((prev) => {
+      const updatedProducts = prev.products.filter((product) => product !== id);
+      return { ...prev, products: updatedProducts };
+    });
 
-    setShortCutProducts((prev) => ({ ...prev, products: updatedProducts }));
+    setFreshProducts((prev) =>
+      prev.filter((product) => product.product_id !== id)
+    );
   };
+
+  useEffect(() => {
+    const closePage = (e) => {
+      if (e.key === "Escape") {
+        handleClose();
+      }
+    };
+    document.addEventListener("keydown", closePage);
+    return () => {
+      document.removeEventListener("keydown", closePage);
+    };
+  });
+
   return (
     <div className="absolute  backdrop-blur-xs w-full  h-full border  z-50 flex justify-center items-center">
       <div className="bg-white relative h-9/12 w-1/2 px-6 border py-6 border-[#ADA3A3] rounded-xl flex flex-col">
-        <div className="absolute -top-4 size-10 overflow-hidden bg-white rounded-l-3xl -right-5 ">
+        <div className="absolute -top-4 size-8 overflow-hidden bg-white rounded-l-3xl -right-4 ">
           <button className="cursor-pointer" onClick={handleClose}>
             <CloseIcon className={"w-full h-full"} />
           </button>
@@ -96,13 +132,16 @@ export const ShortCutEdit = ({ data, isLoading, handleClose }) => {
                 {filteredProducts.length === 0 && "Mehsul yoxdur"}
 
                 {filteredProducts.map((product) => (
-                  <li className="text-2xl " key={product.product_id}>
+                  <li
+                    className="text-xl border-b border-newborder "
+                    key={product.product_id}
+                  >
                     {" "}
                     <div className="flex hover:bg-gray-100 p-2 items-center justify-between w-full pr-5 ">
                       {" "}
                       <p className="w-9/14">{product.name} </p>
                       <span className="text-right">
-                        {product.sellPrice} ₼{" "}
+                        {product?.sellPrice?.toFixed(2)} ₼{" "}
                       </span>{" "}
                       <button
                         onClick={() => AddShortCutProducts(product.product_id)}
@@ -119,14 +158,12 @@ export const ShortCutEdit = ({ data, isLoading, handleClose }) => {
         </div>
         <div className="h-full py-5 px-10">
           <ul className="flex flex-col gap-2  ">
-            {shortCutProducts?.products?.map((product) => (
+            {freshProducts?.map((product) => (
               <li key={product.product_id}>
                 <div className="flex justify-between border border-[#ADA3A3] text-sm rounded  w-full items-center px-5">
                   {" "}
                   <span className="w-1/2"> {product.name} </span>{" "}
-                  <span className="w-1/2">
-                    {product.sellPrice.toFixed(2) + " ₼"}
-                  </span>
+                  <span className="w-1/2">{product?.sellPrice + " ₼"}</span>
                   <div className=" p-2 rounded-xl  flex justify-center ">
                     <button
                       className="cursor-pointer"

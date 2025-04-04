@@ -22,16 +22,11 @@ router.get("/generate-plu", async (req, res) => {
       return res.status(200).json({ message: "Kg bazlı ürün bulunamadı" });
     }
 
-    // Mevcut en yüksek no ve lfcode değerlerini bul
-    const maxNo = (await Plu.max("no")) || 0;
-    const maxLfcode = (await Plu.max("lfcode")) || 413; // 414’ten başlıyor
-
-    // Yeni PLU verilerini oluştur
     const pluData = kgProducts.map((product, index) => {
-      const no = maxNo + index + 1;
-      const lfcode = maxLfcode + index + 1;
-      const rawCode = product.barcode.slice(2, 7); // Barkodun 3-7. haneleri (örneğin "00001")
-      const code = parseInt(rawCode, 10).toString(); // Öndeki sıfırları kaldır (örneğin "1")
+      const no = index + 1;
+      const rawCode = product.barcode.slice(2, 7); // Barkodun 3-7. haneleri
+      const code = parseInt(rawCode, 10).toString(); // Öndeki sıfırları kaldır+
+      const lfcode = index + 1;
 
       return {
         no,
@@ -59,16 +54,17 @@ router.get("/generate-plu", async (req, res) => {
     });
 
     // Yeni verileri PLU tablosuna ekle
-    await Promise.all(
-      pluData.map(async (data) => {
-        await Plu.upsert(data); // Varsa günceller, yoksa ekler
-      })
-    );
+    await Plu.bulkCreate(pluData, { ignoreDuplicates: true });
 
     res.status(200).json({
-      message: "PLU tablosu başarıyla güncellendi",
-      pluCount: pluData.length,
-      pluData,
+      message: "PLU tablosu başarıyla sıfırlandı ve güncellendi",
+      pluData: pluData.map((item) => ({
+        name: item.name,
+        code: item.code,
+        no: item.no,
+        lfcode: item.lfcode,
+        unit_price: parseFloat(item.unit_price.toFixed(2) / 100),
+      })),
     });
   } catch (error) {
     console.error("Hata:", error);

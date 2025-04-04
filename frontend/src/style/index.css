@@ -2,6 +2,7 @@
 
 @theme {
   --color-customborder: #ada3a3;
+  --color-newborder: #d0c5c5;
 }
 
 input[type="number"] {

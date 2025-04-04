@@ -10,26 +10,19 @@ import { Xicon } from "../assets/Xicon";
 import { AddIcon } from "../assets/AddIcon";
 import { SearchIcon } from "../assets/SearchIcon";
 import { Basket } from "../assets/Basket";
-import { Confirm } from "./Confirm";
-import { PaymentMethod } from "./PaymentMethod";
+import { Confirm } from "../components/Confirm";
+import { PaymentMethod } from "../components/PaymentMethod";
 import { RecycleBin } from "../assets/recycleBin";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import Fuse from "fuse.js";
-import { useQuery } from "@tanstack/react-query";
-import { ShortCutEdit } from "./ShortCutEdit";
-import { PosReports } from "./PosReports";
-const FetchProducts = async () => {
-  const { data } = await axios.get("http://localhost:3000/products");
-  return data;
-};
+import { ShortCutEdit } from "../components/ShortCutEdit";
+import { PosReports } from "../components/PosReports";
+import { useApi } from "../components/Context/useApiContext";
+import { FilterIcon } from "../assets/filterIcon";
 
 export const Pos = () => {
-  const { data, isLoding, error, isSuccess } = useQuery({
-    queryKey: ["products"],
-    queryFn: FetchProducts,
-    staleTime: 1000 * 60,
-  });
+  const { data, isSuccess, API, isLoading, error } = useApi();
 
   const [terminals, setTerminals] = useState(() => {
     const storedTerminals = JSON.parse(localStorage.getItem("terminals"));
@@ -60,16 +53,33 @@ export const Pos = () => {
   const barkodInput = useRef(null);
   const searchInput = useRef(null);
   const [barkodFocus] = useState(true);
-
   const [barcode, setBarcode] = useState();
   const selectedTerminalProducts = terminals.find(
     (terminal) => terminal.id === selectedTerminal
   )?.products;
   const [filteredProducts, setFilteredProducts] = useState(data ? data : []);
+  const [freshProducts, setFreshProducts] = useState([]);
+
   const [form, setForm] = useState({
     payment_method: paymentMethod,
     products: [],
   });
+  useEffect(() => {
+    const freshData = async () => {
+      if (shortCutsProducts?.products?.length === 0) return;
+      try {
+        const res = await axios.post(`${API}/products/bulk`, {
+          identifiers: shortCutsProducts.products,
+        });
+        setFreshProducts(res.data);
+      } catch (error) {
+        console.error("Error fetching fresh data:", error);
+        // Optionally handle the error in state or UI
+      }
+    };
+    freshData();
+  }, [shortCutsProducts]);
+  // barkod input focus
   useEffect(() => {
     const handleClick = (event) => {
       // Eğer tıklanan element bir input veya buton değilse, barkod inputuna odaklan
@@ -86,6 +96,7 @@ export const Pos = () => {
       document.removeEventListener("click", handleClick);
     };
   }, []);
+  // total calculator
   useEffect(() => {
     let sum = 0;
     selectedTerminalProducts.forEach((product) => {
@@ -94,18 +105,12 @@ export const Pos = () => {
     setTotal(sum);
   }, [selectedTerminalProducts]);
 
+  // data save to LocalStorage
   useEffect(() => {
     localStorage.setItem("terminals", JSON.stringify(terminals));
   }, [terminals, selectedTerminal]);
 
-  const handleSpanClick = (id) => {
-    setEditProductId(id);
-  };
-
-  const handleInputBlur = () => {
-    setEditProductId(null);
-  };
-
+  // Create new Terminal
   const NewTerminal = () => {
     if (terminals.length >= 4) return;
     const newTerminal = {
@@ -115,11 +120,13 @@ export const Pos = () => {
     };
     setTerminals([...terminals, newTerminal]);
     setSelectedTerminal(newTerminal.id);
+    if (barkodInput?.current) {
+      barkodInput.current.focus();
+    }
   };
-
+  // Delete Selected Terminal
   const DeleteTerminal = () => {
     if (selectedTerminal === 1) {
-      console.log("Bu terminal siline bilmez");
       return;
     }
     const newTerminals = terminals.filter(
@@ -131,22 +138,21 @@ export const Pos = () => {
     if (newTerminals.length > 0) {
       setSelectedTerminal(newTerminals[0].id);
     } else {
-      setSelectedTerminal(null); // Ya da başka bir uygun değer
+      setSelectedTerminal(null);
+    }
+    if (barkodInput?.current) {
+      barkodInput.current.focus();
     }
   };
-
-  const activeTerminal = (id) => {
-    setSelectedTerminal(id);
-  };
-
+  // Add Product to Basket
   const AddProductToBasket = (id, quantity) => {
     // Find the product from the products list
+
     const product = data.find((product) => product.product_id === id);
 
     if (!product) {
-      console.error("Ürün bulunamadı:", id);
-      toast.error("Ürün bulunamadı!"); // Kullanıcıya geri bildirim
-      return; // Erken dönüş, devam etme
+      toast.error("Mehsul yoxdur!");
+      return;
     }
 
     // Check if product exists in selected terminal's products
@@ -184,13 +190,11 @@ export const Pos = () => {
       return terminal;
     });
 
-    handleSearchInputBlur();
     setTerminals(newTerminals);
   };
   const handleProductChange = (e, id) => {
     const value = e.target.value;
 
-    // Разрешить только цифры и точку
     const filteredValue = value.replace(/[^0-9.]/g, "");
 
     // Разрешить только одну точку
@@ -222,7 +226,7 @@ export const Pos = () => {
 
     setTerminals(newTerminals);
   };
-
+  // Clear Basket
   const handleDelete = (option) => {
     if (!option) {
       return setShowConfirm(false);
@@ -236,6 +240,9 @@ export const Pos = () => {
 
     setTerminals(newTerminals);
     setShowConfirm(false);
+    if (barkodInput?.current) {
+      barkodInput.current.focus();
+    }
   };
 
   const DeleteProductFromBasktet = (id) => {
@@ -249,7 +256,6 @@ export const Pos = () => {
       }
       return terminal;
     });
-    handleSearchInputBlur();
     setTerminals(newTerminals);
   };
 
@@ -274,7 +280,6 @@ export const Pos = () => {
           // Son 6 haneyi al (kilogram bilgisi)
           const weightPart = value.slice(-6); // Son 6 rakam
           const weightInKg = parseInt(weightPart) / 10000; // Örneğin, "012345" -> 12.345 kg
-          console.log(weightInKg);
           quantity = weightInKg; // Miktarı kilogram olarak ayarla
 
           // Son rakamı al
@@ -284,20 +289,16 @@ export const Pos = () => {
           apiBarcode = value.slice(0, 7) + "00000" + lastDigit; // Örneğin, "2212345000005"
         }
 
-        // API isteği
-        const response = await axios.get(
-          `http://localhost:3000/products/${apiBarcode}`
-        );
+        const response = await axios.get(`${API}/products/${apiBarcode}`);
 
-        // Ürünü sepete eklerken quantity'i de gönder
         AddProductToBasket(response.data.product_id, quantity);
       } catch (error) {
         toast.error("Mehsul yoxdur!");
         console.error("API isteği hatası:", error);
       }
 
-      setBarcode(""); // Input'u temizle
-      barkodInput.current.focus(); // Tekrar odaklan
+      setBarcode("");
+      barkodInput.current.focus();
     }
   };
 
@@ -305,7 +306,8 @@ export const Pos = () => {
     if (!isSuccess || !data) return null; // Return null until data is ready
     return new Fuse(data, {
       keys: ["name", "barcode"], // Adjust based on your data structure
-      threshold: 0.5,
+      threshold: 0.3,
+      ignoreCase: false,
       minMatchCharLength: 2,
       includeScore: true,
       shouldSort: true,
@@ -348,18 +350,6 @@ export const Pos = () => {
     }
   }, [barkodFocus]);
 
-  // Ürün arama inputuna odaklan
-  const handleUrunAramaClick = () => {
-    if (searchInput.current) {
-      searchInput.current.focus(); // Ürün arama inputuna odaklan
-    }
-  };
-  const handleSearchInputBlur = () => {
-    if (barkodInput.current) {
-      barkodInput.current.focus();
-    }
-  };
-
   const closeReports = () => {
     setShowReports(false);
   };
@@ -371,12 +361,19 @@ export const Pos = () => {
     product_id: product.product_id,
     quantity: product.quantity || 0,
   }));
-
   useEffect(() => {
-    setForm({ ...form, payment_method: paymentMethod, products: filteredData });
-  }, [paymentMethod, selectedTerminalProducts, filteredData, form]);
-
+    if (selectedTerminalProducts) {
+      setForm({
+        ...form,
+        products: filteredData,
+        payment_method: paymentMethod,
+      });
+    }
+  }, [selectedTerminalProducts, paymentMethod]);
   const postSale = async () => {
+    if (selectedTerminalProducts.length === 0) {
+      return;
+    }
     try {
       const res = await axios.post("http://localhost:3000/sales", form);
 
@@ -421,9 +418,12 @@ export const Pos = () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
   });
+
   return (
-    <div className="flex relative flex-col gap-2 h-screen overflow-hidden">
+    <div className="flex relative flex-col gap-2 h-screen overflow-hidden bg-gray-100">
+      <title>Kassa</title>
       <ToastContainer />
+
       {showConfirm && selectedTerminalProducts.length > 0 && (
         <Confirm
           name={"Səbətdəki məhsullar silinsin?"}
@@ -442,17 +442,19 @@ export const Pos = () => {
       {shortCut && (
         <ShortCutEdit
           data={data}
-          isLoading={isLoding}
+          isLoading={isLoading}
           error={error}
           handleClose={closeEditTab}
         />
       )}
       {showReports && <PosReports handleClose={closeReports} />}
+
       <input
         type="text"
         ref={barkodInput}
         onChange={handleBarcodeChange}
-        onKeyPress={handleBarcodeChange}
+        onKeyDown={handleBarcodeChange}
+        // className="focus:outline-red-500"
         value={barcode}
         style={{
           position: "absolute",
@@ -464,30 +466,32 @@ export const Pos = () => {
           margin: 0,
         }}
       />
-      <div className="flex justify-between  px-2  items-center">
-        <div className="flex gap-2  border-[#ADA3A3]">
+
+      <header className="flex justify-between  px-2  items-center">
+        <div className="flex gap-2  border-newborder">
           {terminals?.map((terminal) => (
             <div
               key={terminal.id}
-              onClick={() => activeTerminal(terminal.id)}
-              className={`px-2  gap-4 cursor-pointer ${
+              onClick={() => setSelectedTerminal(terminal.id)}
+              className={`px-4  gap-4 cursor-pointer ${
                 terminal.id === selectedTerminal
                   ? "bg-[#494949]"
                   : "bg-gray-500"
               }   flex items-center  h-14 rounded-lg text-white`}
             >
               <h1 className="text-xl leading-0">{terminal.name}</h1>
-              {terminals[0].id !== terminal.id && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    DeleteTerminal();
-                  }}
-                  className={`cursor-pointer `}
-                >
-                  <Xicon />
-                </button>
-              )}
+              {terminals[0].id !== terminal.id &&
+                selectedTerminal === terminal.id && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      DeleteTerminal();
+                    }}
+                    className={`cursor-pointer  `}
+                  >
+                    <Xicon />
+                  </button>
+                )}
             </div>
           ))}
 
@@ -504,16 +508,16 @@ export const Pos = () => {
           className="px-10 cursor-pointer"
           onClick={() => setShowReports(true)}
         >
-          <button className="cursor-pointer border h-14 px-4 rounded-md text-xl">
+          <button className="cursor-pointer border bg-white p-2  border-newborder rounded-md text-xl">
             Hesabat
           </button>
         </div>
-      </div>
+      </header>
 
       <div className="flex h-full gap-4 ">
-        <div className="min-w-1/2 flex flex-col overflow-hidden border-r border-[#ADA3A3]">
+        <div className="min-w-1/2 flex flex-col overflow-hidden border-r border-newborder bg-white">
           {/* Products Table - Fixed with flex-1 to take available space */}
-          <div className="w-full overflow-auto h-[400px]  border-[#ADA3A3]">
+          <div className="w-full overflow-auto h-[400px]  border-newborder bg-white">
             <table
               className="w-full"
               style={{ borderCollapse: "collapse", tableLayout: "auto" }}
@@ -523,7 +527,7 @@ export const Pos = () => {
                 <tr>
                   <th style={{ width: "40%" }}>Məhsul</th>
                   <th style={{ width: "15%" }}>Qiymet</th>
-                  <th style={{ width: "15%" }}>Vahid</th>
+                  <th style={{ width: "15%" }}>Miqdar</th>
                   <th style={{ width: "15%" }}>Məbləg</th>
                   <th style={{ width: "15%" }}>Əməliyyat</th>
                 </tr>
@@ -541,7 +545,7 @@ export const Pos = () => {
                 {selectedTerminalProducts?.map((product) => (
                   <tr
                     key={product.product_id}
-                    className="text-center h-8 w-full border-[#ADA3A3] border-b text-xl"
+                    className="text-center h-8 w-full border-newborder border-b text-xl"
                   >
                     <td>
                       <div className="flex items-center pl-5">
@@ -559,24 +563,19 @@ export const Pos = () => {
                           {editProductId === product.product_id ? (
                             <input
                               className="text-center w-[50px] focus:outline-none"
-                              type="text"
+                              type="number"
                               name="quantity"
-                              onKeyPress={(e) => {
-                                if (e.key === "Enter") {
-                                  barkodInput.current.focus();
-                                }
-                              }}
                               onChange={(e) => {
                                 handleProductChange(e, product.product_id);
                               }}
-                              onBlur={handleInputBlur}
+                              onBlur={() => setEditProductId(null)}
                               autoFocus
                             />
                           ) : (
                             <span
                               className="flex gap-2 justify-center items-center cursor-pointer"
                               onClick={() =>
-                                handleSpanClick(product.product_id)
+                                setEditProductId(product.product_id)
                               }
                             >
                               {product.quantity.toFixed(2)}
@@ -590,7 +589,7 @@ export const Pos = () => {
                     </td>
                     <td>
                       <div className="flex w-full justify-center items-center">
-                        <span className="text-right min-w-20 text-sm flex justify-end">
+                        <span className="text-right w-1/5 text-sm flex justify-end">
                           {(product.sellPrice * product.quantity).toFixed(2)}
                         </span>
                       </div>
@@ -617,10 +616,13 @@ export const Pos = () => {
             <div className="flex gap-4 items-center">
               <button
                 onClick={() => {
-                  if (selectedTerminalProducts.length > 0) {
+                  if (selectedTerminalProducts.length !== 0) {
                     setQuery("");
                     setShowConfirm(true);
                   } else {
+                    if (barkodInput?.current) {
+                      barkodInput.current.focus();
+                    }
                     return;
                   }
                 }}
@@ -629,7 +631,17 @@ export const Pos = () => {
                 Ləğv et
               </button>
               <button
-                onClick={() => setShowPaymentMethod((prev) => !prev)}
+                onClick={() => {
+                  if (selectedTerminalProducts.length === 0) {
+                    if (barkodInput?.current) {
+                      barkodInput.current.focus();
+                    }
+                    setQuery("");
+                    return;
+                  }
+                  setQuery("");
+                  setShowPaymentMethod((prev) => !prev);
+                }}
                 className="cursor-pointer bg-[#50B156] font-semibold rounded-xl text-xl text-white flex items-center py-4 px-10"
               >
                 Ödəniş
@@ -647,38 +659,45 @@ export const Pos = () => {
         </div>
 
         <div className="flex flex-col gap-10 w-full px-4 box-border ">
-          <div className="flex w-full justify-between items-center">
+          <div className="flex w-full gap-12 items-center">
             <div className="relative  w-9/12 flex items-center ">
               <input
                 type="text"
                 placeholder="Məhsul axtar..."
                 ref={searchInput}
-                onClick={handleUrunAramaClick}
-                onKeyPress={(e) => {
+                onKeyDown={(e) => {
                   if (e.key === "Enter") {
+                    setQuery("");
                     barkodInput.current?.focus();
                   }
                 }}
                 value={query}
-                onBlur={handleSearchInputBlur}
                 onChange={handleInputChange}
-                className="w-full border h-10 text-2xl px-12 border-[#ADA3A3] rounded-lg focus:outline-none"
+                className="w-full border h-10 text-2xl px-12 bg-white border-newborder rounded-lg focus:outline-none"
               />
               <SearchIcon className={"absolute ml-2"} />
-              <div
-                onClick={() => {
-                  setQuery("");
-                }}
-                className="absolute w-10 right-0 items-center justify-center flex px-1 py-3 cursor-pointer rounded-full "
-              >
-                <button className="">X</button>
+              <div className="absolute w-10 right-0 items-center justify-center flex p-4  rounded-full ">
+                <button
+                  onClick={() => {
+                    setQuery("");
+                    if (barkodInput?.current) {
+                      barkodInput.current.focus();
+                    }
+                  }}
+                  className="cursor-pointer"
+                >
+                  X
+                </button>
               </div>
               {query && (
-                <div className="absolute top-12 w-full rounded-lg border-[#ADA3A3] h-128  bg-white z-50 border p-4">
+                <div className="absolute top-12 w-full rounded-lg border-newborder h-128  bg-white z-50 border px-4 py-2">
                   <ul className="h-full overflow-auto flex flex-col">
-                    {isLoding && "Loading"}
+                    {isLoading && "Loading"}
                     {filteredProducts.map((product) => (
-                      <li className="text-2xl" key={product.product_id}>
+                      <li
+                        className="text-xl cursor-pointer"
+                        key={product.product_id}
+                      >
                         {" "}
                         <div className="flex hover:bg-gray-100 p-2 items-center justify-between w-full pr-5">
                           {" "}
@@ -690,7 +709,7 @@ export const Pos = () => {
                             onClick={() =>
                               AddProductToBasket(product.product_id)
                             }
-                            className="cursor-pointer flex items-center justify-center border border-[#ADA3A3] hover:bg-green-700  bg-white rounded-xl hover:text-white"
+                            className="cursor-pointer flex items-center justify-center border border-newborder hover:bg-green-700  bg-white rounded-xl hover:text-white"
                           >
                             <Basket className={"size-10 "} />
                           </button>
@@ -701,27 +720,25 @@ export const Pos = () => {
                 </div>
               )}
             </div>
-            <div className="border p-1 rounded-md">
-              <button
-                onClick={() => setShortCut((prev) => !prev)}
-                className="text-xl px-4 cursor-pointer"
-              >
-                Düzəliş et
-              </button>
-            </div>
+            <button
+              onClick={() => setShortCut((prev) => !prev)}
+              className=" cursor-pointer hover:bg-gray-200 bg-white p-1 rounded border border-newborder "
+            >
+              <FilterIcon className={"size-8"} />
+            </button>
           </div>
           <div className="w-full">
             <ul className=" flex box-border flex-wrap gap-2 w-full">
-              {shortCutsProducts.products.length === 0 && "Mehsul yoxdur"}
-              {shortCutsProducts?.products?.map((product) => (
+              {freshProducts.length === 0 && "Mehsul yoxdur"}
+              {freshProducts?.map((product) => (
                 <li
-                  key={product.product_id}
-                  className="relative h-[5.7rem] "
+                  key={product?.product_id}
+                  className="relative h-[5.7rem]"
                   onClick={() => AddProductToBasket(product.product_id)}
                 >
-                  <div className="border border-[#ADA3A3] hover:bg-gray-300 cursor-pointer rounded px-4 w-32 flex items-center justify-start h-16 basis-48 ">
+                  <div className="border border-newborder bg-white hover:bg-gray-300 cursor-pointer rounded px-4 w-32 flex items-center justify-start h-16 basis-48 ">
                     <span className="text-xs">{product.name}</span>
-                    <div className="absolute right-1 rounded-lg  border-[#ADA3A3] border   bottom-5 z-10 bg-white flex items-center justify-center px-4 ">
+                    <div className="absolute right-1 rounded-lg  border-newborder border   bottom-5 z-10 bg-white flex items-center justify-center px-4 ">
                       <span className="text-xs"> {product.sellPrice} ₼</span>
                     </div>
                   </div>

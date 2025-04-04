@@ -1,72 +1,80 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import { CloseIcon } from "../assets/Close";
-const FetchSales = async () => {
-  const { data } = await axios.get("http://localhost:3000/sales");
-  return data;
-};
+import { useApi } from "./Context/useApiContext";
+import { FormatDate } from "./utils/DateFunctions";
+
 export const PosReports = ({ handleClose }) => {
-  const { data, isLoding, error } = useQuery({
-    queryKey: ["sales"],
-    queryFn: FetchSales,
-  });
-  const [turnover, setTurnOver] = useState(null);
+  const { API } = useApi();
+  const [data, setData] = useState({});
 
-  const formatDate = (isoString) => {
-    const date = new Date(isoString);
-
-    // Gün, ay və il
-    const days = date.getDate().toString().padStart(2, "0");
-    const months = [
-      "yanvar",
-      "fevral",
-      "mart",
-      "aprel",
-      "may",
-      "iyun",
-      "iyul",
-      "avqust",
-      "sentyabr",
-      "oktyabr",
-      "noyabr",
-      "dekabr",
-    ];
-    const month = months[date.getMonth()];
-    const year = date.getFullYear();
-
-    // Saat, dəqiqə və saniyə
-    const hours = date.getHours().toString().padStart(2, "0");
-    const minutes = date.getMinutes().toString().padStart(2, "0");
-    const seconds = date.getSeconds().toString().padStart(2, "0");
-
-    // Tarix və vaxtı birləşdir
-    return `${days} ${month} ${year}, ${hours}:${minutes}:${seconds}`;
-  };
+  function getTodayRangeUTC() {
+    const now = new Date();
+    const start = new Date(
+      Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate(),
+        0,
+        0,
+        0,
+        0
+      )
+    );
+    const end = new Date(
+      Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate(),
+        23,
+        59,
+        59,
+        999
+      )
+    );
+    return { from: start, to: end };
+  }
 
   useEffect(() => {
-    const totalTurnover = data?.reduce(
-      (acc, sale) => acc + Number(sale.total_amount),
-      0
-    );
-    setTurnOver(totalTurnover);
-  }, [data]);
+    const getReport = async () => {
+      try {
+        const res = await axios.post(`${API}/reports`, getTodayRangeUTC());
+        setData(res.data);
+        console.log(res.data);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    getReport();
+  }, []);
+
+  useEffect(() => {
+    const closePage = (e) => {
+      if (e.key === "Escape") {
+        handleClose();
+      }
+    };
+    document.addEventListener("keydown", closePage);
+
+    return () => {
+      document.addEventListener("keydown", closePage);
+    };
+  });
 
   return (
     <div className="absolute  flex justify-center items-center w-full h-full backdrop-blur-xs z-40">
-      <div className="flex flex-col  justify-center h-[90%] bg-white w-[90%] rounded-l-xl border-[#ADA3A3] border relative">
-        <div className="absolute -top-4 size-10 overflow-hidden bg-white rounded-l-3xl -right-5 ">
+      <div className="flex py-4  flex-col items-center   h-[90%] bg-white w-[90%] rounded-l-xl border-newborder border relative gap-10">
+        <div className="absolute -top-4 size-8 overflow-hidden bg-white rounded-full -right-4 ">
           <button className="cursor-pointer" onClick={handleClose}>
             <CloseIcon className={"w-full h-full"} />
           </button>
         </div>
-        <div className="px-4 flex items-center justify-center">
-          <span className="text-3xl">Dövriyyə: {turnover?.toFixed(2)}</span>
-        </div>
-        <div className="w-full overflow-auto h-full px-20  border-[#ADA3A3] py-10">
+
+        <div className="w-full px-10 overflow-auto max-h-[90%]     flex justify-center ">
           <table
-            className="w-full border"
-            style={{ borderCollapse: "collapse", tableLayout: "auto" }}
+            className="w-full"
+            style={{ tableLayout: "auto", borderSpacing: 0 }}
             border={1}
           >
             <thead className="text-center bg-gray-500 h-14 text-white text-xl font-light   top-0">
@@ -75,13 +83,14 @@ export const PosReports = ({ handleClose }) => {
                 <th>Toplam Məbləğ</th>
                 <th>Ödəniş növü</th>
                 <th>Tarix</th>
+                <th>Cap et</th>
               </tr>
             </thead>
-            <tbody className="">
-              {data?.map((sale) => (
+            <tbody>
+              {data?.sales?.map((sale) => (
                 <tr
                   key={sale.sale_id}
-                  className="text-center h-16 w-full border-[#ADA3A3] border-b text-xl"
+                  className="text-center h-12 w-full border-[#ADA3A3] border-b text-xl hover:bg-gray-200"
                 >
                   <td>
                     <div className="flex items-center justify-center pl-5">
@@ -101,7 +110,7 @@ export const PosReports = ({ handleClose }) => {
                   <td>
                     <div className="flex w-full justify-center items-center">
                       <span className="text-right min-w-20 flex justify-end">
-                        {formatDate(sale.date)}
+                        {FormatDate(sale.date)}
                       </span>
                     </div>
                   </td>

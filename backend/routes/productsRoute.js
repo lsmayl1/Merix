@@ -3,138 +3,65 @@ const { body, param, validationResult } = require("express-validator");
 const router = express.Router();
 const { Products, Sequelize, sequelize, Op } = require("../models");
 
-// Validation middleware for POST
-// const validateProduct = [
-//   body("name")
-//     .notEmpty()
-//     .withMessage("Name is required")
-//     .isString()
-//     .withMessage("Name must be a string"),
-//   body("category")
-//     .notEmpty()
-//     .withMessage("Category is required")
-//     .isString()
-//     .withMessage("Category must be a string"),
-//   body("barcode")
-//     .notEmpty()
-//     .withMessage("Barcode is required")
-//     .isNumeric()
-//     .withMessage("Barcode must consist of numbers only")
-//     .isString()
-//     .withMessage("Barcode must be a string")
-//     .custom((value, { req }) => {
-//       if (req.body.unit === "kg") {
-//         if (!value.startsWith("22")) {
-//           throw new Error('Barcode must start with "22" when unit is "kg"');
-//         }
-//         if (value.length !== 13) {
-//           throw new Error(
-//             'Barcode must be exactly 13 digits when unit is "kg"'
-//           );
-//         }
-//       }
-//       return true;
-//     }),
-//   body("buyPrice")
-//     .notEmpty()
-//     .withMessage("Buy price is required")
-//     .isFloat({ min: 0 })
-//     .withMessage("Buy price must be a positive number"),
-//   body("sellPrice")
-//     .notEmpty()
-//     .withMessage("Sell price is required")
-//     .isFloat({ min: 0 })
-//     .withMessage("Sell price must be a positive number"),
-//   body("unit")
-//     .notEmpty()
-//     .withMessage("Unit is required")
-//     .isIn(["piece", "kg"])
-//     .withMessage('Unit must be either "piece" or "kg"'),
-// ];
-
-// // Validation for PUT
-// const validateUpdateProduct = [
-//   body("name").optional().isString().withMessage("Name must be a string"),
-//   body("category")
-//     .optional()
-//     .isString()
-//     .withMessage("Category must be a string"),
-//   body("buyPrice")
-//     .optional()
-//     .isFloat({ min: 0 })
-//     .withMessage("Buy price must be a positive number"),
-//   body("sellPrice")
-//     .optional()
-//     .isFloat({ min: 0 })
-//     .withMessage("Sell price must be a positive number"),
-//   body("unit")
-//     .optional()
-//     .isIn(["piece", "kg"])
-//     .withMessage('Unit must be either "piece" or "kg"'),
-//   body("barcode")
-//     .optional()
-//     .isNumeric()
-//     .withMessage("Barcode must consist of numbers only")
-//     .isString()
-//     .withMessage("Barcode must be a string")
-//     .custom(async (value, { req }) => {
-//       const product = await Products.findByPk(req.params.id);
-//       const unitToCheck = req.body.unit || product.unit;
-//       if (unitToCheck === "kg") {
-//         if (value && !value.startsWith("22")) {
-//           throw new Error('Barcode must start with "22" when unit is "kg"');
-//         }
-//         if (value && value.length !== 13) {
-//           throw new Error(
-//             'Barcode must be exactly 13 digits when unit is "kg"'
-//           );
-//         }
-//       }
-//       return true;
-//     }),
-// ];
-
-// Error handling middleware
-// const handleValidationErrors = (req, res, next) => {
-//   const errors = validationResult(req);
-//   if (!errors.isEmpty()) {
-//     return res.status(400).json({ errors: errors.array() });
-//   }
-//   next();
-// };
-
 // Create a product
 router.post("/", async (req, res) => {
   try {
-    const { name, barcode, sellPrice, buyPrice, unit, category } = req.body;
+    const { name, barcode, sellPrice, buyPrice, unit, category, newStock } =
+      req.body;
 
+    if (!barcode) {
+      return res.status(400).json({ error: "Barkod yoxdur !" });
+    }
     // Zorunlu alanları kontrol et
     if (!name || !unit || !category) {
-      return res.status(400).json({ message: "Ad, unit veya kategori eksik" });
+      return res.status(400).json({ error: "Ad veya Vahid teyin olunmuyub" });
+    }
+
+    if (!sellPrice || !buyPrice) {
+      return res
+        .status(400)
+        .json({ error: "Alis ve Satis qiymetleri teyin olunmalidir!" });
     }
 
     // Unit’in geçerli bir ENUM değeri olduğundan emin ol
     if (!["piece", "kg"].includes(unit)) {
-      return res.status(400).json({ message: 'Unit "piece" veya "kg" olmalı' });
+      return res.status(400).json({ error: 'Unit "piece" veya "kg" olmalı' });
     }
 
-    if (!barcode) {
-      return res.status(401).json({ message: "Barkod yoxdur" });
-    }
     // Barkodun uzunluğunu kontrol et (isteğe bağlı, 13 hane istiyorsanız)
-    if (barcode && unit === "kg" && barcode.length !== 13) {
+    if (
+      barcode &&
+      unit === "kg" &&
+      barcode.length !== 13 &&
+      !barcode.startsWith("22")
+    ) {
       return res.status(400).json({
-        message:
-          "Kg vahidli mehsullarin barokdu 22 le baslamali uzunluqu 13 reqemden ibaret olmalidir",
+        error:
+          "barokdunu teyin etmek ucun barkodun yanindaki boz knopkaya basin ve emeliyyati tekrarlayin ",
+      });
+    }
+
+    // Check if barcode already exists in Products table
+    const existingProduct = await Products.findOne({
+      where: { barcode: barcode },
+    });
+
+    if (existingProduct) {
+      return res.status(400).json({
+        error: "Bu barkod  başka bir mehsulda var ferqli barkod yaradin",
       });
     }
 
     // Veri türlerini düzenle
     const productData = {
       name,
-      barcode: barcode || null, // Barkod opsiyonel
-      sellPrice: sellPrice ? parseFloat(sellPrice) : null, // DECIMAL için sayı
-      buyPrice: buyPrice ? parseFloat(buyPrice) : null, // DECIMAL için sayı
+      barcode: barcode || null,
+      sellPrice: sellPrice ? parseFloat(sellPrice) : null,
+      buyPrice: buyPrice ? parseFloat(buyPrice) : null,
+      stock:
+        existingProduct && newStock
+          ? existingProduct?.stock + Number(newStock)
+          : 0,
       unit,
       category,
     };
@@ -148,7 +75,7 @@ router.post("/", async (req, res) => {
         message: "Doğrulama hatası",
         errors: error.errors.map((e) => e.message),
       });
-    } else if (error.barcode === "SequelizeUniqueConstraintError") {
+    } else if (error.name === "SequelizeUniqueConstraintError") {
       return res.status(400).json({ message: "Bu barkod zaten kullanılıyor" });
     }
     res.status(400).json({ error: error.message });
@@ -158,16 +85,58 @@ router.post("/", async (req, res) => {
 // Get all products
 router.get("/", async (req, res) => {
   try {
-    const products = await Products.findAll();
+    // Query parametreleri (Varsayılan: page=1, limit=20)
+    let { page, limit } = req.query;
+    page = parseInt(page) || 1;
+    limit = parseInt(limit) || 20;
+    const offset = (page - 1) * limit;
+
+    // Veriyi getir (SQL seviyesinde sıralama yaparak hızlandır)
+    const products = await Products.findAll({
+      order: [["product_id", "ASC"]], // SQL ile sıralama (Daha hızlı!)
+      limit: limit,
+      offset: offset,
+    });
+
+    // Veriyi dönüştür (buyPrice ve sellPrice float'a çevriliyor)
+    const transformedProducts = products.map((product) => ({
+      ...product.get({ plain: true }),
+      buyPrice: parseFloat(product.buyPrice),
+      sellPrice: parseFloat(product.sellPrice),
+    }));
+
+    res.json(transformedProducts);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.get("/search", async (req, res) => {
+  try {
+    const { query } = req.query;
+
+    if (!query || query.trim().length < 2) {
+      return res
+        .status(400)
+        .json({ error: "Arama kelimesi en az 2 karakter olmalıdır." });
+    }
+
+    const products = await Products.findAll({
+      where: {
+        name: {
+          [Op.iLike]: `%${query}%`, // Kelimenin herhangi bir yerinde geçmesine izin ver
+        },
+      },
+      order: [["name", "ASC"]],
+      limit: 50, // En fazla 20 ürün getir
+    });
 
     // Veriyi dönüştür
-    const transformedProducts = products.map((product) => {
-      return {
-        ...product.toJSON(),
-        buyPrice: parseFloat(product.buyPrice),
-        sellPrice: parseFloat(product.sellPrice),
-      };
-    });
+    const transformedProducts = products.map((product) => ({
+      ...product.get({ plain: true }),
+      buyPrice: parseFloat(product.buyPrice),
+      sellPrice: parseFloat(product.sellPrice),
+    }));
 
     res.json(transformedProducts);
   } catch (error) {
@@ -200,29 +169,68 @@ router.get("/:id", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+// Get multiple products by IDs or barcodes
+router.post("/bulk", async (req, res) => {
+  try {
+    const { identifiers } = req.body; // Expects array ["1", "2", "ABC123"]
+
+    if (!identifiers || !identifiers.length) {
+      return res.status(400).json({ error: "No IDs or barcodes provided" });
+    }
+
+    // Separate numeric IDs from barcodes (strings)
+    const numericIds = [];
+    const barcodes = [];
+
+    identifiers.forEach((id) => {
+      if (!isNaN(id)) {
+        numericIds.push(Number(id));
+      } else {
+        barcodes.push(id);
+      }
+    });
+
+    // Find products by both criteria
+    const products = await Products.findAll({
+      where: {
+        [Sequelize.Op.or]: [
+          { product_id: { [Sequelize.Op.in]: numericIds } },
+          { barcode: { [Sequelize.Op.in]: barcodes } },
+        ],
+      },
+    });
+
+    if (products.length > 0) {
+      res.json(products);
+    } else {
+      res
+        .status(404)
+        .json({ error: "No products found with the provided identifiers" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // Update a product
 router.put("/:id", async (req, res) => {
   try {
-    // Find product by ID (as a number) or barcode (as a string)
+    // Find product by ID or barcode
     let product = null;
 
-    // Try ID first (convert to number if it’s numeric)
     if (!isNaN(req.params.id)) {
       product = await Products.findByPk(Number(req.params.id));
     }
 
-    // If not found by ID, try barcode
     if (!product) {
       product = await Products.findOne({ where: { barcode: req.params.id } });
     }
 
-    // If no product found, send error
     if (!product) {
       return res.status(404).json({ error: "Product not found" });
     }
 
-    // List of fields we can update
+    // Fields that can be updated directly
     const fields = [
       "name",
       "category",
@@ -232,7 +240,6 @@ router.put("/:id", async (req, res) => {
       "barcode",
     ];
 
-    // Build update data from request
     const updateData = {};
     fields.forEach((field) => {
       if (req.body[field] !== undefined) {
@@ -240,23 +247,53 @@ router.put("/:id", async (req, res) => {
       }
     });
 
-    // Check if barcode is already used
+    // Handle stock update if newStock is provided
+    if (req.body.newStock !== undefined) {
+      const newStockValue = Number(req.body.newStock);
+      if (isNaN(newStockValue)) {
+        return res.status(400).json({ error: "newStock must be a number" });
+      }
+      updateData.stock = product.stock + newStockValue;
+    }
+
+    // Barcode uniqueness check (only if changing)
     if (updateData.barcode && updateData.barcode !== product.barcode) {
-      const barcodeCheck = await Products.findOne({
+      const existingProduct = await Products.findOne({
         where: { barcode: updateData.barcode },
       });
-      if (barcodeCheck && barcodeCheck.id !== product.id) {
-        return res.status(400).json({ error: "Barcode already in use" });
+
+      if (existingProduct && existingProduct.id !== product.id) {
+        return res.status(400).json({
+          error: "Barcode already in use by another product",
+          conflictingProduct: {
+            id: existingProduct.id,
+            name: existingProduct.name,
+          },
+        });
       }
     }
 
-    // Update product and send result
+    // Update product
     await product.update(updateData);
-    return res.json(product);
+
+    // Return the updated product with stock change information
+    const response = product.toJSON();
+    if (req.body.newStock !== undefined) {
+      response.stockChange = {
+        previousStock: product.stock - Number(req.body.newStock),
+        newStock: product.stock,
+        added: Number(req.body.newStock),
+      };
+    }
+
+    return res.json(response);
   } catch (error) {
-    // Show error in logs and send simple message
-    console.error("Error:", error.message);
-    return res.status(500).json({ error: "Failed to update product" });
+    console.error("Error updating product:", error);
+    return res.status(500).json({
+      error: "Failed to update product",
+      details:
+        process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
   }
 });
 // Delete a product
@@ -364,6 +401,33 @@ router.post("/generate-barcode", async (req, res) => {
     console.error("Hata:", error);
     res.status(500).json({
       message: "Barkod oluşturma hatası",
+      error: error.message,
+    });
+  }
+});
+
+router.post("/stock-refresh", async (req, res) => {
+  try {
+    // Transaction başlat (veri tutarlılığı için)
+    const result = await sequelize.transaction(async (t) => {
+      // Tüm ürünlerin stoklarını 0 yap
+      const [affectedCount] = await Products.update(
+        { stock: 0 },
+        { where: {}, transaction: t }
+      );
+
+      return affectedCount;
+    });
+
+    res.json({
+      success: true,
+      message: `Tüm ürün stokları sıfırlandı. ${result} ürün güncellendi.`,
+    });
+  } catch (error) {
+    console.error("Stok sıfırlama hatası:", error);
+    res.status(500).json({
+      success: false,
+      message: "Stoklar sıfırlanırken bir hata oluştu",
       error: error.message,
     });
   }

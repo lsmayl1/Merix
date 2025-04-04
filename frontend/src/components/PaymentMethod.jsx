@@ -3,6 +3,7 @@ import { Wallet } from "../assets/Wallet";
 import { Kart } from "../assets/Kart";
 import { Tick } from "../assets/Tick";
 import axios from "axios";
+import { take } from "lodash";
 
 export const PaymentMethod = ({
   totals,
@@ -29,7 +30,7 @@ export const PaymentMethod = ({
     if (inputRef.current) {
       inputRef.current.focus(); // input elemanına odaklanın
     }
-  }, []); // editTaked değiştiğinde input elemanına odaklanın
+  }, [editTaked]); // editTaked değiştiğinde input elemanına odaklanın
 
   const handleTakeMoneyChange = (e) => {
     const value = parseFloat(e.target.value);
@@ -40,15 +41,15 @@ export const PaymentMethod = ({
 
   return (
     <div className="absolute backdrop-blur-xs w-full h-full z-50 flex items-center justify-center">
-      <div className="w-1/2 bg-white h-1/2 border rounded-2xl border-[#ADA3A3] flex ">
-        <div className="text-2xl w-1/3 p-4 flex flex-col gap-5 border-r border-[#ADA3A3]">
+      <div className="w-1/2 bg-white h-8/12 border rounded-2xl border-newborder flex ">
+        <div className="text-2xl w-1/3 p-4 flex flex-col gap-5 border-r border-newborder">
           <h1>Odəniş üsulu</h1>
           <div className="flex flex-col gap-5 ">
             <button
-              className={` border p-4 cursor-pointer  rounded-2xl flex items-center gap-5 ${
+              className={` border border-newborder p-2 cursor-pointer  rounded-xl flex items-center gap-5 ${
                 paymentMethodvalue === "cash"
                   ? "bg-[#A9A9A9] border-none text-white"
-                  : "bg-white"
+                  : "bg-white "
               }`}
               onClick={() => changePaymentMethod("cash")}
             >
@@ -56,7 +57,7 @@ export const PaymentMethod = ({
               Nagd{" "}
             </button>
             <button
-              className={` border p-4  cursor-pointer rounded-2xl flex items-center gap-5 ${
+              className={` border border-newborder  p-2  cursor-pointer rounded-xl flex items-center gap-5 ${
                 paymentMethodvalue === "card"
                   ? "bg-[#A9A9A9] border-none text-white"
                   : "bg-white"
@@ -77,19 +78,21 @@ export const PaymentMethod = ({
               <div className="flex gap-5 w-full">
                 <div className="flex flex-1 flex-col gap-1">
                   <span className="text-xl px-2">Alınan məbləg</span>
-                  <div className="flex-1 border flex items-center border-black rounded-2xl">
+                  <div className="flex-1 border  flex items-center border-newborder rounded-2xl">
                     {editTaked ? (
                       <input
                         type="number"
-                        className="w-full text-2xl px-4  focus:outline-none"
+                        className="w-full text-2xl px-4 border-newborder  focus:outline-none"
                         onBlur={() => setEditTaked((prev) => !prev)}
                         onChange={handleTakeMoneyChange}
                         ref={inputRef}
                       />
                     ) : (
                       <span
-                        className="text-2xl px-4"
-                        onClick={() => setEditTaked((prev) => !prev)}
+                        className="text-2xl px-4 w-full"
+                        onClick={() => {
+                          setEditTaked((prev) => !prev);
+                        }}
                       >
                         {takedMoney.toFixed(2)}
                       </span>
@@ -98,7 +101,7 @@ export const PaymentMethod = ({
                 </div>
                 <div className="flex flex-1 flex-col gap-1">
                   <span className="text-xl px-2">Qaytarılacag məbləg</span>
-                  <div className="flex-1 p-2 border rounded-2xl">
+                  <div className="flex-1 p-2 border border-newborder rounded-2xl">
                     <span className="text-2xl">
                       {(takedMoney - totals).toFixed(2) + " ₼"}
                     </span>
@@ -109,8 +112,8 @@ export const PaymentMethod = ({
           ) : (
             <div className="flex gap-5 w-full">
               <div className="flex flex-1 flex-col gap-1">
-                <span className="text-xl px-2">Kart nomresi</span>
-                <div className="flex-1 p-2 border border-[#ADA3A3] rounded-2xl">
+                <span className="text-xl px-2">Kart nömrəsi</span>
+                <div className="flex-1 px-4 py-2 border border-newborder rounded-2xl">
                   <span className="text-2xl">4898 9845 6548 2454</span>
                 </div>
               </div>
@@ -129,15 +132,15 @@ export const PaymentMethod = ({
           <div className="flex justify-center gap-15">
             <button
               onClick={closePaymentPage}
-              className="text-2xl bg-red-500 cursor-pointer text-white p-2 rounded-2xl w-full"
+              className="text-2xl bg-red-700 cursor-pointer text-white p-2 rounded-2xl w-full"
             >
-              Legv et
+              Ləğv et
             </button>
             <button
               onClick={createSale}
-              className="text-2xl bg-green-500 cursor-pointer text-white p-2 rounded-2xl w-full"
+              className="text-2xl bg-green-700 cursor-pointer text-white p-2 rounded-2xl w-full"
             >
-              Odenis et
+              Odəniş et
             </button>
           </div>
         </div>
