@@ -62,7 +62,7 @@ const CustomDatePicker = ({ handleDate }) => {
         999
       )
     );
-    return { from: start, to: end };
+    return { from: start, to: end, value: start };
   }
 
   function getCurrentWeekRangeUTC() {
@@ -153,7 +153,13 @@ const CustomDatePicker = ({ handleDate }) => {
     const fromStr = formatUTC(range.from);
     if (!range.to) return fromStr;
 
+    if (!range.to || range.from.getTime() === range.to.getTime()) {
+      return fromStr;
+    }
     const toStr = formatUTC(range.to);
+    if (range.value) {
+      return `${fromStr}`;
+    }
     return `${fromStr} - ${toStr}`;
   }
 
@@ -216,26 +222,32 @@ const CustomDatePicker = ({ handleDate }) => {
   };
 
   return (
-    <div className="date-picker flex justify-end z-40">
-      <header className="flex items-center justify-end h-20 px-16 gap-4 relative">
-        <h1 className="text-xl font-medium">
+    <div className="flex justify-end relative ">
+      <div
+        className="flex items-center justify-end h-20 gap-4 relative" // 'relative' eklendi
+        style={{ zIndex: 20 }} // zIndex değeri eklendi
+      >
+        <h1 className="text-xl max-xl:text-lg max-xl:font-normal font-medium max-xs:text-[14px] truncate">
           {formatDateRange(selectedRange)}
         </h1>
-        <div className="relative flex justify-end">
+        <div className="flex justify-end">
           <button
             onClick={(e) => {
               e.stopPropagation();
               setShowDatePick((prev) => !prev);
             }}
-            className="rounded-full bg-gray-300 size-12 cursor-pointer flex items-center justify-center"
+            className="rounded-full bg-gray-300 size-12 cursor-pointer flex items-center justify-center max-xs:size-10"
           >
-            <DatePickIcon />
+            <DatePickIcon className={"max-xs:size-6"} />
           </button>
         </div>
-      </header>
+      </div>
 
       {showDatePick && (
-        <div className="flex absolute right-10 top-20">
+        <div
+          className="flex absolute right-10 top-20"
+          style={{ zIndex: 30, position: "absolute" }} // zIndex değerini 30 olarak güncelledik
+        >
           {/* Seçenekler */}
           <div className="py-4 w-[90%] cursor-pointer rounded bg-white border border-newborder">
             <ul className="flex flex-col gap-1">

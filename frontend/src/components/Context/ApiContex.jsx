@@ -1,7 +1,9 @@
 import { QueryClient, useMutation, useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { createContext, useState } from "react";
-export const API = "http://localhost:3000";
+// export const API = "/api/";
+export const API = "http://localhost:3000"; // Backend API URL
+
 export const queryClient = new QueryClient();
 
 export const ApiContext = createContext(null);

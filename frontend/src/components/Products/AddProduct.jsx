@@ -112,7 +112,7 @@ export const AddProduct = ({ handleClose }) => {
             {/* Product Name */}
             <div className="w-full flex justify-between items-end gap-16">
               <div className="flex flex-col w-full">
-                <label htmlFor="name" className="text-xl">
+                <label htmlFor="name" className="text-xl max-lg:text-md">
                   Mehsulun adı
                 </label>
                 <input
@@ -128,7 +128,7 @@ export const AddProduct = ({ handleClose }) => {
 
             {/* Unit Selection */}
             <div className="flex flex-col">
-              <label className="text-xl">Vahid</label>
+              <label className="text-xl max-lg:text-md">Vahid</label>
               <div className="flex w-1/2">
                 <button
                   onClick={handleUnitChange("piece")}
@@ -150,9 +150,9 @@ export const AddProduct = ({ handleClose }) => {
             </div>
 
             {/* Barcode */}
-            <div className="flex w-1/2 flex-col">
-              <label className="text-xl">Barkod</label>
-              <div className="flex items-center gap-2">
+            <div className="flex w-1/2 flex-col max-lg:w-full">
+              <label className="text-xl max-lg:text-md">Barkod</label>
+              <div className="flex items-center gap-2 max-lg:justify-between">
                 <input
                   type="text" // Changed to text to avoid number overflow
                   value={form.barcode || ""}
@@ -170,11 +170,11 @@ export const AddProduct = ({ handleClose }) => {
 
             {/* Prices */}
             <div className="flex flex-col gap-2">
-              <div className="flex w-9/12 items-center justify-between rounded-lg border border-newborder">
-                <span className="w-2/5 border-r border-newborder px-4">
+              <div className="flex w-9/12 max-lg:w-full items-center justify-between rounded-lg border border-newborder">
+                <span className="w-2/5 border-r border-newborder px-4 max-lg:text-md truncate">
                   Alis Qiymeti
                 </span>
-                <div className="flex w-3/5 items-center gap-2">
+                <div className="flex w-3/5 items-center gap-2  ">
                   <input
                     type="number"
                     value={
@@ -188,8 +188,8 @@ export const AddProduct = ({ handleClose }) => {
                   <span className="px-2 text-xl">₼</span>
                 </div>
               </div>
-              <div className="flex w-9/12 items-center justify-between rounded-lg border border-newborder">
-                <span className="w-2/5 border-r border-newborder px-4">
+              <div className="flex w-9/12 max-lg:w-full items-center justify-between rounded-lg border border-newborder">
+                <span className="w-2/5 border-r border-newborder px-4 max-lg:text-md truncate">
                   Satis Qiymeti
                 </span>
                 <div className="flex w-3/5 items-center gap-2">
@@ -208,22 +208,29 @@ export const AddProduct = ({ handleClose }) => {
               </div>
             </div>
             {/* Stok */}
-            <div className="flex justify-between items-center w-full">
+            <div className="flex justify-between items-center w-full ">
               {isEditMode && (
-                <div className="flex gap-2 items-center text-xl ">
-                  <label htmlFor="">Stok da</label>
-                  <span> {form.stock | 0}</span>
-                  <span>{form.unit === "piece" ? "ədəd" : "kg"}</span>
+                <div className="flex gap-2 items-center text-xl  w-full">
+                  <label htmlFor="" className="max-lg:text-md">
+                    Stok da
+                  </label>
+                  <span className="max-lg:text-md"> {form.stock | 0}</span>
+                  <span className="max-lg:text-md">
+                    {form.unit === "piece" ? "ədəd" : "kg"}
+                  </span>
                 </div>
               )}
-              <div className="w-1/3 items-center gap-4 flex">
-                <label htmlFor="" className="truncate text-nowrap text-xl">
+              <div className="w-full justify-end items-center gap-4 flex">
+                <label
+                  htmlFor=""
+                  className="truncate text-nowrap text-xl max-lg:text-md"
+                >
                   Stok əlavə
                 </label>
                 <input
                   type="number"
                   onChange={handleInputChange("newStock")}
-                  className="border focus:outline-none rounded text-center px-1 text-xl border-newborder w-1/2 "
+                  className="border focus:outline-none rounded text-center px-1 text-xl border-newborder w-1/6 "
                 />
               </div>
             </div>
@@ -231,7 +238,7 @@ export const AddProduct = ({ handleClose }) => {
 
           {/* Action Buttons */}
           <div className="flex items-center justify-between gap-4">
-            <button className="rounded-xl cursor-pointer bg-white border border-newborder w-1/4 py-1 px-4     font-semibold ">
+            <button className="rounded-xl cursor-pointer bg-white border border-newborder w-1/4 py-1 px-4     font-semibold max-lg:text-md max-lg:font-normal truncate ">
               Cap et
             </button>
             <div className="flex items-center gap-4 justify-end w-full">
@@ -240,14 +247,14 @@ export const AddProduct = ({ handleClose }) => {
                   onClick={() => {
                     setShowConfirm(true);
                   }}
-                  className="rounded-xl cursor-pointer bg-red-500 px-4 py-1 font-semibold text-white"
+                  className="rounded-xl max-lg:text-md cursor-pointer bg-red-500 px-4 py-1 font-semibold text-white"
                 >
                   Sil
                 </button>
               )}
               <button
                 onClick={handleClose}
-                className="rounded-xl cursor-pointer bg-red-700 px-4 py-1 font-semibold text-white"
+                className="rounded-xl truncate  max-lg:text-md cursor-pointer bg-red-700 px-4 py-1 font-semibold text-white"
               >
                 Legv et
               </button>
@@ -255,14 +262,14 @@ export const AddProduct = ({ handleClose }) => {
               {isEditMode ? (
                 <button
                   onClick={() => handleEdit(form.product_id)}
-                  className="rounded-xl cursor-pointer bg-green-700 px-4 py-1 font-semibold text-white"
+                  className="rounded-xl cursor-pointer max-lg:text-md bg-green-700 px-4 py-1 font-semibold text-white"
                 >
                   Deyis
                 </button>
               ) : (
                 <button
                   onClick={handleAddProduct}
-                  className="rounded-xl cursor-pointer bg-green-700 px-4 py-1 font-semibold text-white"
+                  className="rounded-xl max-lg:text-md cursor-pointer bg-green-700 px-4 py-1 font-semibold text-white"
                 >
                   Elave et
                 </button>

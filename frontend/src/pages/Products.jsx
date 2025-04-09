@@ -294,8 +294,8 @@ export const Products = () => {
           margin: 0,
         }}
       />
-      <div className="relative   w-full gap-16 flex items-center ">
-        <div className="relative flex-1 flex items-center h-20">
+      <div className="relative   w-full gap-16 flex items-center max-lg:flex-col-reverse max-lg:gap-4 max-lg:items-end ">
+        <div className="relative flex-1 flex items-center h-20 w-full">
           <input
             type="text"
             ref={searchInput}
@@ -308,7 +308,7 @@ export const Products = () => {
                 setFilteredProduct(data);
               }
             }}
-            className="w-full border h-10 text-2xl px-12 border-newborder rounded-lg focus:outline-none"
+            className="w-full border h-10 text-2xl px-12 border-newborder rounded-lg focus:outline-none max-lg:w-full"
           />
           <SearchIcon className={"absolute ml-2"} />
           <div
@@ -321,118 +321,7 @@ export const Products = () => {
             <button className="size-10 cursor-pointer">X</button>
           </div>
         </div>
-        <div className="flex gap-4">
-          {/* <div className="relative">
-            <button
-              onClick={() => setShowFilters((prev) => !prev)}
-              className="flex items-center justify-center hover:bg-gray-300 cursor-pointer bg-white px-2 py-1 border border-newborder rounded"
-            >
-              <FilterIcon className={"size-8"} />
-            </button>
-
-            {showFilters && (
-              <div
-                ref={filterRef}
-                className="absolute px-4 py-4 top-12 bg-white size-[300px] border border-newborder right-0 items-center flex flex-col justify-between "
-              >
-                <ul className="flex flex-col gap-4 w-full">
-                  <li className="flex gap-4">
-                    <button
-                      onClick={() => handleFilterSelection("name")}
-                      className={`rounded-full cursor-pointer transition duration-300 size-6 flex items-center justify-center border-2 ${
-                        selectedFilter === "name"
-                          ? "border-blue-500"
-                          : "border-gray-500"
-                      }   overflow-hidden p-1`}
-                    >
-                      <span
-                        className={`${
-                          selectedFilter === "name" ? "bg-blue-400" : ""
-                        } w-full h-full rounded-full`}
-                      ></span>
-                    </button>
-                    Ad
-                  </li>
-                  <li className="flex gap-4">
-                    <button
-                      onClick={() => handleFilterSelection("stock")}
-                      className={`rounded-full cursor-pointer transition duration-300 size-6 flex items-center justify-center border-2 ${
-                        selectedFilter === "stock"
-                          ? "border-blue-500"
-                          : "border-gray-500"
-                      }   overflow-hidden p-1`}
-                    >
-                      <span
-                        className={`${
-                          selectedFilter === "stock" ? "bg-blue-400" : ""
-                        } w-full h-full rounded-full`}
-                      ></span>
-                    </button>
-                    Stok
-                  </li>
-                  <span className="text-xl">Vahid</span>
-                  <li className="flex gap-4">
-                    <button
-                      onClick={() => handleFilterSelection("kg")}
-                      className={`rounded-full cursor-pointer transition duration-300 size-6 flex items-center justify-center border-2 ${
-                        selectedFilter === "kg"
-                          ? "border-blue-500"
-                          : "border-gray-500"
-                      }   overflow-hidden p-1`}
-                    >
-                      <span
-                        className={`${
-                          selectedFilter === "kg" ? "bg-blue-400" : ""
-                        } w-full h-full rounded-full`}
-                      ></span>
-                    </button>
-                    KG
-                  </li>
-                  <li className="flex gap-4">
-                    <button
-                      onClick={() => handleFilterSelection("piece")}
-                      className={`rounded-full cursor-pointer transition duration-300 size-6 flex items-center justify-center border-2 ${
-                        selectedFilter === "piece"
-                          ? "border-blue-500"
-                          : "border-gray-500"
-                      }   overflow-hidden p-1`}
-                    >
-                      <span
-                        className={`${
-                          selectedFilter === "piece" ? "bg-blue-400" : ""
-                        } w-full h-full rounded-full`}
-                      ></span>
-                    </button>
-                    Eded
-                  </li>
-                  <li className="flex gap-4">
-                    <button
-                      onClick={() => handleFilterSelection("id")}
-                      className={`rounded-full cursor-pointer transition duration-300 size-6 flex items-center justify-center border-2 ${
-                        selectedFilter === "id"
-                          ? "border-blue-500"
-                          : "border-gray-500"
-                      }   overflow-hidden p-1`}
-                    >
-                      <span
-                        className={`${
-                          selectedFilter === "id" ? "bg-blue-400" : ""
-                        } w-full h-full rounded-full`}
-                      ></span>
-                    </button>
-                    Siralama
-                  </li>
-                </ul>
-                <button
-                  onClick={filterData}
-                  className=" cursor-pointer border px-2 py-1 rounded w-1/2 "
-                >
-                  Tedbiq et
-                </button>
-              </div>
-            )}
-          </div> */}
-
+        <div className="flex gap-4 max-lg:justify-end  max-lg:items-end">
           <button
             onClick={handleShowLabelPrinter}
             className="py-2 px-4 cursor-pointer border hover:bg-gray-300 border-newborder rounded"
@@ -450,33 +339,27 @@ export const Products = () => {
       </div>
       <div className=" w-full flex justify-center rounded-xs border border-[#ADA3A3]   bg-white  overflow-auto max-h-[80%]">
         <table className="w-full ">
+          <colgroup>
+            <col className="max-xs:w-1/8 "></col>
+            <col className="max-xs:w-1/12 "></col>
+            <col className="max-xs:w-1/8 "></col>
+            <col className="max-xs:w-1/8 "></col>
+
+            <col className="max-xs:w-1/8 "></col>
+            <col className="max-xs:w-1/8 "></col>
+            <col className="max-xs:w-2/8 "></col>
+
+          </colgroup>
           <thead className="border border-newborder">
-            <tr className=" text-center h-10 bg-white">
-              <td style={{ width: "2%" }}></td>
-              <td
-                className=" border-l border-newborder"
-                style={{ width: "2%" }}
-              >
-                ID
-              </td>
-              <td className="border  border-newborder" style={{ width: "18%" }}>
-                MƏHSUL
-              </td>
-              <td className="border border-newborder" style={{ width: "10%" }}>
-                BARKOD
-              </td>
-              <td className="border-l border-newborder" style={{ width: "5%" }}>
-                VAHİD
-              </td>
-              <td className="border-l border-newborder" style={{ width: "8%" }}>
-                ALIŞ QİYMƏTİ
-              </td>
-              <td className="border-l border-newborder" style={{ width: "8%" }}>
-                SATIŞ QİYMƏTİ
-              </td>
-              <td className="border-l border-newborder" style={{ width: "5%" }}>
-                STOK
-              </td>
+            <tr className=" text-center h-10 bg-white truncate max-md:text-[10px] max-sm:text-[8px] max-xs:text-fxs ">
+              <td className="max-xs:hidden"></td>
+              <td className=" border-l border-newborder ">ID</td>
+              <td className="border  border-newborder">MƏHSUL</td>
+              <td className="border border-newborder">BARKOD</td>
+              <td className="border-l border-newborder">VAHİD</td>
+              <td className="border-l border-newborder">ALIŞ QİYMƏTİ</td>
+              <td className="border-l border-newborder">SATIŞ QİYMƏTİ</td>
+              <td className="border-l border-newborder ">STOK</td>
             </tr>
           </thead>
           <tbody className="">
@@ -484,7 +367,7 @@ export const Products = () => {
               <tr>
                 <td
                   colSpan={8}
-                  className="text-3xl border=bordercolor text-center py-14"
+                  className="text-3xl border-newborder text-center py-14"
                 >
                   Yuklenir{" "}
                 </td>
@@ -493,13 +376,13 @@ export const Products = () => {
             {filteredProducts?.map((product) => (
               <tr
                 key={product.product_id}
-                className=" border-b border-[#ADA3A3] hover:bg-gray-300"
+                className=" border-b border-newborder hover:bg-gray-300 "
               >
-                <td>
-                  <div className="flex w-full items-center justify-center">
+                <td className="max-xs:hidden">
+                  <div className="flex w-full items-center justify-center ">
                     <div
                       onClick={() => selectProduct(product)}
-                      className={`border size-4 rounded border-newborder ${
+                      className={`border size-4 max-lg:size-3 max-sm:size-2 max-md:size-3 rounded border-newborder ${
                         selectedProduct?.product_id === product?.product_id
                           ? "bg-blue-600"
                           : ""
@@ -507,19 +390,27 @@ export const Products = () => {
                     ></div>
                   </div>
                 </td>
-                <td className=" border-l border-b text-center border-newborder">
-                  <span> {product.product_id}</span>
+                <td className=" border-l border-b text-center border-newborder max-xs:px-1">
+                  <span className="max-lg:text-flg max-sm:text-fsm max-xs:text-fxs ">
+                    {" "}
+                    {product.product_id}
+                  </span>
                 </td>
                 <td
                   onDoubleClick={() => handleProductById(product)}
-                  className="px-4 border-l border-b  border-newborder cursor-pointer"
+                  className="px-4 border-l border-b  border-newborder cursor-pointer max-sm:px-2 max-xs:px-1"
                 >
-                  <span> {product.name}</span>
+                  <span className=" max-lg:text-flg max-md:text-[10px] truncate max-sm:text-fsm max-xs:text-fxs">
+                    {" "}
+                    {product.name}
+                  </span>
                 </td>
-                <td className="border-l border-b  border-newborder px-4">
-                  {product.barcode}
+                <td className="border-l border-b  border-newborder px-4 max-sm:px-2 max-xs:px-1 ">
+                  <span className=" max-lg:text-flg max-md:text-xs max-sm:text-fsm max-xs:text-fxs">
+                    {product.barcode}
+                  </span>
                 </td>
-                <td className="border-l border-b  border-newborder px-4 text-center">
+                <td className="border-l border-b  border-newborder px-4 max-sm:px-2 max-xs:px-1 text-center max-lg:text-flg  max-md:text-xs max-sm:text-fsm max-xs:text-fxs">
                   {product.unit === "piece" ? "əd" : "kg"}
                 </td>
                 <td className="text-center border-l border-b  border-newborder ">
@@ -527,7 +418,7 @@ export const Products = () => {
                     <span
                       className={`${
                         product.buyPrice === 0 ? "text-red-400" : "text-black"
-                      } w-7/12 text-end tracking-widest font-medium`}
+                      } w-7/12 text-end tracking-widest font-medium max-lg:text-flg max-md:text-xs max-sm:text-fsm max-sm:w-8/12 max-xs:text-fxs`}
                     >
                       {product?.buyPrice?.toFixed(2) || "0.00"}
                     </span>{" "}
@@ -535,14 +426,16 @@ export const Products = () => {
                 </td>
                 <td className="text-center border-l border-b  border-newborder">
                   <div className="w-full flex items-center">
-                    <span className="w-7/12 text-end tracking-widest font-medium">
+                    <span className="w-7/12 text-end tracking-widest max-lg:text-flg font-medium max-md:text-xs max-sm:text-fsm max-sm:w-8/12 max-xs:text-fxs">
                       {product?.sellPrice?.toFixed(2) || "0.00"}
                     </span>{" "}
                   </div>
                 </td>
                 <td className="text-center border-l border-b  border-newborder">
                   <span
-                    className={`${product.stock < 0 ? "text-red-400" : ""}`}
+                    className={` max-lg:text-flg max-md:text-xs max-sm:text-fsm max-xs:text-fxs ${
+                      product.stock < 0 ? "text-red-400" : ""
+                    }`}
                   >
                     {product?.stock}
                   </span>
@@ -552,7 +445,7 @@ export const Products = () => {
           </tbody>
         </table>
       </div>
-      
+
       {query === "" && (
         <div className="flex pb-4 items-center justify-center ">
           <button

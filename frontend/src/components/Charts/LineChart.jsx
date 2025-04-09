@@ -67,6 +67,7 @@ export const LineChart = () => {
 
   const options = {
     responsive: true, // Ekran boyutuna göre uyumlu olmasını sağlar
+    maintainAspectRatio: false, // Grafik boyutunu korur
     plugins: {
       legend: {
         display: false, // Legend'ı gizler
@@ -115,8 +116,9 @@ export const LineChart = () => {
   };
 
   return (
-    <div className="w-7/12 flex flex-col border p-4 rounded-xl border-newborder gap-2">
-      <div className="flex justify-between">
+    <div className=" w-7/12 h-full  relative flex flex-col gap-7 justify-between p-4 border border-newborder 
+     max-md:order-2 rounded-lg max-md:h-1/2 max-md:w-full">
+      <div className="flex justify-between  ">
         <span className="text-xl">Satis grafigi</span>
         <div className="flex gap-4 relative">
           <button
@@ -140,7 +142,16 @@ export const LineChart = () => {
           )}
         </div>
       </div>
-      <Line data={data} options={options} />
+      <Line
+        data={data}
+        style={{
+          height: "100%",
+          width: "100%",
+          display: "block",
+          overflow: "hidden",
+        }}
+        options={options}
+      />
     </div>
   );
 };

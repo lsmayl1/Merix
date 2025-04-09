@@ -433,4 +433,25 @@ router.post("/stock-refresh", async (req, res) => {
   }
 });
 
+router.get("/stocks/data", async (req, res) => {
+  try {
+    const products = await Products.findAll({
+      where: {
+        stock: {
+          [Op.lt]: 10, // Stok miktarı 10'dan az olan ürünleri getir
+        },
+      },
+      order: [["stock", "ASC"]], // Stok miktarına göre sıralama
+      attributes: ["name", "stock"],
+      limit: 20,
+    });
+    const transformedProducts = products.map((product) => ({
+      ...product.get({ plain: true }),
+    }));
+    res.json(transformedProducts);
+  } catch (error) {
+    console.log(error);
+  }
+});
+
 module.exports = router;

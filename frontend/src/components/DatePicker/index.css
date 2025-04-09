@@ -1,13 +1,6 @@
-.date-picker {
-  position: relative;
-  font-family: Arial, sans-serif;
-}
 
-.date-picker input {
-  padding: 8px;
-  width: 900px;
-  cursor: pointer;
-}
+
+
 
 .calendar {
   background: white;
