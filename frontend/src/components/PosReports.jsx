@@ -41,7 +41,6 @@ export const PosReports = ({ handleClose }) => {
       try {
         const res = await axios.post(`${API}/reports`, getTodayRangeUTC());
         setData(res.data);
-        console.log(res.data);
       } catch (error) {
         console.log(error);
       }

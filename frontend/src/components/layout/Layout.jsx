@@ -7,12 +7,13 @@ import { ReportIcon } from "../../assets/ReportIcon";
 import { ScaleIcon } from "../../assets/ScaleIcon";
 import { RightArrow } from "../../assets/Arrows";
 import { Hamburger } from "../../assets/hamburger";
-
+import { useMediaQuery } from "react-responsive";
 export const Layout = () => {
+  const isMobile = useMediaQuery({ maxWidth: 1024 });
   const location = useLocation();
   const pathname = location.pathname;
   const lastPath = pathname.split("/").pop();
-  const [showSidebar, setShowSidebar] = useState(true);
+  const [showSidebar, setShowSidebar] = useState(false);
   const [showHamburger, setShowHamburger] = useState(false);
   const links = [
     { name: "Əsas", blank: false, path: "", icon: <Dashboard /> },
@@ -33,14 +34,25 @@ export const Layout = () => {
     { name: "Tərəzi", blank: false, path: "terezi", icon: <ScaleIcon /> },
   ];
 
+  useEffect(() => {
+    if (isMobile === false) {
+      setShowSidebar(true);
+    } else {
+      setShowSidebar(false);
+    }
+  }, [isMobile]);
+
   return (
     <div className="h-screen w-full flex relative bg-white">
-      <button
-        className="h-10 w-10 lg:hidden flex items-center justify-center  absolute top-7 left-4 z-50"
-        onClick={() => setShowSidebar((prev) => !prev)}
-      >
-        <Hamburger />
-      </button>
+      {isMobile && (
+        <button
+          className="h-10 w-10  flex items-center justify-center  absolute top-2 left-4 z-50"
+          onClick={() => setShowSidebar((prev) => !prev)}
+        >
+          <Hamburger />
+        </button>
+      )}
+
       {showSidebar && (
         <div
           className={` h-screen w-1/6 justify-center  border-r bg-white border-newborder flex items-center max-lg:absolute max-lg:w-full max-lg:z-40 `}
@@ -52,7 +64,6 @@ export const Layout = () => {
                 <NavLink
                   to={item?.path}
                   target={item.blank ? "_blank" : ""}
-                  onClick={() => setShowSidebar(false)}
                   className={`px-4 py-2 flex items-center  w-full gap-4 max-xl:gap-2 bg-gray-400 rounded-lg ${
                     lastPath === item.path
                       ? "bg-gray-500 text-white"
@@ -81,7 +92,6 @@ export const Layout = () => {
                       <NavLink
                         to={subItem.path}
                         key={index}
-                        onClick={() => setShowSidebar(false)}
                         className={`px-4 max-2xl:text-xs py-2  ${
                           subItem.path === lastPath
                             ? "bg-gray-500 text-white"

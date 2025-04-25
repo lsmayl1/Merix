@@ -5,7 +5,6 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
-import { debounce } from "lodash";
 import { Xicon } from "../assets/Xicon";
 import { AddIcon } from "../assets/AddIcon";
 import { SearchIcon } from "../assets/SearchIcon";
@@ -15,7 +14,6 @@ import { PaymentMethod } from "../components/PaymentMethod";
 import { RecycleBin } from "../assets/recycleBin";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
-import Fuse from "fuse.js";
 import { ShortCutEdit } from "../components/ShortCutEdit";
 import { PosReports } from "../components/PosReports";
 import { useApi } from "../components/Context/useApiContext";
@@ -53,7 +51,7 @@ export const Pos = () => {
   const barkodInput = useRef(null);
   const searchInput = useRef(null);
   const [barkodFocus] = useState(true);
-  const [barcode, setBarcode] = useState();
+  const [barcode, setBarcode] = useState("");
   const selectedTerminalProducts = terminals.find(
     (terminal) => terminal.id === selectedTerminal
   )?.products;
@@ -64,6 +62,7 @@ export const Pos = () => {
     payment_method: paymentMethod,
     products: [],
   });
+
   useEffect(() => {
     const freshData = async () => {
       if (shortCutsProducts?.products?.length === 0) return;
@@ -145,10 +144,16 @@ export const Pos = () => {
     }
   };
   // Add Product to Basket
-  const AddProductToBasket = (id, quantity) => {
-    // Find the product from the products list
-
-    const product = data.find((product) => product.product_id === id);
+  const findById = async (id) => {
+    try {
+      const res = await axios.get(`${API}/products/${id}`);
+      return res.data;
+    } catch (error) {
+      console.error("Error finding product by ID:", error);
+    }
+  };
+  const AddProductToBasket = async (id, quantity) => {
+    const product = await findById(id);
 
     if (!product) {
       toast.error("Mehsul yoxdur!");
@@ -298,51 +303,49 @@ export const Pos = () => {
       }
 
       setBarcode("");
+      if (barkodInput.current) {
+        barkodInput.current.focus();
+      }
+    }
+  };
+  const getProductsByQuery = async (search) => {
+    try {
+      const res = await axios.get(`${API}/products/search?query=${search}`);
+      if (res.data.length === 0) {
+        toast.error("Mehsul tapılmadı!");
+      }
+      return res.data;
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  useEffect(() => {
+    if (query.length === 0) {
+      setFilteredProducts(data || []);
+    }
+  }, [query, data]);
+
+  const handleInputChange = async (e) => {
+    const value = e.target.value;
+    setQuery(value);
+  };
+
+  const handleKeyDown = async (e) => {
+    if (e.key === "Enter" && query) {
+      e.preventDefault(); // Enter tuşunun varsayılan davranışını engelle
+      const products = await getProductsByQuery(query);
+      if (products) {
+        setFilteredProducts(products);
+        barkodInput.current.focus();
+      } else if (products.length === 0) {
+        toast.error("Mehsul tapılmadı!");
+        setFilteredProducts(data);
+        barkodInput.current.focus();
+      }
+    } else if (e.key === "Enter" && query.length === 0) {
       barkodInput.current.focus();
     }
   };
-
-  const fuse = useMemo(() => {
-    if (!isSuccess || !data) return null; // Return null until data is ready
-    return new Fuse(data, {
-      keys: ["name", "barcode"], // Adjust based on your data structure
-      threshold: 0.3,
-      ignoreCase: false,
-      minMatchCharLength: 2,
-      includeScore: true,
-      shouldSort: true,
-    });
-  }, [data, isSuccess]);
-
-  useMemo(() => {
-    if (isSuccess && data) {
-      setFilteredProducts(data); // Initialize with full dataset
-    }
-  }, [data, isSuccess]);
-
-  const handleInputChange = useCallback(
-    (e) => {
-      const value = e.target.value;
-      setQuery(value);
-
-      if (!fuse || !isSuccess) return; // Skip if fuse or data isn't ready
-
-      const debouncedSearch = debounce((searchQuery) => {
-        if (!searchQuery || searchQuery.length < 2) {
-          setFilteredProducts(data); // Reset to full dataset
-          return;
-        }
-
-        const results = fuse.search(searchQuery, { limit: 50 });
-        setFilteredProducts(results.map((result) => result.item));
-      }, 100);
-
-      debouncedSearch(value);
-
-      return () => debouncedSearch.cancel();
-    },
-    [fuse, data, isSuccess, setFilteredProducts, setQuery]
-  );
 
   useEffect(() => {
     if (barkodFocus) {
@@ -402,8 +405,8 @@ export const Pos = () => {
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.ctrlKey && event.key === "e") {
-        event.preventDefault(); // Tarayıcı varsayılanını engelle
-        searchInput.current?.focus(); // Inputa odaklan
+        event.preventDefault();
+        searchInput.current?.focus();
       } else if (event.key === "F1") {
         event.preventDefault();
         NewTerminal();
@@ -449,24 +452,6 @@ export const Pos = () => {
       )}
       {showReports && <PosReports handleClose={closeReports} />}
 
-      <input
-        type="text"
-        ref={barkodInput}
-        onChange={handleBarcodeChange}
-        onKeyDown={handleBarcodeChange}
-        // className="focus:outline-red-500"
-        value={barcode}
-        style={{
-          position: "absolute",
-          opacity: 0,
-          width: 0,
-          height: 0,
-          padding: 0,
-          border: 0,
-          margin: 0,
-        }}
-      />
-
       <header className="flex justify-between  px-2  items-center">
         <div className="flex gap-2  border-newborder">
           {terminals?.map((terminal) => (
@@ -504,11 +489,31 @@ export const Pos = () => {
             <AddIcon />
           </button>
         </div>
-        <div
-          className="px-10 cursor-pointer"
-          onClick={() => setShowReports(true)}
-        >
-          <button className="cursor-pointer border bg-white p-2  border-newborder rounded-md text-xl">
+
+        <div className="px-10 cursor-pointer flex gap-4 items-center">
+          <input
+            type="text"
+            ref={barkodInput}
+            onChange={handleBarcodeChange}
+            onKeyDown={handleBarcodeChange}
+            value={barcode}
+            className="focus:outline-red-500 rounded-full size-2 focus:bg-red-500  "
+            style={
+              {
+                // position: "absolute",
+                // opacity: 0,
+                // width: 0,
+                // height: 0,
+                // padding: 0,
+                // border: 0,
+                // margin: 0,
+              }
+            }
+          />
+          <button
+            onClick={() => setShowReports(true)}
+            className="cursor-pointer border bg-white p-2  border-newborder rounded-md text-xl"
+          >
             Hesabat
           </button>
         </div>
@@ -517,7 +522,7 @@ export const Pos = () => {
       <div className="flex h-full gap-4 ">
         <div className="min-w-1/2 flex flex-col overflow-hidden border-r border-newborder bg-white">
           {/* Products Table - Fixed with flex-1 to take available space */}
-          <div className="w-full overflow-auto h-[400px]  border-newborder bg-white">
+          <div className="w-full overflow-auto h-[700px]  border-newborder bg-white">
             <table
               className="w-full"
               style={{ borderCollapse: "collapse", tableLayout: "auto" }}
@@ -553,9 +558,7 @@ export const Pos = () => {
                       </div>
                     </td>
                     <td>
-                      <h1 className="text-sm">
-                        {product?.sellPrice.toFixed(2) + " ₼"}
-                      </h1>
+                      <h1 className="text-sm">{product?.sellPrice + " ₼"}</h1>
                     </td>
                     <td>
                       <div className="flex justify-center items-center">
@@ -665,12 +668,7 @@ export const Pos = () => {
                 type="text"
                 placeholder="Məhsul axtar..."
                 ref={searchInput}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    setQuery("");
-                    barkodInput.current?.focus();
-                  }
-                }}
+                onKeyDown={handleKeyDown}
                 value={query}
                 onChange={handleInputChange}
                 className="w-full border h-10 text-2xl px-12 bg-white border-newborder rounded-lg focus:outline-none"
@@ -689,11 +687,11 @@ export const Pos = () => {
                   X
                 </button>
               </div>
-              {query && (
-                <div className="absolute top-12 w-full rounded-lg border-newborder h-128  bg-white z-50 border px-4 py-2">
+              {filteredProducts?.length > 0 && (
+                <div className="absolute top-12 overflow-auto max-h-128 w-full rounded-lg border-newborder  bg-white z-50 border px-4 py-2">
                   <ul className="h-full overflow-auto flex flex-col">
                     {isLoading && "Loading"}
-                    {filteredProducts.map((product) => (
+                    {filteredProducts?.map((product) => (
                       <li
                         className="text-xl cursor-pointer"
                         key={product.product_id}

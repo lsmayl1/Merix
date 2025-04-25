@@ -3,7 +3,10 @@ import React, { useEffect, useRef, useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import { Confirm } from "../Confirm";
 import { useApi } from "../Context/useApiContext";
-export const AddProduct = ({ handleClose }) => {
+import { useMediaQuery } from "react-responsive";
+import { BarcodeReader } from "../BarcodeReader";
+export const AddProduct = ({ handleClose, isEditMode }) => {
+  const isMobile = useMediaQuery({ maxWidth: 768 });
   const {
     PutSuccess,
     form,
@@ -29,27 +32,7 @@ export const AddProduct = ({ handleClose }) => {
     }
   };
   const [showConfirim, setShowConfirm] = useState(false);
-
-  const [isEditMode, setIsEditMode] = useState(false);
-
-  useEffect(() => {
-    // Focus on the name input field when the component mounts
-    if (nameInputRef.current) {
-      nameInputRef.current.focus();
-    }
-    const findProdutcByid = async () => {
-      if (!form.product_id) {
-        return;
-      }
-      try {
-        await FetchById(form.product_id);
-        setIsEditMode(true);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    findProdutcByid();
-  }, []);
+  const [showBarcode, setShowBarcode] = useState(false);
 
   // Handle input changes
   const handleInputChange = (field) => (e) => {
@@ -96,6 +79,14 @@ export const AddProduct = ({ handleClose }) => {
     }
   };
 
+  // const handleCloseReader = () => {
+  //   setShowBarcode(false);
+  // };
+  // const handleBarcodeReader = (barcode) => {
+  //   setForm({ ...form, barcode });
+  //   setShowBarcode(false);
+  // };
+
   return (
     <div className="absolute inset-0 backdrop-blur-lg   z-50 flex h-screen w-full drop-shadow-md">
       <ToastContainer />
@@ -105,10 +96,25 @@ export const AddProduct = ({ handleClose }) => {
           handleOption={handleConfirm}
         />
       )}
-      <div className="flex w-full justify-center py-16">
-        <div className="flex h-fit w-1/2 flex-col gap-32 rounded-xl border border-newborder bg-white px-4 py-6">
+      {/* {showBarcode && (
+        <BarcodeReader
+          handleCloseReader={handleCloseReader}
+          handleBarcodeReader={handleBarcodeReader}
+        />
+      )} */}
+      {/* Barcode Reader Component */}
+      <div
+        className={`flex w-full justify-center ${
+          isMobile ? "py-2 px-2 h-full" : "py-16"
+        }`}
+      >
+        <div
+          className={`flex  ${
+            isMobile ? "w-full  h-[90%] justify-between" : "w-1/2 gap-32 h-fit"
+          } flex-col  rounded-xl border border-newborder bg-white px-4 py-6`}
+        >
           {/* Form Fields */}
-          <div className="flex flex-col gap-12">
+          <div className={`flex flex-col  ${isMobile ? "gap-16" : "gap-12"}`}>
             {/* Product Name */}
             <div className="w-full flex justify-between items-end gap-16">
               <div className="flex flex-col w-full">
@@ -165,6 +171,14 @@ export const AddProduct = ({ handleClose }) => {
                 >
                   {">>>"}
                 </button>
+                {isMobile && (
+                  <button
+                    onClick={() => setShowBarcode(true)}
+                    className="px-2 truncate rounded border border-newborder"
+                  >
+                    Barkod oxu
+                  </button>
+                )}
               </div>
             </div>
 

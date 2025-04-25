@@ -1,13 +1,6 @@
-import React, {
-  useEffect,
-  useState,
-  useRef,
-  useCallback,
-  useMemo,
-} from "react";
-import debounce from "lodash/debounce";
+import React, { useEffect, useState, useRef, useCallback } from "react";
+
 import { SearchIcon } from "../assets/SearchIcon";
-import Fuse from "fuse.js";
 import { AddProduct } from "../components/Products/AddProduct";
 import { ToastContainer, toast } from "react-toastify";
 import { useApi } from "../components/Context/useApiContext";
@@ -15,7 +8,18 @@ import { LabelPrint } from "../components/LabelPrinting/LabelPrint";
 import { FilterIcon } from "../assets/filterIcon";
 import { API } from "../components/Context/ApiContex";
 import axios from "axios";
+import { useMediaQuery } from "react-responsive";
+import { BarcodeReader } from "../components/BarcodeReader";
 export const Products = () => {
+  const tableHeaders = [
+    "ID",
+    "MƏHSUL",
+    "BARKOD",
+    "VAHİD",
+    "ALIŞ QİYMƏTİ",
+    "SATIŞ QİYMƏTİ",
+    "STOK",
+  ];
   const {
     form,
     setForm,
@@ -25,7 +29,7 @@ export const Products = () => {
     PostError,
     PostSuccess,
   } = useApi();
-
+  const isMobile = useMediaQuery({ maxWidth: 768 });
   const [data, setData] = useState([]);
   const [page, setPage] = useState(1);
   const [barcode, setBarcode] = useState("");
@@ -39,14 +43,15 @@ export const Products = () => {
   const [filteredProducts, setFilteredProduct] = useState([]);
   const [query, setQuery] = useState("");
   const barkodInput = useRef(null);
-
+  const [showBarcodeReader, setShowBarcodeReader] = useState(false);
+  const [editableProduct, setEditableProduct] = useState(false);
   useEffect(() => {
     if (barkodInput.current) {
       barkodInput.current.focus();
     }
     const handleClick = (event) => {
       // Eğer tıklanan element bir input veya buton değilse, barkod inputuna odaklan
-      if (!event.target.matches("input, button")) {
+      if (!event.target.matches("input, button, li")) {
         if (barkodInput.current) {
           barkodInput.current.focus();
         }
@@ -148,33 +153,6 @@ export const Products = () => {
     }
   }, [data]);
 
-  const filterData = useCallback(() => {
-    let newData;
-    let weight;
-    switch (selectedFilter) {
-      case "name":
-        newData = [...data].sort((a, b) => a.name.trim().localeCompare(b.name));
-        break;
-      case "kg":
-      case "piece":
-        weight = data.filter((item) => item.unit === selectedFilter);
-        newData = [...weight].sort((a, b) =>
-          a.name.trim().localeCompare(b.name)
-        );
-        break;
-      case "id":
-        newData = [...data].sort((a, b) => b.product_id - a.product_id);
-        break;
-      case "stock":
-        newData = [...data].sort((a, b) => b.stock - a.stock);
-        break;
-      default:
-        newData = data;
-    }
-
-    setFilteredProduct(newData);
-  }, [selectedFilter, data]);
-
   const selectProduct = (product) => {
     if (selectedProduct?.product_id === product.product_id) {
       setSelectedProduct(null);
@@ -183,7 +161,9 @@ export const Products = () => {
     }
   };
 
-  const handleCloseNewProducts = async () => {
+  const handleCloseNewProducts = () => {
+    setShowNewProduct(false);
+    setSelectedProduct(null);
     setBarcode("");
     setForm({
       name: "",
@@ -193,7 +173,6 @@ export const Products = () => {
       sellPrice: 0.0,
       unit: "piece",
     });
-    setShowNewProduct(false);
   };
 
   const handleBarcodeChange = useCallback(async (e) => {
@@ -207,7 +186,21 @@ export const Products = () => {
       if (e.key === "Enter" && value) {
         try {
           const product = await FetchById(value);
-          setForm(product);
+          if (!product) {
+            setForm((prev) => ({
+              ...prev,
+              barcode: value,
+              // Diğer alanları resetle
+              name: "",
+              category: "mehsul",
+              buyPrice: 0.0,
+            }));
+            setEditableProduct(false);
+          } else {
+            setSelectedProduct(product);
+            setForm(product);
+            setEditableProduct(true);
+          }
           setShowNewProduct(true);
         } catch (error) {
           console.log(error);
@@ -244,22 +237,46 @@ export const Products = () => {
     setshowLabelPrinter(false);
   };
 
-  const handleFilterSelection = (option) => {
-    if (selectedFilter === option) {
-      setSelectedFilter(null);
-    } else {
-      setSelectedFilter(option);
+  const editProduct = () => {
+    setForm(selectedProduct);
+    setShowNewProduct(true);
+  };
+
+  const handleCloseBarcodeReader = () => {
+    setShowBarcodeReader(false);
+    barkodInput?.current?.focus();
+  };
+
+  const handleBarcodeReader = async () => {
+    setShowBarcodeReader(false);
+    try {
+      const data = await axios.get(`${API}/products/${barcode}`);
+      const product = data.data;
+      setSelectedProduct(product);
+      setForm(product);
+      setEditableProduct(true);
+      setShowNewProduct(true);
+    } catch (error) {
+      console.log(error);
+      setForm((prev) => ({
+        ...prev,
+        barcode: barcode,
+        name: "",
+        category: "mehsul",
+        buyPrice: 0.0,
+        sellPrice: 0.0,
+        unit: "piece",
+      }));
+      setShowNewProduct(true);
+      setEditableProduct(false);
     }
   };
 
-  const handleAddProduct = async () => {
-    try {
-      await NewProduct(form);
-    } catch (error) {
-      toast.error("Server Xetasi");
-      console.log(error);
+  useEffect(() => {
+    if (barcode && barcode.trim().length > 0) {
+      handleBarcodeReader();
     }
-  };
+  }, [barcode]);
 
   return (
     <div
@@ -269,7 +286,13 @@ export const Products = () => {
       {showNewProduct && (
         <AddProduct
           handleClose={handleCloseNewProducts}
-          handleAddProduct={handleAddProduct}
+          isEditMode={editableProduct}
+        />
+      )}
+      {showBarcodeReader && (
+        <BarcodeReader
+          handleCloseReader={handleCloseBarcodeReader}
+          setBarcode={setBarcode}
         />
       )}
       {showLabelPrinter && (
@@ -278,22 +301,25 @@ export const Products = () => {
           handleClose={handleCloseLabelPrinting}
         />
       )}
-      <input
-        type="text"
-        ref={barkodInput}
-        onChange={handleBarcodeChange}
-        onKeyPress={handleBarcodeChange}
-        value={barcode}
-        style={{
-          position: "absolute",
-          opacity: 0,
-          width: 0,
-          height: 0,
-          padding: 0,
-          border: 0,
-          margin: 0,
-        }}
-      />
+      {!isMobile && (
+        <input
+          type="text"
+          ref={barkodInput}
+          onChange={handleBarcodeChange}
+          onKeyPress={handleBarcodeChange}
+          value={barcode}
+          style={{
+            position: "absolute",
+            opacity: 0,
+            width: 0,
+            height: 0,
+            padding: 0,
+            border: 0,
+            margin: 0,
+          }}
+        />
+      )}
+
       <div className="relative   w-full gap-16 flex items-center max-lg:flex-col-reverse max-lg:gap-4 max-lg:items-end ">
         <div className="relative flex-1 flex items-center h-20 w-full">
           <input
@@ -308,151 +334,216 @@ export const Products = () => {
                 setFilteredProduct(data);
               }
             }}
-            className="w-full border h-10 text-2xl px-12 border-newborder rounded-lg focus:outline-none max-lg:w-full"
+            className="w-full border h-10 text-2xl px-12 max-lg:h-8 max-lg:text-sm border-newborder rounded-lg focus:outline-none max-lg:w-full"
           />
-          <SearchIcon className={"absolute ml-2"} />
-          <div
-            onClick={() => {
-              setQuery("");
-              barkodInput.current.focus();
-            }}
-            className="absolute w-10 right-0 items-center justify-center flex px-1 py-3 cursor-pointer rounded-full "
-          >
-            <button className="size-10 cursor-pointer">X</button>
+          <SearchIcon className={"absolute ml-2 max-lg:size-5"} />
+          <div className="absolute w-20 right-0 items-center justify-center flex px-1 py-3 cursor-pointer rounded-full  ">
+            {isMobile && (
+              <button
+                onClick={() => setShowBarcodeReader(true)}
+                className="truncate border"
+              >
+                Barkod oxu
+              </button>
+            )}
+            <button
+              onClick={() => {
+                setQuery("");
+                barkodInput.current.focus();
+              }}
+              className="size-10 cursor-pointer"
+            >
+              X
+            </button>
           </div>
         </div>
         <div className="flex gap-4 max-lg:justify-end  max-lg:items-end">
           <button
             onClick={handleShowLabelPrinter}
-            className="py-2 px-4 cursor-pointer border hover:bg-gray-300 border-newborder rounded"
+            className="py-2 px-4 max-lg:py-1 max-lg:px-2 max-lg:text-xs cursor-pointer border hover:bg-gray-300 border-newborder rounded"
           >
             Etiket Cap
           </button>
 
           <button
             onClick={() => setShowNewProduct(true)}
-            className="py-2 px-4 border border-newborder rounded  hover:bg-gray-300 cursor-pointer"
+            className="py-2 px-4 max-lg:py-1 max-lg:px-2 max-lg:text-xs border border-newborder rounded  hover:bg-gray-300 cursor-pointer"
           >
             Məhsul Əlavə Et
           </button>
+          {isMobile && selectedProduct && (
+            <button
+              onClick={editProduct}
+              className="py-2 px-4 max-lg:py-1 max-lg:px-2 max-lg:text-xs border border-newborder rounded  hover:bg-gray-300 cursor-pointer"
+            >
+              Duzelis Et
+            </button>
+          )}
         </div>
       </div>
-      <div className=" w-full flex justify-center rounded-xs border border-[#ADA3A3]   bg-white  overflow-auto max-h-[80%]">
-        <table className="w-full ">
-          <colgroup>
-            <col className="max-xs:w-1/8 "></col>
-            <col className="max-xs:w-1/12 "></col>
-            <col className="max-xs:w-1/8 "></col>
-            <col className="max-xs:w-1/8 "></col>
-
-            <col className="max-xs:w-1/8 "></col>
-            <col className="max-xs:w-1/8 "></col>
-            <col className="max-xs:w-2/8 "></col>
-
-          </colgroup>
-          <thead className="border border-newborder">
-            <tr className=" text-center h-10 bg-white truncate max-md:text-[10px] max-sm:text-[8px] max-xs:text-fxs ">
-              <td className="max-xs:hidden"></td>
-              <td className=" border-l border-newborder ">ID</td>
-              <td className="border  border-newborder">MƏHSUL</td>
-              <td className="border border-newborder">BARKOD</td>
-              <td className="border-l border-newborder">VAHİD</td>
-              <td className="border-l border-newborder">ALIŞ QİYMƏTİ</td>
-              <td className="border-l border-newborder">SATIŞ QİYMƏTİ</td>
-              <td className="border-l border-newborder ">STOK</td>
-            </tr>
-          </thead>
-          <tbody className="">
-            {!data && (
-              <tr>
-                <td
-                  colSpan={8}
-                  className="text-3xl border-newborder text-center py-14"
-                >
-                  Yuklenir{" "}
-                </td>
-              </tr>
-            )}
+      {isMobile ? (
+        <div className="flex flex-col gap-2 w-full overflow-auto h-full max-h-[80%]">
+          <ul className="flex gap-2 w-full  max-lg:gap-1  flex-col overflow-auto h-full pr-2">
             {filteredProducts?.map((product) => (
-              <tr
+              <li
                 key={product.product_id}
-                className=" border-b border-newborder hover:bg-gray-300 "
+                onClick={() => selectProduct(product)}
+                className={`flex flex-col bg-white border  rounded-lg px-4 py-4  w-full ${
+                  selectedProduct?.product_id === product.product_id
+                    ? " border-blue-600"
+                    : "border-newborder"
+                }`}
               >
-                <td className="max-xs:hidden">
-                  <div className="flex w-full items-center justify-center ">
-                    <div
-                      onClick={() => selectProduct(product)}
-                      className={`border size-4 max-lg:size-3 max-sm:size-2 max-md:size-3 rounded border-newborder ${
-                        selectedProduct?.product_id === product?.product_id
-                          ? "bg-blue-600"
-                          : ""
-                      } `}
-                    ></div>
+                <div className="flex justify-between items-center border-b border-gray-100 pb-2">
+                  <span className="text-xs font-medium"> {product.name}</span>
+                  <span className="text-gray-400 text-xs">
+                    ID : {product.product_id}
+                  </span>
+                </div>
+                <div className="flex gap-2 items-center justify-between border-b border-gray-100 py-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-400">ALIŞ QİYMƏTİ</span>
+                    <span> {product?.buyPrice?.toFixed(2) || "0.00"}</span>
                   </div>
-                </td>
-                <td className=" border-l border-b text-center border-newborder max-xs:px-1">
-                  <span className="max-lg:text-flg max-sm:text-fsm max-xs:text-fxs ">
-                    {" "}
-                    {product.product_id}
-                  </span>
-                </td>
-                <td
-                  onDoubleClick={() => handleProductById(product)}
-                  className="px-4 border-l border-b  border-newborder cursor-pointer max-sm:px-2 max-xs:px-1"
-                >
-                  <span className=" max-lg:text-flg max-md:text-[10px] truncate max-sm:text-fsm max-xs:text-fxs">
-                    {" "}
-                    {product.name}
-                  </span>
-                </td>
-                <td className="border-l border-b  border-newborder px-4 max-sm:px-2 max-xs:px-1 ">
-                  <span className=" max-lg:text-flg max-md:text-xs max-sm:text-fsm max-xs:text-fxs">
-                    {product.barcode}
-                  </span>
-                </td>
-                <td className="border-l border-b  border-newborder px-4 max-sm:px-2 max-xs:px-1 text-center max-lg:text-flg  max-md:text-xs max-sm:text-fsm max-xs:text-fxs">
-                  {product.unit === "piece" ? "əd" : "kg"}
-                </td>
-                <td className="text-center border-l border-b  border-newborder ">
-                  <div className="w-full flex items-center">
-                    <span
-                      className={`${
-                        product.buyPrice === 0 ? "text-red-400" : "text-black"
-                      } w-7/12 text-end tracking-widest font-medium max-lg:text-flg max-md:text-xs max-sm:text-fsm max-sm:w-8/12 max-xs:text-fxs`}
-                    >
-                      {product?.buyPrice?.toFixed(2) || "0.00"}
-                    </span>{" "}
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-400">SATIŞ QİYMƏTİ</span>
+                    <span> {product?.sellPrice?.toFixed(2) || "0.00"}</span>
                   </div>
-                </td>
-                <td className="text-center border-l border-b  border-newborder">
-                  <div className="w-full flex items-center">
-                    <span className="w-7/12 text-end tracking-widest max-lg:text-flg font-medium max-md:text-xs max-sm:text-fsm max-sm:w-8/12 max-xs:text-fxs">
-                      {product?.sellPrice?.toFixed(2) || "0.00"}
-                    </span>{" "}
+                </div>
+                <div className="flex gap-2 items-center justify-between pt-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-400">BARKOD</span>
+                    <span className="text-xs font-medium">
+                      {product?.barcode}
+                    </span>
                   </div>
-                </td>
-                <td className="text-center border-l border-b  border-newborder">
-                  <span
-                    className={` max-lg:text-flg max-md:text-xs max-sm:text-fsm max-xs:text-fxs ${
-                      product.stock < 0 ? "text-red-400" : ""
-                    }`}
-                  >
-                    {product?.stock}
-                  </span>
-                </td>
-              </tr>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-400">STOK</span>
+                    <span className="text-xs font-medium">
+                      {product?.stock}
+                    </span>
+                  </div>
+                </div>
+              </li>
             ))}
-          </tbody>
-        </table>
-      </div>
-
+          </ul>
+        </div>
+      ) : (
+        <div className=" w-full flex justify-center rounded-xs border border-[#ADA3A3]   bg-white  overflow-auto max-h-[80%]">
+          <table className="w-full ">
+            <colgroup>
+              <col className="max-xs:w-1/8 "></col>
+              <col className="max-xs:w-1/8 "></col>
+              <col className="max-xs:w-1/8 "></col>
+              <col className="max-xs:w-1/8 "></col>
+              <col className="max-xs:w-1/8 "></col>
+              <col className="max-xs:w-1/8 "></col>
+              <col className="max-xs:w-2"></col>
+            </colgroup>
+            <thead className="border border-newborder">
+              <tr className=" text-center h-10 bg-white truncate max-md:text-[10px] max-sm:text-[8px] max-xs:text-fxs ">
+                <td className="max-xs:hidden"></td>
+                {tableHeaders.map((header, index) => (
+                  <td
+                    key={index}
+                    className={`border-l border-b text-center border-newborder max-xs:px-2 max-xs:text-fxs`}
+                  >
+                    {header}
+                  </td>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="">
+              {!data && (
+                <tr>
+                  <td
+                    colSpan={8}
+                    className="text-3xl border-newborder text-center py-14"
+                  >
+                    Yuklenir{" "}
+                  </td>
+                </tr>
+              )}
+              {filteredProducts?.map((product) => (
+                <tr
+                  key={product.product_id}
+                  className=" border-b border-newborder hover:bg-gray-300 "
+                >
+                  <td className="max-xs:hidden">
+                    <div className="flex w-full items-center justify-center ">
+                      <div
+                        onClick={() => selectProduct(product)}
+                        className={`border size-4 max-lg:size-3 max-sm:size-2 max-md:size-3 rounded border-newborder ${
+                          selectedProduct?.product_id === product?.product_id
+                            ? "bg-blue-600"
+                            : ""
+                        } `}
+                      ></div>
+                    </div>
+                  </td>
+                  <td className=" border-l border-b text-center border-newborder max-xs:px-1">
+                    <span className="max-lg:text-flg max-sm:text-fsm max-xs:text-fxs ">
+                      {" "}
+                      {product.product_id}
+                    </span>
+                  </td>
+                  <td
+                    onDoubleClick={() => handleProductById(product)}
+                    className="px-4 border-l border-b  border-newborder cursor-pointer max-sm:px-2 max-xs:px-1"
+                  >
+                    <span className=" max-lg:text-flg max-md:text-[10px] truncate max-sm:text-fsm max-xs:text-fxs">
+                      {" "}
+                      {product.name}
+                    </span>
+                  </td>
+                  <td className="border-l border-b  border-newborder px-4 max-sm:px-2 max-xs:px-1 ">
+                    <span className=" max-lg:text-flg max-md:text-xs max-sm:text-fsm max-xs:text-fxs">
+                      {product.barcode}
+                    </span>
+                  </td>
+                  <td className="border-l border-b  border-newborder px-4 max-sm:px-2 max-xs:px-1 text-center max-lg:text-flg  max-md:text-xs max-sm:text-fsm max-xs:text-fxs">
+                    {product.unit === "piece" ? "əd" : "kg"}
+                  </td>
+                  <td className="text-center border-l border-b  border-newborder ">
+                    <div className="w-full flex items-center">
+                      <span
+                        className={`${
+                          product.buyPrice === 0 ? "text-red-400" : "text-black"
+                        } w-7/12 text-end tracking-widest font-medium max-lg:text-flg max-md:text-xs max-sm:text-fsm max-sm:w-8/12 max-xs:text-fxs`}
+                      >
+                        {product?.buyPrice?.toFixed(2) || "0.00"}
+                      </span>{" "}
+                    </div>
+                  </td>
+                  <td className="text-center border-l border-b  border-newborder">
+                    <div className="w-full flex items-center">
+                      <span className="w-7/12 text-end tracking-widest max-lg:text-flg font-medium max-md:text-xs max-sm:text-fsm max-sm:w-8/12 max-xs:text-fxs">
+                        {product?.sellPrice?.toFixed(2) || "0.00"}
+                      </span>{" "}
+                    </div>
+                  </td>
+                  <td className="text-center border-l border-b  border-newborder">
+                    <span
+                      className={` max-lg:text-flg max-md:text-xs max-sm:text-fsm max-xs:text-fxs ${
+                        product.stock < 0 ? "text-red-400" : ""
+                      }`}
+                    >
+                      {product?.stock}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
       {query === "" && (
         <div className="flex pb-4 items-center justify-center ">
           <button
             onClick={() => setPage((prev) => prev + 1)}
-            className="border cursor-pointer px-4 py-2 rounded bg-white border-newborder"
+            className="border cursor-pointer max-lg:px-2 max-lg:py-0  px-4 py-2 rounded bg-white border-newborder"
           >
-            <span>Daha cox</span>
+            <span className="max-lg:text-xs">Daha cox</span>
           </button>
         </div>
       )}
