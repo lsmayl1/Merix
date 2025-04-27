@@ -122,4 +122,33 @@ router.get("/export-plu", async (req, res) => {
   }
 });
 
+
+router.get('/update-units', async (req, res) => {
+  try {
+    // Önce şartlara uyan ürünleri buluyoruz
+    const products = await Products.findAll({
+      where: {
+        barcode: {
+          [Op.and]: [
+            { [Op.like]: '22%' },
+            sequelize.where(sequelize.fn('LENGTH', sequelize.col('barcode')), 13)
+          ]
+        }
+      }
+    });
+
+    // Sonra her birini güncelliyoruz
+    for (const product of products) {
+      await product.update({ unit: 'kg' });
+    }
+
+    res.json({ message: 'Units updated successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'An error occurred' });
+  }
+
+module.exports = router;
+
+
 module.exports = router;
