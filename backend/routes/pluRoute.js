@@ -147,8 +147,7 @@ router.get('/update-units', async (req, res) => {
     console.error(error);
     res.status(500).json({ error: 'An error occurred' });
   }
-
-module.exports = router;
+})
 
 
 module.exports = router;
