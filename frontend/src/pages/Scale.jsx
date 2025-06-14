@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import axios from "axios";
 import Fuse from "fuse.js";
-import { useApi } from "../components/Context/useApiContext";
 import CustomDatePicker from "../components/DatePicker/CustomDatePicker";
 import { ReportsDetails } from "../components/ReportsDetails";
 import { FilterIcon } from "../assets/filterIcon";
@@ -10,7 +9,6 @@ import { SearchIcon } from "../assets/SearchIcon";
 import debounce from "lodash/debounce";
 
 export const Scale = () => {
-  const { API } = useApi();
   const [showFilter, setShowFilter] = useState(false);
   const [data, setData] = useState();
   const [selectedFilter, setSelectedFilter] = useState(null);

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
-import { useApi } from "../../components/Context/useApiContext";
+// import { useApi } from "../../components/Context/useApiContext";
 import CustomDatePicker from "../../components/DatePicker/CustomDatePicker";
 import { ReportsDetails } from "../../components/ReportsDetails";
 import { FilterIcon } from "../../assets/filterIcon";
@@ -280,7 +280,7 @@ export const SalesReports = () => {
                 <th>Toplam Məbləğ</th>
                 <th>Ödəniş növü</th>
                 <th>Qazanc</th>
-                <th style={{ width: "25%" }}>Tarix</th>
+                <th style={{ width: "25%" }}>Tarix</th> 
               </tr>
             </thead>
             <tbody>

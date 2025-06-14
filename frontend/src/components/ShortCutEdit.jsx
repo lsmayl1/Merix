@@ -6,7 +6,6 @@ import { CloseIcon } from "../assets/Close";
 
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useApi } from "./Context/useApiContext";
 
 export const ShortCutEdit = ({ data, isLoading, handleClose }) => {
   const { API } = useApi();

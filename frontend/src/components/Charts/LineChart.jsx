@@ -11,7 +11,6 @@ import {
   Legend,
 } from "chart.js";
 import axios from "axios";
-import { useApi } from "../Context/useApiContext";
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -23,7 +22,6 @@ ChartJS.register(
 );
 
 export const LineChart = () => {
-  const { API } = useApi();
   const [chartData, setData] = useState({});
   const [showDateOptions, setShowDateOptions] = useState(false);
   const [dateOptions, setDateOptions] = useState([
@@ -116,8 +114,10 @@ export const LineChart = () => {
   };
 
   return (
-    <div className=" w-7/12 h-full  relative flex flex-col gap-7 justify-between p-4 border border-newborder 
-     max-md:order-2 rounded-lg max-md:h-1/2 max-md:w-full">
+    <div
+      className=" w-7/12 h-full  relative flex flex-col gap-7 justify-between p-4 border border-newborder 
+     max-md:order-2 rounded-lg max-md:h-1/2 max-md:w-full"
+    >
       <div className="flex justify-between  ">
         <span className="text-xl">Satis grafigi</span>
         <div className="flex gap-4 relative">

@@ -1,5 +1,4 @@
 import React from "react";
-import { useApi } from "../components/Context/useApiContext";
 export const StockList = () => {
   const [data, setData] = React.useState([]);
 

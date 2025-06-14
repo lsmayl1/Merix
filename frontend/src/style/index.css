@@ -1,8 +1,11 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
 @import "tailwindcss";
 
 @theme {
-  --color-customborder: #ada3a3;
-  --color-newborder: #d0c5c5;
+  --color-MaingBg: #f4f6fa;
+  --color-headerBg: #0e0e10;
+  --color-mainBorder: #e6e6e6;
+  --color-mainText: #717171;
   --breakpoint-mm: 375px;
   --breakpoint-xs: 480px;
   --breakpoint-sm: 640px;
@@ -14,6 +17,14 @@
   --text-flg: 0.9rem;
   --text-fsm: 0.6rem;
   --text-fxs: 0.45rem;
+}
+body {
+  font-family: "Inter";
+}
+input,
+button,
+textarea:focus {
+  outline: none;
 }
 
 input[type="number"] {

@@ -10,13 +10,11 @@ import { AddIcon } from "../assets/AddIcon";
 import { SearchIcon } from "../assets/SearchIcon";
 import { Basket } from "../assets/Basket";
 import { Confirm } from "../components/Confirm";
-import { PaymentMethod } from "../components/PaymentMethod";
 import { RecycleBin } from "../assets/recycleBin";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import { ShortCutEdit } from "../components/ShortCutEdit";
 import { PosReports } from "../components/PosReports";
-import { useApi } from "../components/Context/useApiContext";
 import { FilterIcon } from "../assets/filterIcon";
 
 export const Pos = () => {

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { CloseIcon } from "../assets/Close";
 import axios from "axios";
-import { useApi } from "./Context/useApiContext";
 import { FormatDate } from "./utils/DateFunctions";
 export const ReportsDetails = ({ selectedSale, handleClose }) => {
   const { API } = useApi();

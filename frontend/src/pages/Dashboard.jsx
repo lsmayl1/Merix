@@ -1,78 +1,193 @@
 import React, { useEffect, useState } from "react";
-import CustomDatePicker from "../components/DatePicker/CustomDatePicker";
-import axios from "axios";
-import { useApi } from "../components/Context/useApiContext.jsx";
-import { LineChart } from "../components/Charts/LineChart.jsx";
-import { StockList } from "../components/StockList.jsx";
+import { KPI } from "../components/Metric/KPI.jsx";
+import { Table } from "../components/Table/index.jsx";
+
 export const Dashboard = () => {
-  const { API } = useApi();
-  const [dateRange, setDateRange] = useState({});
-  const [reports, setReports] = useState({
-    turnover: 0.0,
-    profit: 0.0,
-    sellCount: 0,
-  });
-
-  const handleDateRange = (range) => {
-    const timeZoneOffset = "+04:00"; // Adjust based on your timezone
-
-    // Convert from and to dates to ISO format with timezone
-    const formattedRange = {
-      from: range.from
-        ? new Date(range.from).toISOString().replace("Z", timeZoneOffset)
-        : null,
-      to: range.to
-        ? new Date(range.to).toISOString().replace("Z", timeZoneOffset)
-        : null,
-    };
-
-    setDateRange(formattedRange);
-  };
-
-  const data = [
-    { name: "Dovrriyə", id: 1, value: reports?.turnover + "  ₼" || 0 },
-    { name: "Mənfəət", id: 2, value: reports?.profit + " ₼" || 0 },
-    { name: "Mənfəət %", id: 3, value: reports?.profit + " %" || 0 },
-    { name: "Satış sayısı", id: 4, value: reports?.sellCount || 0 },
+  const header = [
+    {
+      key: "product",
+      name: "Product",
+    },
+    {
+      key: "barcode",
+      name: "Barcode",
+    },
+    {
+      key: "sold",
+      name: "Sold",
+    },
+    {
+      key: "revenue",
+      name: "Revenue",
+    },
+    {
+      key: "profit",
+      name: "Profit",
+    },
+    {
+      key: "profitMargin",
+      name: "Profit Margin",
+      align: true,
+    },
   ];
 
-  useEffect(() => {
-    if (!dateRange.from) return;
-    const getReport = async () => {
-      try {
-        const res = await axios.post(`${API}/reports`, dateRange);
-        setReports(res.data);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    getReport();
-  }, [dateRange, API]);
+  const stockHeader = [
+    {
+      key: "product",
+      name: "Product",
+    },
+    {
+      key: "barcode",
+      name: "Barcode",
+    },
+    {
+      key: "stock",
+      name: "Stock",
+    },
+  ];
 
+  const data = [
+    {
+      id: 1,
+      barcode: "1234567890123",
+      product: "Product A",
+      sold: 100,
+      revenue: "₼ 1,000",
+      profit: "₼ 200",
+      stock: 4,
+      profitMargin: "20%",
+    },
+    {
+      id: 1,
+      product: "Product A",
+      barcode: "1234567890123",
+      sold: 100,
+      revenue: "₼ 1,000",
+      profit: "₼ 200",
+      stock: 4,
+      profitMargin: "20%",
+    },
+    {
+      id: 2,
+      barcode: "1234567890123",
+      product: "Product B",
+      sold: 150,
+      revenue: "₼ 1,000",
+      profit: "₼ 200",
+      stock: 4,
+      profitMargin: "20%",
+    },
+
+    {
+      id: 3,
+      barcode: "1234567890123",
+      product: "Product C",
+      sold: 200,
+      revenue: "₼ 1,000",
+      profit: "₼ 200",
+      stock: 4,
+      profitMargin: "20%",
+    },
+    {
+      id: 1,
+      barcode: "1234567890123",
+      product: "Product A",
+      sold: 100,
+      revenue: "₼ 1,000",
+      profit: "₼ 200",
+      stock: 4,
+      profitMargin: "20%",
+    },
+    {
+      barcode: "1234567890123",
+      id: 2,
+      product: "Product B",
+      sold: 150,
+      revenue: "₼ 1,000",
+      profit: "₼ 200",
+      stock: 4,
+      profitMargin: "20%",
+    },
+
+    {
+      id: 3,
+      barcode: "1234567890123",
+      product: "Product C",
+      sold: 200,
+      revenue: "₼ 1,000",
+      profit: "₼ 200",
+      stock: 4,
+      profitMargin: "20%",
+    },
+    {
+      id: 1,
+      barcode: "1234567890123",
+      product: "Product A",
+      sold: 100,
+      revenue: "₼ 1,000",
+      profit: "₼ 200",
+      stock: 4,
+      profitMargin: "20%",
+    },
+    {
+      id: 2,
+      barcode: "1234567890123",
+      product: "Product B",
+      sold: 150,
+      revenue: "₼ 1,000",
+      profit: "₼ 200",
+      stock: 4,
+      profitMargin: "20%",
+    },
+
+    {
+      id: 3,
+      barcode: "1234567890123",
+      product: "Product C",
+      sold: 2000,
+      revenue: "₼ 1,000",
+      profit: "₼ 200",
+      stock: 4,
+      profitMargin: "20%",
+    },
+  ];
   return (
-    <div className="w-full h-screen py-2 px-4 flex flex-col">
-      <CustomDatePicker handleDate={handleDateRange} />
-
-      {/* <div className="flex items-center w-full h-1/5">
-        <ul className="flex w-full gap-4 max-lg:gap-2 ">
-          {data?.map((dt) => (
-            <li key={dt.id} className="w-full h-full">
-              <div className="w-full p-4 truncate rounded border border-newborder h-full flex flex-col gap-4">
-                <span className="text-2xl truncate text-gray-400 max-lg:text-xl max-md:text-md max-xs:text-[12px]
-                max-mm:text-[10px]">
-                  {dt.name}
-                </span>
-                <span className="text-2xl max-lg:text-xl max-md:text-md max-xs:text-[14px] max-mm:text-[10px]">
-                  {dt.value}
-                </span>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </div> */}
-      <div className="flex gap-6 w-full h-3/7 max-md:h-full max-md:flex-col">
-        <LineChart />
-        <StockList />
+    <div className="w-full h-full  flex flex-col gap-2 ">
+      <div className="flex items-center gap-2 w-full">
+        <KPI
+          data={[
+            {
+              label: "Total Revenue",
+              value: "₼ 12,345",
+            },
+            {
+              label: "Total Profit",
+              value: "₼ 2,345",
+            },
+            {
+              label: "Total Sales",
+              value: "5,456",
+            },
+            {
+              label: "Total Stock Cost",
+              value: "₼ 10,000",
+            },
+          ]}
+        />
+      </div>
+      <div className="flex gap-2">
+        <div className="flex flex-col gap-4 flex-5 overflow-hidden bg-white rounded-xl p-4 ">
+          <h1 className="text-mainText text-md font-medium">
+            10 Best Selling Products
+          </h1>
+          <Table header={header} data={data} />
+        </div>
+        <div className="flex flex-col gap-4 flex-2  overflow-hidden bg-white rounded-xl p-4 ">
+          <h1 className="text-mainText text-md font-medium">
+            Low Stock Overview
+          </h1>
+          <Table header={stockHeader} data={data} />
+        </div>
       </div>
     </div>
   );

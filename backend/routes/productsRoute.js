@@ -88,7 +88,7 @@ router.get("/", async (req, res) => {
     // Query parametreleri (Varsayılan: page=1, limit=20)
     let { page, limit } = req.query;
     page = parseInt(page) || 1;
-    limit = parseInt(limit) || 20;
+    limit = parseInt(limit) || 50;
     const offset = (page - 1) * limit;
 
     // Veriyi getir (SQL seviyesinde sıralama yaparak hızlandır)
@@ -454,32 +454,29 @@ router.get("/stocks/data", async (req, res) => {
   }
 });
 
-
-
-router.get('/plu/update-units', async (req, res) => {
+router.get("/plu/update-units", async (req, res) => {
   try {
     // Doğrudan SQL gibi toplu update yapalım
     await Products.update(
-      { unit: 'kg' }, // Değişiklik
+      { unit: "kg" }, // Değişiklik
       {
         where: {
           [Op.and]: [
-            { barcode: { [Op.like]: '22%' } },
-            sequelize.where(sequelize.fn('length', sequelize.col('barcode')), 13)
-          ]
-        }
+            { barcode: { [Op.like]: "22%" } },
+            sequelize.where(
+              sequelize.fn("length", sequelize.col("barcode")),
+              13
+            ),
+          ],
+        },
       }
     );
 
-    res.json({ message: 'Products updated successfully' });
+    res.json({ message: "Products updated successfully" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'An error occurred' });
+    res.status(500).json({ error: "An error occurred" });
   }
 });
-
-
-
-
 
 module.exports = router;
