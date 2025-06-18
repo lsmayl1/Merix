@@ -161,6 +161,11 @@ router.get("/:id", async (req, res) => {
     }
 
     if (product) {
+      const productData = product.get({ plain: true });
+      productData.buyPrice = parseFloat(productData.buyPrice);
+      productData.sellPrice = parseFloat(productData.sellPrice);
+      res.json(productData);
+      return;
       res.json(product);
     } else {
       res.status(404).json({ error: "Product not found by ID or barcode" });
@@ -183,8 +188,10 @@ router.post("/bulk", async (req, res) => {
     const barcodes = [];
 
     identifiers.forEach((id) => {
+      // Hem ID hem de barcode olarak arama yapabilmek için her ikisini de ekle
       if (!isNaN(id)) {
         numericIds.push(Number(id));
+        barcodes.push(id.toString());
       } else {
         barcodes.push(id);
       }
@@ -199,9 +206,15 @@ router.post("/bulk", async (req, res) => {
         ],
       },
     });
-
     if (products.length > 0) {
-      res.json(products);
+      const modifiedData = products.map((data) => {
+        const plain = data.toJSON();
+        return {
+          ...plain,
+          sellPrice: parseFloat(plain.sellPrice),
+        };
+      });
+      res.json(modifiedData);
     } else {
       res
         .status(404)

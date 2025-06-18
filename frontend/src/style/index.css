@@ -27,6 +27,14 @@ textarea:focus {
   outline: none;
 }
 
+button {
+  cursor: pointer;
+}
+
+tr {
+  cursor: pointer;
+}
+
 input[type="number"] {
   -moz-appearance: textfield;
 }

@@ -14,10 +14,10 @@ const links = [
     icon: <Reports />,
     path: "reports",
     category: [
-      { name: "Sale Report", path: "satis-hesabati" },
+      { name: "Sale Report", path: "reports/sale" },
       {
         name: "Products Sold Report",
-        path: "satilmis-mehsul-hesabati",
+        path: "reports/products",
       },
     ],
   },
@@ -66,7 +66,7 @@ export const Sidebar = (prop) => {
                 {link.category.map((subLink, subIndex) => (
                   <NavLink
                     key={subIndex}
-                    to={`${link.path}/${subLink.path}`}
+                    to={subLink.path}
                     className={({ isActive }) =>
                       `flex items-center gap-4 py-2 ${
                         isActive

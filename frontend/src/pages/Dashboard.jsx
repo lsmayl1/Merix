@@ -1,49 +1,69 @@
 import React, { useEffect, useState } from "react";
 import { KPI } from "../components/Metric/KPI.jsx";
 import { Table } from "../components/Table/index.jsx";
+import { createColumnHelper } from "@tanstack/react-table";
 
 export const Dashboard = () => {
-  const header = [
-    {
-      key: "product",
-      name: "Product",
-    },
-    {
-      key: "barcode",
-      name: "Barcode",
-    },
-    {
-      key: "sold",
-      name: "Sold",
-    },
-    {
-      key: "revenue",
-      name: "Revenue",
-    },
-    {
-      key: "profit",
-      name: "Profit",
-    },
-    {
-      key: "profitMargin",
-      name: "Profit Margin",
-      align: true,
-    },
+  const columnHelper = createColumnHelper();
+  const ProductsColumn = [
+    columnHelper.accessor("product", {
+      header: "Product",
+      cell: (info) => info.getValue(),
+      headerClassName: "text-start bg-gray-100 rounded-s-lg",
+      cellClassName: "text-start ",
+    }),
+
+    columnHelper.accessor("barcode", {
+      header: "Barcode",
+      cell: (info) => info.getValue(),
+      headerClassName: "text-start bg-gray-100",
+      cellClassName: "text-start",
+    }),
+    columnHelper.accessor("sold", {
+      header: "Sold",
+      cell: (info) => info.getValue(),
+      headerClassName: "text-center bg-gray-100",
+      cellClassName: "text-center",
+    }),
+    columnHelper.accessor("revenue", {
+      header: "Revenue",
+      cell: (info) => info.getValue(),
+      headerClassName: "text-start bg-gray-100",
+      cellClassName: "text-start",
+    }),
+    columnHelper.accessor("profit", {
+      header: "profit",
+      cell: (info) => info.getValue(),
+      headerClassName: "text-start bg-gray-100",
+      cellClassName: "text-start",
+    }),
+    columnHelper.accessor("profitMargin", {
+      header: "Profit Margin",
+      cell: (info) => info.getValue(),
+      headerClassName: "text-center bg-gray-100 rounded-e-lg",
+      cellClassName: "text-center",
+    }),
   ];
 
-  const stockHeader = [
-    {
-      key: "product",
-      name: "Product",
-    },
-    {
-      key: "barcode",
-      name: "Barcode",
-    },
-    {
-      key: "stock",
-      name: "Stock",
-    },
+  const stockColumn = [
+    columnHelper.accessor("product", {
+      header: "Product",
+      headerClassName: "text-start bg-gray-100 rounded-s-lg",
+      cellClassName: "text-start",
+      cell: (info) => info.getValue(),
+    }),
+    columnHelper.accessor("barcode", {
+      header: "Barcode",
+      headerClassName: "text-start bg-gray-100 ",
+      cellClassName: "text-start",
+      cell: (info) => info.getValue(),
+    }),
+    columnHelper.accessor("stock", {
+      header: "Stock",
+      headerClassName: "text-center bg-gray-100 rounded-e-lg",
+      cellClassName: "text-center",
+      cell: (info) => info.getValue(),
+    }),
   ];
 
   const data = [
@@ -180,13 +200,14 @@ export const Dashboard = () => {
           <h1 className="text-mainText text-md font-medium">
             10 Best Selling Products
           </h1>
-          <Table header={header} data={data} />
+          <Table columns={ProductsColumn} data={data} />
         </div>
         <div className="flex flex-col gap-4 flex-2  overflow-hidden bg-white rounded-xl p-4 ">
           <h1 className="text-mainText text-md font-medium">
             Low Stock Overview
           </h1>
-          <Table header={stockHeader} data={data} />
+          {/* <Table header={stockHeader} data={data} /> */}
+          <Table columns={stockColumn} data={data} />
         </div>
       </div>
     </div>

@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { Table } from "../components/Table";
 import {
   useDeleteProductByIdMutation,
   useGetProductByIdQuery,
@@ -16,66 +15,89 @@ import { SearchIcon } from "../assets/SearchIcon";
 import { Filters } from "../assets/Filters";
 import { Plus } from "../assets/Plus";
 import { FiltersModal } from "../components/Filters/FiltersModal";
+import { Table } from "../components/Table";
+import { createColumnHelper } from "@tanstack/react-table";
 
 export const Products = () => {
-  const header = [
-    { key: "product_id", name: "ID" },
-    { key: "name", name: "Product" },
-    { key: "barcode", name: "Barcode" },
-    {
-      key: "unit",
-      name: "Unit",
-      render: (value) => <span>{value === "piece" ? "eded" : value} </span>,
-    },
-    {
-      key: "buyPrice",
-      name: "Buy Price",
-      // render: (value) => (
-      //   <div className="flex items-center justify-center w-1/2 gap-2">
-      //     <span>{value} </span>₼
-      //   </div>
-      // ),
-    },
-    {
-      key: "sellPrice",
-      name: "Sell Price",
-      // render: (value) => (
-      //   <div className="flex items-center justify-center w-1/2 gap-2">
-      //     <span>{value} </span>₼
-      //   </div>
-      // ),
-    },
-    {
-      key: "stock",
-      name: "Stok",
-      render: (value) => (
-        <div className="flex items-center justify-center w-1/2 gap-2">
-          <span>{value} </span>
+  const columnHelper = createColumnHelper();
+  const columns = [
+    columnHelper.accessor("product_id", {
+      header: "ID",
+      headerClassName: "text-center rounded-s-lg bg-gray-100",
+      cellClassName: "text-center",
+    }),
+    columnHelper.accessor("name", {
+      header: "Product",
+      headerClassName: "text-start bg-gray-100",
+      cellClassName: "text-start",
+    }),
+    columnHelper.accessor("barcode", {
+      header: "Barcode",
+      headerClassName: "text-start bg-gray-100",
+      cellClassName: "text-start",
+    }),
+    columnHelper.accessor("unit", {
+      header: "Unit",
+      cell: (info) => (
+        <span>{info.getValue() === "piece" ? "eded" : info.getValue()}</span>
+      ),
+      headerClassName: "text-center bg-gray-100",
+      cellClassName: "text-center",
+    }),
+    columnHelper.accessor("buyPrice", {
+      header: "Buy Price",
+      cell: (info) => (
+        <div className="flex items-center justify-center gap-2">
+          <span>{info.getValue().toFixed(2)}</span>₼
         </div>
       ),
-    },
-    {
-      key: "action",
-      name: "Edit / Delete",
-      render: (value, row) => (
-        <div className="flex  justify-end w-1/2 gap-2 ">
+      headerClassName: "text-center bg-gray-100",
+      cellClassName: "text-center",
+    }),
+    columnHelper.accessor("sellPrice", {
+      header: "Sell Price",
+      cell: (info) => (
+        <div className="flex items-center justify-center gap-2">
+          <span>{info.getValue().toFixed(2)}</span>₼
+        </div>
+      ),
+      headerClassName: "text-center bg-gray-100",
+      cellClassName: "text-center",
+    }),
+    columnHelper.accessor("stock", {
+      header: "Stok",
+      cell: (info) => (
+        <div className="flex items-center justify-center gap-2">
+          <span>{info.getValue()}</span>
+        </div>
+      ),
+      headerClassName: "text-center bg-gray-100",
+      cellClassName: "text-center",
+    }),
+    columnHelper.accessor("action", {
+      header: "Edit / Delete",
+      headerClassName: "text-center rounded-e-lg bg-gray-100",
+      cellClassName: "text-center",
+      cell: ({ row }) => (
+        <div className="flex justify-center  gap-2">
           <button
             className="cursor-pointer"
-            onClick={() => handleEditProduct(row.product_id)}
+            onClick={() => handleEditProduct(row.original.product_id)}
           >
             <Edit />
           </button>
           <button
             className="cursor-pointer"
-            onClick={() => handleDeleteProduct(row.product_id)}
+            onClick={() => handleDeleteProduct(row.original.product_id)}
           >
-            <TrashBin className={"size-5"} />
+            <TrashBin className="size-5" />
           </button>
         </div>
       ),
-    },
+      enableSorting: false, // Action sütunu için sıralamayı devre dışı bırak
+      enableColumnFilter: false, // Action sütunu için filtrelemeyi devre dışı bırak
+    }),
   ];
-
   const [page, setPage] = useState(1);
   const {
     data,
@@ -83,6 +105,7 @@ export const Products = () => {
     refetch: ProductsRefetch,
   } = useGetProductsQuery(page);
   const [showProductModal, setShowProductModal] = useState(false);
+  const [showFiltersModal, setShowFiltersModal] = useState(false);
   const [query, setQuery] = useState("");
   const [editId, setEditId] = useState(null);
   const [inputValue, setInputValue] = useState("");
@@ -186,7 +209,7 @@ export const Products = () => {
           },
         ]}
       />
-      <div className="flex flex-col gap-2 w-full h-full min-h-0  bg-white rounded-lg p-4 relative">
+      <div className="flex flex-col gap-2 w-full h-full min-h-0  bg-white rounded-lg px-4 py-2 relative">
         {showProductModal && (
           <ProductModal
             handleClose={handleClosePopUp}
@@ -209,13 +232,15 @@ export const Products = () => {
           </div>
           <div className="flex  relative ">
             <button
-              onClick={() => setShowProductModal(true)}
+              onClick={() => setShowFiltersModal(!showFiltersModal)}
               className="border bg-white border-gray-200 rounded-xl text-nowrap px-4 cursor-pointer flex items-center gap-2 py-1"
             >
               <Filters />
               Filters
             </button>
-            <FiltersModal />
+            {showFiltersModal && (
+              <FiltersModal handleClose={setShowFiltersModal} />
+            )}
           </div>
           <button
             onClick={() => setShowProductModal(true)}
@@ -226,19 +251,12 @@ export const Products = () => {
           </button>
         </div>
 
-        <div className="min-h-0  overflow-hidden">
+        <div className="min-h-0 w-full px-2">
           <Table
-            curentPage={page}
-            totalPage={data?.totalPage || 50}
-            header={header}
+            columns={columns}
             data={filteredProducts}
-            loading={isLoading || SearchLoading}
-            handlePage={handlePage}
-            style={{
-              body: "text-black text-[14px] font-medium",
-              header: "text-black text-[16px] font-semibold",
-            }}
-          />{" "}
+            isLoading={isLoading}
+          />
         </div>
       </div>
     </div>

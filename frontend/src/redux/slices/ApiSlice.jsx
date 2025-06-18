@@ -1,14 +1,16 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+// const API = "http://localhost:3000";
+const API = "";
 
 export const ApiSlice = createApi({
   reducerPath: "api",
-  baseQuery: fetchBaseQuery({ baseUrl: "http://localhost:3000" }),
+  baseQuery: fetchBaseQuery({ baseUrl: API }),
   endpoints: (build) => ({
+    // Product
     getProducts: build.query({
       query: (page = 1) => `/products?page=${page}`,
       keepUnusedDataFor: 0,
     }),
-
     getProductById: build.query({
       query: (id) => ({
         url: `/products/${id}`,
@@ -46,6 +48,28 @@ export const ApiSlice = createApi({
         method: "DELETE",
       }),
     }),
+    getBulkProduct: build.mutation({
+      query: (id) => ({
+        url: "products/bulk",
+        method: "POST",
+        body: id,
+      }),
+    }),
+    // Sales
+    postSalePreview: build.mutation({
+      query: (data) => ({
+        url: "sales/preview",
+        method: "POST",
+        body: data,
+      }),
+    }),
+    postSale: build.mutation({
+      query: (sale) => ({
+        url: "sales",
+        method: "POST",
+        body: sale,
+      }),
+    }),
   }),
 });
 
@@ -55,6 +79,11 @@ export const {
   useGetBarcodeMutation,
   useGetProductsByQueryQuery,
   useGetProductByIdQuery,
+  useLazyGetProductByIdQuery,
   usePutProductByIdMutation,
   useDeleteProductByIdMutation,
+  useGetBulkProductMutation,
+
+  usePostSalePreviewMutation,
+  usePostSaleMutation,
 } = ApiSlice;

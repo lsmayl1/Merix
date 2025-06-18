@@ -4,7 +4,7 @@ export const RecycleBin = (prop) => {
   return (
     <svg
       className={prop.className}
-      fill="#000000"
+      fill="currentColor"
       version="1.1"
       id="Capa_1"
       width="800px"

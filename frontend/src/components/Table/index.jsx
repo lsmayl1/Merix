@@ -1,99 +1,134 @@
 import React from "react";
-
+import {
+  useReactTable,
+  getCoreRowModel,
+  flexRender,
+} from "@tanstack/react-table";
 export const Table = ({
-  data,
-  header,
-  loading,
-  handlePage,
-  curentPage,
-  totalPage,
-  style = {
-    body: "",
-    header: "",
-  },
+  data = [],
+  columns = [],
+  isLoading,
+  pagination = true,
 }) => {
+  const table = useReactTable({
+    data,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    initialState: {
+      pagination: {
+        pageSize: 10, // Varsayılan sayfa başına satır sayısı
+      },
+    },
+  });
   return (
-    <div className="w-full flex flex-col  h-full items-center bg-white   rounded-xl  ">
-      <div className="w-full flex flex-col gap-4 pr-2  min-h-0 overflow-y-auto">
-        <table
-          className="min-w-full"
-          style={{
-            borderCollapse: "collapse",
-          }}
-        >
+    <div className="w-full h-full flex flex-col  min-h-0 rounded-lg justify-between   bg-white gap-1">
+      <div className="overflow-y-auto flex flex-col min-h-0 px-2 h-full">
+        <table className="w-full">
           <thead>
-            <tr className="">
-              {header?.map((head, index) => (
-                <th
-                  key={index}
-                  className={
-                    `px-6 text-start bg-[#F7F7F7] text-black  py-4 ${style.header}` +
-                    (index === 0 ? "rounded-tl-xl rounded-bl-xl " : "") +
-                    (index === header.length - 1
-                      ? "rounded-tr-xl rounded-br-xl  "
-                      : "")
-                  }
-                >
-                  {head.name}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {!data ||
-              (data.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={header.length || 1}
-                    className=" text-center py-4 w-full "
-                  >
-                    {loading ? "Yuklenir..." : "Mehsul yoxdur"}
-                  </td>
-                </tr>
-              ))}
-            {data?.map((row, rowIndex) => (
-              <tr
-                key={rowIndex}
-                className={`hover:bg-[#eeeeee] cursor-pointer  border-gray-200 text-black text-[14px] font-semibold ${style.body} `}
-              >
-                {header?.map((col, index) => (
-                  <td
-                    key={index}
-                    className={`px-6 py-2 text-nowrap   ${
-                      index === 0 ? "rounded-tl-xl rounded-bl-xl" : ""
-                    } ${
-                      index === header.length - 1
-                        ? "rounded-tr-xl rounded-br-xl"
-                        : ""
+            {table?.getHeaderGroups()?.map((headerGroup) => (
+              <tr key={headerGroup.id} className=" ">
+                {headerGroup.headers?.map((header) => (
+                  <th
+                    key={header.id}
+                    className={`px-4 py-2 capitalize ${
+                      header.column.columnDef.headerClassName || ""
                     }`}
                   >
-                    {col.render
-                      ? col.render(row[col.key], row)
-                      : row[col.key] ?? "-"}
-                  </td>
+                    {flexRender(
+                      header.column.columnDef.header,
+                      header.getContext()
+                    )}
+                  </th>
                 ))}
               </tr>
             ))}
+          </thead>
+          <tbody>
+            {isLoading ? (
+              <tr>
+                <td colSpan={columns.length} className="text-center py-8">
+                  <div className="flex justify-center items-center">
+                    Loading
+                  </div>
+                </td>
+              </tr>
+            ) : data.length == 0 ? (
+              <tr>
+                <td colSpan={columns.length} className="text-center py-8">
+                  <div className="flex justify-center items-center">Empty</div>
+                </td>
+              </tr>
+            ) : (
+              table.getRowModel()?.rows?.map((row) => (
+                <tr key={row.id} className="hover:bg-gray-100">
+                  {row.getVisibleCells().map((cell) => (
+                    <td
+                      key={cell.id}
+                      className={`px-4 py-2 text-nowrap ${
+                        cell.column.columnDef.cellClassName || ""
+                      }`}
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
-      {data?.length >= 50 && (
-        <div className="pt-4 flex justify-between w-full  items-center border-t border-mainBorder ">
-          <span className="text-md font-medium text-mainText">
-            Showing {curentPage} to 50 of {totalPage} entries
-          </span>
-          <div className="flex gap-2">
+      {data && data.length > 10 && !isLoading && pagination && (
+        <div className="flex items-center justify-between   px-4  bg-white rounded-lg ">
+          <div className="flex items-center gap-2">
             <button
-              onClick={() => handlePage("prev")}
-              className="px-4 py-2 bg-gray-200 rounded-lg cursor-pointer"
+              className="px-3 py-1 border border-gray-300 rounded-md text-gray-700  hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+              onClick={() => table.setPageIndex(0)}
+              disabled={!table.getCanPreviousPage()}
+            >
+              First
+            </button>
+            <button
+              className="px-3 py-1 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
             >
               Previous
             </button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {Array.from({ length: table.getPageCount() }, (_, i) => (
+              <button
+                key={i}
+                className={`px-3 py-1 rounded-md text-sm font-medium cursor-pointer ${
+                  table.getState().pagination.pageIndex === i
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                } transition-colors duration-200`}
+                onClick={() => table.setPageIndex(i)}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2">
             <button
-              onClick={handlePage}
-              className="px-4 py-2 bg-gray-200 rounded-lg cursor-pointer"
+              className="px-3 py-1 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
             >
               Next
+            </button>
+            <button
+              className="px-3 py-1 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+              disabled={!table.getCanNextPage()}
+            >
+              Last
             </button>
           </div>
         </div>

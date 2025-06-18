@@ -63,6 +63,53 @@ router.get("/:id", async (req, res) => {
     res.json({ error: "Server Xetasi" + error });
   }
 });
+
+router.post("/preview", async (req, res) => {
+  const { items } = req.body; // [{ barcode, quantity }]
+  const resultItems = [];
+  console.log("Gelen ürünler:", items);
+
+  if (!items || !Array.isArray(items) || items.length === 0) {
+    return res.status(400).json({ error: "Ürün listesi boş." });
+  }
+
+  try {
+    for (const item of items) {
+      const { barcode, quantity } = item;
+
+      // Sequelize ile ürün bul
+      const product = await Products.findOne({
+        where: { barcode },
+        attributes: ["sellPrice", "barcode", "name"],
+      });
+
+      if (!product) continue;
+      const qty = parseFloat(quantity);
+      if (isNaN(qty) || qty <= 0) continue;
+
+      const subtotal = parseFloat(product.sellPrice) * qty;
+
+      resultItems.push({
+        name: product.name,
+        barcode: product.barcode,
+        quantity,
+        sellPrice: parseFloat(product.sellPrice),
+        subtotal,
+      });
+    }
+
+    const subtotal = resultItems.reduce((sum, i) => sum + i.subtotal, 0);
+
+    res.json({
+      subtotal,
+      total: subtotal,
+      items: resultItems,
+    });
+  } catch (error) {
+    console.error("Preview error:", error.message);
+    res.status(500).json({ error: "Sunucu hatası" });
+  }
+});
 // 🔹 POST /sales
 router.post("/", async (req, res) => {
   try {

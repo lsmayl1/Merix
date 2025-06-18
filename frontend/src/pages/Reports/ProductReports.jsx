@@ -8,65 +8,68 @@ import { Table } from "../../components/Table";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Details } from "../../assets/Details";
 
-export const SalesReports = () => {
+export const ProductReports = () => {
   const [showFiltersModal, setShowFiltersModal] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const columnHelper = createColumnHelper();
 
   const columns = [
-    columnHelper.accessor("id", {
-      header: "ID",
-      headerClassName: "text-center rounded-s-lg bg-gray-100",
-      cellClassName: "text-center",
+    columnHelper.accessor("name", {
+      header: "Name",
+      headerClassName: "text-start rounded-s-lg bg-gray-100",
+      cellClassName: "text-start",
     }),
-    columnHelper.accessor("date", {
-      header: "Date",
+    columnHelper.accessor("barcode", {
+      header: "Barcode",
+      headerClassName: "text-start bg-gray-100",
+      cellClassName: "text-start",
+    }),
+    columnHelper.accessor("unitsSold", {
+      header: "Units Sold",
       headerClassName: "text-center bg-gray-100",
       cellClassName: "text-center",
     }),
-    columnHelper.accessor("totalSaleAmount", {
-      header: "Total Sale Amount",
+    columnHelper.accessor("totalRevenue", {
+      header: "Total Revenue",
       headerClassName: "text-center bg-gray-100",
       cellClassName: "text-center",
     }),
-    columnHelper.accessor("paymentMethod", {
-      header: "Payment Method",
+    columnHelper.accessor("totalProfit", {
+      header: "Total Profit",
       headerClassName: "text-center bg-gray-100",
       cellClassName: "text-center",
     }),
-    columnHelper.accessor("profit", {
-      header: "Profit",
-      headerClassName: "text-center bg-gray-100",
-      cellClassName: "text-center",
-    }),
-    columnHelper.accessor("details", {
-      header: "Details",
+    columnHelper.accessor("profitMargin", {
+      header: "Profit Margin",
       headerClassName: "text-center bg-gray-100 rounded-e-lg",
-      cell: (info) => (
-        <button className="text-mainText hover:underline">
-          <Details />
-        </button>
-      ),
       cellClassName: "text-center",
     }),
   ];
 
   const data = [
     {
-      id: 1,
-      date: "2025-05-23",
-      totalSaleAmount: "1,200.00 ₼",
-      paymentMethod: "Cash",
-      profit: "₼ 300.00",
-      details: "View Details",
+      name: "Apple",
+      barcode: "5566545454654",
+      unitsSold: "1,200",
+      totalRevenue: "300.00 ₼",
+      totalProfit: "300.00 ₼",
+      profitMargin: "20%",
     },
     {
-      id: 2,
-      date: "2025-05-24",
-      totalSaleAmount: "2,500.00 ₼",
-      paymentMethod: "Card",
-      profit: "₼ 600.00",
-      details: "View Details",
+      name: "Apple",
+      barcode: "5566545454654",
+      unitsSold: "1,200",
+      totalRevenue: "300.00 ₼",
+      totalProfit: "300.00 ₼",
+      profitMargin: "20%",
+    },
+    {
+      name: "Apple",
+      barcode: "5566545454654",
+      unitsSold: "1,200",
+      totalRevenue: "300.00 ₼",
+      totalProfit: "300.00 ₼",
+      profitMargin: "20%",
     },
   ];
 
