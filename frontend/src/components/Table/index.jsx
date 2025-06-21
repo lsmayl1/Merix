@@ -22,17 +22,21 @@ export const Table = ({
   });
   return (
     <div className="w-full h-full flex flex-col  min-h-0 rounded-lg justify-between   bg-white gap-1">
-      <div className="overflow-y-auto flex flex-col min-h-0 px-2 h-full">
+      <div className="overflow-y-auto flex flex-col min-h-0  h-full">
         <table className="w-full">
           <thead>
             {table?.getHeaderGroups()?.map((headerGroup) => (
               <tr key={headerGroup.id} className=" ">
-                {headerGroup.headers?.map((header) => (
+                {headerGroup.headers?.map((header, index) => (
                   <th
                     key={header.id}
                     className={`px-4 py-2 capitalize ${
-                      header.column.columnDef.headerClassName || ""
-                    }`}
+                      index == 0
+                        ? "text-center rounded-s-lg bg-gray-100"
+                        : index == headerGroup.headers.length - 1
+                        ? "text-center bg-gray-100 rounded-e-lg"
+                        : " bg-gray-100"
+                    } ${header.column.columnDef.headerClassName || ""}`}
                   >
                     {flexRender(
                       header.column.columnDef.header,
@@ -80,7 +84,7 @@ export const Table = ({
           </tbody>
         </table>
       </div>
-      {data && data.length > 10 && !isLoading && pagination && (
+      {/* {data && data.length > 10 && !isLoading && pagination && (
         <div className="flex items-center justify-between   px-4  bg-white rounded-lg ">
           <div className="flex items-center gap-2">
             <button
@@ -132,7 +136,7 @@ export const Table = ({
             </button>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 };

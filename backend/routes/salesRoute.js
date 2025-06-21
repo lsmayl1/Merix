@@ -1,18 +1,55 @@
+const moment = require("moment");
 const {
   Sales,
   SalesDetails,
   Products,
   sequelize,
   Sequelize,
+  Op,
 } = require("../models");
 const express = require("express");
 const router = express.Router();
 // Get all sales
 router.get("/", async (req, res) => {
   try {
-    const sales = await Sales.findAll();
+    const sales = await Sales.findAll({
+      include: [
+        {
+          model: SalesDetails,
+          as: "details",
+          attributes: ["sell_price", "buy_price", "quantity"],
+          required: false,
+        },
+      ],
+    });
 
-    res.json(sales);
+    const formattedSales = sales.map((sale) => {
+      const details = sale.details;
+      let profit = 0;
+      if (Array.isArray(details)) {
+        profit = details.reduce((sum, d) => {
+          if (Number(d.buy_price) === 0) return sum;
+          return (
+            sum +
+            (Number(d.sell_price) - Number(d.buy_price)) *
+              Number(d.quantity || 0)
+          );
+        }, 0);
+      } else if (details) {
+        if (Number(details.buy_price) !== 0) {
+          profit =
+            (Number(details.sell_price) - Number(details.buy_price)) *
+            Number(details.quantity || 0);
+        }
+      }
+
+      return {
+        ...sale.dataValues,
+        date: moment(sale.date).tz("Asia/Dubai").format("DD-MM-YYYY HH:mm:ss"),
+        profit: Number(profit.toFixed(2)),
+      };
+    });
+    res.json(formattedSales);
   } catch (err) {
     console.log(err);
   }
@@ -42,19 +79,17 @@ router.get("/:id", async (req, res) => {
     if (!sale) return res.json({ error: "Satis yoxdur" });
 
     const response = {
-      saleId: sale.sa,
-      totalAmount: sale.total_amount,
+      saleId: sale.sale_id,
+      totalAmount: sale.total_amount + " ₼",
       paymentMethod: sale.payment_method,
-      date: sale.date,
+      date: moment(sale.date).tz("Asia/Dubai").format("DD-MM-YYYY HH:mm:ss"),
       details: sale.details.map((detail) => ({
         quantity: detail.quantity,
-        subtotal: detail.subtotal,
-        product: {
-          id: detail.product.id,
-          name: detail.product.name,
-          barcode: detail.product.barcode,
-          sellPrice: detail.product.sellPrice,
-        },
+        subtotal: detail.subtotal + " ₼",
+        id: detail.product.id,
+        name: detail.product.name,
+        barcode: detail.product.barcode,
+        sellPrice: detail.product.sellPrice + " ₼",
       })),
     };
 
@@ -65,34 +100,67 @@ router.get("/:id", async (req, res) => {
 });
 
 router.post("/preview", async (req, res) => {
-  const { items } = req.body; // [{ barcode, quantity }]
+  const { items } = req.body;
   const resultItems = [];
-  console.log("Gelen ürünler:", items);
 
   if (!items || !Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: "Ürün listesi boş." });
   }
 
   try {
-    for (const item of items) {
-      const { barcode, quantity } = item;
+    const grouped = {};
 
-      // Sequelize ile ürün bul
+    for (const { barcode, quantity: newQuantity } of items) {
+      let productBarcode = barcode;
+      let quantity = newQuantity || 1;
+      let unit = "piece";
+
+      // ✅ Tartım barkodu kontrolü
+      if (barcode.length === 13 && barcode.startsWith("22")) {
+        const baseCode = barcode.substring(0, 8); // ilk 8: ürün kodu
+        const weightGrams = parseInt(barcode.substring(8), 10); // son 5: ağırlık
+        quantity = weightGrams / 1000;
+        unit = "kg";
+
+        const product = await Products.findOne({
+          where: { barcode: { [Op.like]: `${baseCode}%` } },
+          attributes: ["barcode"],
+        });
+
+        if (!product) continue;
+        productBarcode = product.barcode;
+      }
+
+      // ✅ Aynı ürün daha önce eklenmişse quantity'yi topla
+      if (!grouped[productBarcode]) {
+        grouped[productBarcode] = {
+          productBarcode,
+          quantity,
+          unit,
+        };
+      } else {
+        grouped[productBarcode].quantity += quantity;
+      }
+    }
+
+    // 🧮 Hesapla ve response oluştur
+    for (const productBarcode in grouped) {
+      const { quantity, unit } = grouped[productBarcode];
+
       const product = await Products.findOne({
-        where: { barcode },
-        attributes: ["sellPrice", "barcode", "name"],
+        where: { barcode: productBarcode },
+        attributes: ["name", "sellPrice", "barcode"],
       });
 
       if (!product) continue;
-      const qty = parseFloat(quantity);
-      if (isNaN(qty) || qty <= 0) continue;
 
-      const subtotal = parseFloat(product.sellPrice) * qty;
+      const subtotal = parseFloat(product.sellPrice) * quantity;
 
       resultItems.push({
         name: product.name,
-        barcode: product.barcode,
+        barcode: product.barcode, // ✅ sadece ürünün gerçek barkodu
         quantity,
+        unit,
         sellPrice: parseFloat(product.sellPrice),
         subtotal,
       });
@@ -110,6 +178,7 @@ router.post("/preview", async (req, res) => {
     res.status(500).json({ error: "Sunucu hatası" });
   }
 });
+
 // 🔹 POST /sales
 router.post("/", async (req, res) => {
   try {
@@ -129,105 +198,80 @@ router.post("/", async (req, res) => {
     const stockUpdates = [];
 
     for (const item of products) {
-      if (!item.product_id || !item.quantity) {
-        return res.status(400).json({
-          error: "Each product must have product_id and quantity",
-        });
-      }
-      if (item.quantity < 1) {
-        return res.status(400).json({ error: "Quantity must be at least 1" });
-      }
+      let barcode = item.barcode;
+      let quantity = item.quantity ?? 1;
 
-      const product = await Products.findByPk(item.product_id);
+      const product = await Products.findOne({ where: { barcode } });
+
       if (!product) {
         return res.status(404).json({
-          error: `Product with id ${item.product_id} not found`,
+          error: `Product with barcode ${barcode} not found`,
         });
       }
 
-      console.log(`Product ${item.product_id}:`, {
-        buyPrice: product.buyPrice,
-        sellPrice: product.sellPrice,
-        stock: product.stock,
-      });
+      if (quantity < 0.001) {
+        return res.status(400).json({
+          error: `Quantity for barcode ${barcode} must be greater than 0`,
+        });
+      }
 
-      const subtotal = product.sellPrice * item.quantity;
+      const subtotal = product.sellPrice * quantity;
       totalAmount += subtotal;
 
       salesDetails.push({
-        product_id: item.product_id,
+        product_id: product.product_id,
         product_name: product.name,
-        quantity: item.quantity,
+        quantity,
         subtotal,
         buy_price: product.buyPrice,
         sell_price: product.sellPrice,
         previous_stock: product.stock,
-        new_stock: product.stock - item.quantity,
+        new_stock: product.stock - quantity,
       });
 
       stockUpdates.push({
         product,
-        quantity: item.quantity,
+        quantity,
       });
     }
 
-    console.log("SalesDetails to create:", salesDetails); // Debug before transaction
-
     const result = await sequelize.transaction(async (t) => {
-      try {
-        const sale = await Sales.create(
-          {
-            total_amount: totalAmount,
-            payment_method,
-          },
-          { transaction: t }
-        );
-        console.log("Created sale:", sale.toJSON());
+      const sale = await Sales.create(
+        {
+          total_amount: totalAmount,
+          payment_method,
+        },
+        { transaction: t }
+      );
 
-        await Promise.all(
-          salesDetails.map(async (detail) => {
-            try {
-              const createdDetail = await SalesDetails.create(
-                {
-                  sale_id: sale.sale_id,
-                  product_id: detail.product_id,
-                  quantity: detail.quantity,
-                  subtotal: detail.subtotal,
-                  buy_price: detail.buy_price,
-                  sell_price: detail.sell_price,
-                },
-                { transaction: t }
-              );
-              console.log("Created SalesDetail:", createdDetail.toJSON());
-            } catch (detailError) {
-              console.error("SalesDetails create error:", detailError);
-              throw detailError; // Re-throw to rollback transaction
-            }
-          })
-        );
+      await Promise.all(
+        salesDetails.map(async (detail) => {
+          await SalesDetails.create(
+            {
+              sale_id: sale.sale_id,
+              product_id: detail.product_id,
+              quantity: detail.quantity,
+              subtotal: detail.subtotal,
+              buy_price: detail.buy_price,
+              sell_price: detail.sell_price,
+            },
+            { transaction: t }
+          );
+        })
+      );
 
-        await Promise.all(
-          stockUpdates.map(async (update) => {
-            try {
-              await update.product.update(
-                {
-                  stock: sequelize.literal(`stock - ${update.quantity}`),
-                },
-                { transaction: t }
-              );
-              console.log(`Updated stock for product ${update.product.id}`);
-            } catch (updateError) {
-              console.error("Stock update error:", updateError);
-              throw updateError; // Re-throw to rollback transaction
-            }
-          })
-        );
+      await Promise.all(
+        stockUpdates.map(async (update) => {
+          await update.product.update(
+            {
+              stock: sequelize.literal(`stock - ${update.quantity}`),
+            },
+            { transaction: t }
+          );
+        })
+      );
 
-        return sale;
-      } catch (transactionError) {
-        console.error("Transaction inner error:", transactionError);
-        throw transactionError; // Ensure rollback and outer catch
-      }
+      return sale;
     });
 
     const response = {

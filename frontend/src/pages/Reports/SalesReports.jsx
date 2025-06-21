@@ -7,14 +7,19 @@ import { SearchIcon } from "../../assets/SearchIcon";
 import { Table } from "../../components/Table";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Details } from "../../assets/Details";
+import { useGetAllSalesQuery } from "../../redux/slices/ApiSlice";
+import { SaleDetailsModal } from "../../components/Reports/SaleDetailsModal";
+import { DateRange } from "../../components/Date/DateRange";
 
 export const SalesReports = () => {
   const [showFiltersModal, setShowFiltersModal] = useState(false);
+  const { data } = useGetAllSalesQuery();
   const [inputValue, setInputValue] = useState("");
   const columnHelper = createColumnHelper();
-
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedSale, setSelectedSale] = useState(null);
   const columns = [
-    columnHelper.accessor("id", {
+    columnHelper.accessor("sale_id", {
       header: "ID",
       headerClassName: "text-center rounded-s-lg bg-gray-100",
       cellClassName: "text-center",
@@ -24,12 +29,13 @@ export const SalesReports = () => {
       headerClassName: "text-center bg-gray-100",
       cellClassName: "text-center",
     }),
-    columnHelper.accessor("totalSaleAmount", {
+    columnHelper.accessor("total_amount", {
       header: "Total Sale Amount",
       headerClassName: "text-center bg-gray-100",
       cellClassName: "text-center",
+      cell: ({ getValue }) => <span>{getValue()} ₼</span>,
     }),
-    columnHelper.accessor("paymentMethod", {
+    columnHelper.accessor("payment_method", {
       header: "Payment Method",
       headerClassName: "text-center bg-gray-100",
       cellClassName: "text-center",
@@ -38,51 +44,31 @@ export const SalesReports = () => {
       header: "Profit",
       headerClassName: "text-center bg-gray-100",
       cellClassName: "text-center",
+      cell: ({ getValue }) => <span>{getValue().toFixed(2)} ₼</span>,
     }),
     columnHelper.accessor("details", {
       header: "Details",
       headerClassName: "text-center bg-gray-100 rounded-e-lg",
-      cell: (info) => (
-        <button className="text-mainText hover:underline">
+      cell: ({ row }) => (
+        <button
+          onClick={() => handleDetails(row?.original?.sale_id)}
+          className="text-mainText hover:underline"
+        >
           <Details />
         </button>
       ),
       cellClassName: "text-center",
     }),
   ];
-
-  const data = [
-    {
-      id: 1,
-      date: "2025-05-23",
-      totalSaleAmount: "1,200.00 ₼",
-      paymentMethod: "Cash",
-      profit: "₼ 300.00",
-      details: "View Details",
-    },
-    {
-      id: 2,
-      date: "2025-05-24",
-      totalSaleAmount: "2,500.00 ₼",
-      paymentMethod: "Card",
-      profit: "₼ 600.00",
-      details: "View Details",
-    },
-  ];
+  const handleDetails = (id) => {
+    if (!id) return;
+    setSelectedSale(id);
+    setShowDetailsModal(true);
+  };
 
   return (
-    <div className="flex flex-col gap-2  w-full h-full">
-      <div className="flex w-full justify-between p-4 items-center">
-        <h1 className="text-3xl font-semibold ">
-          May 23 - May 30 <span className="text-xs text-gray-500"> 2025</span>
-        </h1>
-        <div className="flex items-center ">
-          <button className="flex gap-4 items-center bg-white py-2 px-4 rounded-lg border border-mainBorder text-xl">
-            <Calendar />
-            This Week
-          </button>
-        </div>
-      </div>
+    <div className="flex flex-col gap-2  w-full h-full relative">
+      <DateRange />
       <KPI
         data={[
           {
@@ -103,6 +89,12 @@ export const SalesReports = () => {
           },
         ]}
       />
+      {showDetailsModal && (
+        <SaleDetailsModal
+          saleId={selectedSale}
+          handleClose={setShowDetailsModal}
+        />
+      )}
       <div className="flex flex-col gap-2 w-full h-full min-h-0  bg-white rounded-lg px-4 py-2 relative">
         <div className="flex gap-2 items-center">
           <div className="flex items-center gap-2 w-full relative">
@@ -130,7 +122,7 @@ export const SalesReports = () => {
           </div>
         </div>
 
-        <div className="min-h-0 w-full px-2">
+        <div className="min-h-0 w-full h-full px-2 relative">
           <Table
             columns={columns}
             data={data}

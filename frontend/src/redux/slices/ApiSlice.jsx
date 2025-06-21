@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-// const API = "http://localhost:3000";
-const API = "";
+const API = "http://localhost:3000";
+// const API = "";
 
 export const ApiSlice = createApi({
   reducerPath: "api",
@@ -56,6 +56,14 @@ export const ApiSlice = createApi({
       }),
     }),
     // Sales
+    getAllSales: build.query({
+      query: () => ({
+        url: "sales",
+      }),
+    }),
+    getSaleById: build.query({
+      query: (id) => `sales/${id}`,
+    }),
     postSalePreview: build.mutation({
       query: (data) => ({
         url: "sales/preview",
@@ -84,6 +92,8 @@ export const {
   useDeleteProductByIdMutation,
   useGetBulkProductMutation,
 
+  useGetAllSalesQuery,
+  useGetSaleByIdQuery,
   usePostSalePreviewMutation,
   usePostSaleMutation,
 } = ApiSlice;

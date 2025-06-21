@@ -1,5 +1,4 @@
 const express = require("express");
-const { body, param, validationResult } = require("express-validator");
 const router = express.Router();
 const { Products, Sequelize, sequelize, Op } = require("../models");
 
@@ -93,7 +92,7 @@ router.get("/", async (req, res) => {
 
     // Veriyi getir (SQL seviyesinde sıralama yaparak hızlandır)
     const products = await Products.findAll({
-      order: [["product_id", "ASC"]], // SQL ile sıralama (Daha hızlı!)
+      order: [["product_id", "DESC"]], // SQL ile sıralama (Daha hızlı!)
       limit: limit,
       offset: offset,
     });
@@ -144,36 +143,66 @@ router.get("/search", async (req, res) => {
   }
 });
 
-// Get a product by ID or barcode
 router.get("/:id", async (req, res) => {
   try {
-    let product;
     const param = req.params.id;
+    let product;
+    let unit = "piece";
+    let quantity = 1;
+    let originalBarcode = param; // okutulan barkodu döneceğiz
+    let productBarcode = null;
 
-    // Önce ID ile ara (eğer param bir tam sayıysa)
+    // Eğer ID olarak aramak istiyorsan
     if (!isNaN(param)) {
       product = await Products.findByPk(Number(param));
+      if (product) productBarcode = product.barcode;
     }
 
-    // ID ile ürün bulunamadıysa, barkod ile ara
+    // Tartım barkodu ise
+    if (!product && param.length === 13 && param.startsWith("22")) {
+      const productCode = param.substring(0, 8); // ilk 8 hane ürün kodu
+      const weightGrams = parseInt(param.substring(8), 10);
+      quantity = weightGrams / 1000;
+      unit = "kg";
+
+      product = await Products.findOne({
+        where: {
+          barcode: {
+            [Op.like]: `${productCode}%`,
+          },
+        },
+      });
+
+      if (product) productBarcode = product.barcode;
+    }
+
+    // Normal barkod
     if (!product) {
       product = await Products.findOne({ where: { barcode: param } });
+      if (product) productBarcode = product.barcode;
     }
 
     if (product) {
       const productData = product.get({ plain: true });
-      productData.buyPrice = parseFloat(productData.buyPrice);
-      productData.sellPrice = parseFloat(productData.sellPrice);
-      res.json(productData);
-      return;
-      res.json(product);
+
+      res.json({
+        name: productData.name,
+        sellPrice: parseFloat(productData.sellPrice),
+        buyPrice: parseFloat(productData.buyPrice),
+        barcode: originalBarcode, // okutulan barkod
+        productBarcode: productBarcode, // veritabanındaki gerçek barkod
+        quantity,
+        unit,
+      });
     } else {
       res.status(404).json({ error: "Product not found by ID or barcode" });
     }
   } catch (error) {
+    console.error("Product get error:", error.message);
     res.status(500).json({ error: error.message });
   }
 });
+
 // Get multiple products by IDs or barcodes
 router.post("/bulk", async (req, res) => {
   try {

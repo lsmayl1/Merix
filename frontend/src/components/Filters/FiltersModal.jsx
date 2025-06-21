@@ -48,7 +48,7 @@ export const FiltersModal = ({ handleClose }) => {
   };
 
   return (
-    <div className="bg-white absolute border top-10 right-12 border-mainBorder px-4 flex flex-col gap-12 pt-4 rounded-lg shadow-md w-64 ">
+    <div className="bg-white absolute border z-50 top-10 right-12 border-mainBorder px-4 flex flex-col gap-12 pt-4 rounded-lg shadow-md w-64 ">
       <div className="w-full">
         <ul className="w-full flex flex-col gap-6">
           {filterOptions.map((item, index) => (

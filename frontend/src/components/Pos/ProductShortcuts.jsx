@@ -10,11 +10,12 @@ import { Xcircle } from "../../assets/Xcircle";
 import { Table } from "../Table";
 import { createColumnHelper } from "@tanstack/react-table";
 import TrashBin from "../../assets/TrashBin";
+import { QtyInput } from "../QtyInput";
 
 export const ProductShortcuts = ({
   products = [],
   data = [],
-  handleChangeQunatity,
+  handleChangeQty,
 }) => {
   const columnHelper = createColumnHelper();
   const [showAddModal, setShowAddModal] = useState(false);
@@ -69,7 +70,6 @@ export const ProductShortcuts = ({
             identifiers: identifiers,
           }).unwrap();
           setShortCuts(shortcuts);
-          console.log(shortcuts);
         } catch (error) {
           console.log(error);
         }
@@ -163,23 +163,20 @@ export const ProductShortcuts = ({
           >
             <span className="text-lg font-medium">{item.name}</span>
             <span className="text-md ">{item.sellPrice?.toFixed(2)} ₼</span>
-            <div className="flex items-center gap-2 justify-end">
-              <button
-                onClick={() => handleChangeQunatity(item.barcode, "decrase")}
-                className="bg-white border border-mainBorder rounded-lg p-1"
-              >
-                <Minus className="size-4 text-black" />
-              </button>
-              <span className={"text-xl w-6 max-w-6 text-center"}>
-                {data?.find((x) => x.barcode == item.barcode)?.quantity || 0}
-              </span>
-              <button
-                onClick={() => handleChangeQunatity(item.barcode, "increase")}
-                className="bg-white border border-mainBorder rounded-lg p-1"
-              >
-                <Plus className="size-4 text-black" />
-              </button>
+            <div className="flex justify-end items-end w-full">
+              <QtyInput
+                barcode={item.barcode}
+                qty={data?.find((x) => x.barcode == item.barcode)?.quantity}
+                handleQty={handleChangeQty}
+                allign={"justify-end"}
+                className={
+                  data?.find((x) => x.barcode == item.barcode)
+                    ? "bg-blue-600 text-white"
+                    : "bg-white"
+                }
+              />
             </div>
+
             {openContext === item.barcode && (
               <button
                 onClick={() => deleteIdentifiers(item.barcode)}

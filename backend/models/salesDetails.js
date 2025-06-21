@@ -26,7 +26,7 @@ const SalesDetails = sequelize.define(
       allowNull: false,
     },
     quantity: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.DECIMAL(10, 3),
       allowNull: false,
       validate: {
         min: 1,

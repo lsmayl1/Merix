@@ -23,12 +23,12 @@ export const Products = () => {
   const columns = [
     columnHelper.accessor("product_id", {
       header: "ID",
-      headerClassName: "text-center rounded-s-lg bg-gray-100",
+      headerClassName: "text-center",
       cellClassName: "text-center",
     }),
     columnHelper.accessor("name", {
       header: "Product",
-      headerClassName: "text-start bg-gray-100",
+      headerClassName: "text-start",
       cellClassName: "text-start",
     }),
     columnHelper.accessor("barcode", {
