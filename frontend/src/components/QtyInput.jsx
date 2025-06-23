@@ -3,10 +3,14 @@ import { Minus } from "../assets/Minus";
 import { Plus } from "../assets/Plus";
 
 export const QtyInput = ({ barcode, handleQty, qty, className, allign }) => {
-  const [newQty, setNewQty] = useState(qty);
-
+  const [newQty, setNewQty] = useState(Number(qty).toFixed(2) || 0);
+  console.log(newQty);
   useEffect(() => {
-    setNewQty(qty);
+    if (qty == undefined || qty == null) {
+      setNewQty(0);
+    } else {
+      setNewQty(Number(qty).toFixed(2) || 0);
+    }
   }, [qty]);
   return (
     <div className={`flex items-center ${allign} `}>
@@ -19,7 +23,7 @@ export const QtyInput = ({ barcode, handleQty, qty, className, allign }) => {
       <input
         type="number"
         className={`${className} rounded-lg  w-1/6 text-center  text-black`}
-        value={newQty || 0}
+        value={newQty}
         onChange={(e) => setNewQty(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === "Enter") {

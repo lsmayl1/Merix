@@ -7,6 +7,7 @@ const salesRoutes = require("./routes/salesRoute");
 const pluRoute = require("./routes/pluRoute");
 const labelPrinterRoute = require("./routes/labelPrinterRoute");
 const reportsRoute = require("./routes/reportsRoute");
+const metricRoute = require("./routes/MetricRoute");
 const app = express();
 const path = require("path");
 const bodyParser = require("body-parser");
@@ -17,6 +18,7 @@ app.use(cors());
 // Mount the product routes
 app.use("/products", productsRoute);
 app.use("/sales", salesRoutes);
+app.use("/metrics", metricRoute);
 app.use("/plu", pluRoute);
 app.use("/printer", labelPrinterRoute);
 app.use("/reports", reportsRoute);

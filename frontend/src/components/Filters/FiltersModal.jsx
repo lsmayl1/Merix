@@ -1,13 +1,12 @@
-import React, { useState } from "react";
-import { Plus } from "../../assets/Plus";
-import { Minus } from "../../assets/Minus";
+import React, { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
-export const FiltersModal = ({ handleClose }) => {
-  const [selectedOption, setSelectedOption] = useState([]);
+export const FiltersModal = ({ handleClose, handleFilter }) => {
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [selectedFilters, setSelectedFilters] = useState({
-    name: null, // A-Z veya Z-A (tekli)
-    unit: null, // çoklu seçim
+    name: "",
+    unit: [],
   });
 
   const filterOptions = [
@@ -17,34 +16,54 @@ export const FiltersModal = ({ handleClose }) => {
       options: { type: "single", value: ["A-Z", "Z-A"] },
     },
     {
+      label: "Stock",
+      value: "stock",
+      options: { type: "single", value: ["A-Z", "Z-A"] },
+    },
+    {
       label: "Unit",
       value: "unit",
-      options: { type: "single", value: ["KG", "Piece"] },
+      options: { type: "multiple", value: ["KG", "Piece"] },
     },
   ];
+
+  useEffect(() => {
+    const initialFilters = {
+      name: searchParams.get("name") || "",
+      unit: searchParams.get("unit") ? searchParams.get("unit").split(",") : [],
+    };
+    setSelectedFilters(initialFilters);
+  }, [searchParams]);
 
   const handleMultipleSelection = (option, name) => {
     setSelectedFilters((prev) => {
       const currentSelection = prev[name];
+      let updatedSelection = [];
       if (currentSelection.includes(option)) {
-        return {
-          ...prev,
-          [name]: currentSelection.filter((item) => item !== option),
-        };
+        updatedSelection = currentSelection.filter((item) => item !== option);
       } else {
-        return {
-          ...prev,
-          [name]: [...currentSelection, option],
-        };
+        updatedSelection = [...currentSelection, option];
       }
+      return {
+        ...prev,
+        [name]: updatedSelection,
+      };
     });
   };
 
   const handleSingleSelection = (option, name) => {
     setSelectedFilters((prev) => ({
       ...prev,
-      [name]: prev?.[name] === option ? null : option,
+      [name]: prev?.[name] === option ? "" : option,
     }));
+  };
+
+  const applyFilters = () => {
+    const params = new URLSearchParams();
+    if (selectedFilters.name) params.set("name", selectedFilters.name);
+    if (selectedFilters.unit.length > 0)
+      params.set("unit", selectedFilters.unit.join(","));
+    setSearchParams(params);
   };
 
   return (
@@ -52,8 +71,8 @@ export const FiltersModal = ({ handleClose }) => {
       <div className="w-full">
         <ul className="w-full flex flex-col gap-6">
           {filterOptions.map((item, index) => (
-            <li className="flex flex-col " key={index}>
-              <div className="flex gap-1 items-center justify-between  ">
+            <li className="flex flex-col" key={index}>
+              <div className="flex gap-1 items-center justify-between">
                 <label>{item.label}</label>
               </div>
               <div className="flex flex-col gap-2 pt-2">
@@ -64,12 +83,12 @@ export const FiltersModal = ({ handleClose }) => {
                         onClick={() =>
                           handleSingleSelection(option, item.value)
                         }
-                        className="flex items-center gap-2 cursor-pointer jusify-center"
+                        className="flex items-center gap-2 cursor-pointer"
                       >
                         <label className="relative cursor-pointer flex items-center justify-center">
                           <div className="size-6 border border-mainBorder rounded-full relative overflow-hidden" />
                           {selectedFilters[item.value] === option && (
-                            <div className=" size-4 bg-blue-400 rounded-full absolute " />
+                            <div className="size-4 bg-blue-400 rounded-full absolute" />
                           )}
                         </label>
                       </button>
@@ -87,8 +106,7 @@ export const FiltersModal = ({ handleClose }) => {
                         }
                         className="flex items-center justify-center size-6 border border-mainBorder rounded-lg"
                       >
-                        {selectedFilters[item.value] &&
-                        selectedFilters[item.value].includes(option) ? (
+                        {selectedFilters[item.value]?.includes(option) ? (
                           <div className="size-3 bg-blue-400 rounded-lg" />
                         ) : (
                           <div className="size-4" />
@@ -96,7 +114,7 @@ export const FiltersModal = ({ handleClose }) => {
                       </button>
                       <label
                         htmlFor={`${item.value}-${idx}`}
-                        className="text-gray-500 text-nowrap hover:text-black  cursor-pointer"
+                        className="text-gray-500 text-nowrap hover:text-black cursor-pointer"
                       >
                         {option}
                       </label>
@@ -114,7 +132,10 @@ export const FiltersModal = ({ handleClose }) => {
         >
           Cancel
         </button>
-        <button className=" text-nowrap text-white px-4 py-1 rounded-lg  text-xs transition-colors duration-200 bg-blue-500 hover:bg-blue-600  border border-blue-500">
+        <button
+          onClick={applyFilters}
+          className="text-nowrap text-white px-4 py-1 rounded-lg text-xs transition-colors duration-200 bg-blue-500 hover:bg-blue-600 border border-blue-500"
+        >
           Apply
         </button>
       </div>

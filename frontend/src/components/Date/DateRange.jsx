@@ -1,48 +1,79 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Calendar from "../../assets/Calendar";
 import { getDateRange } from "../utils/GetDateRange";
 
-export const DateRange = ({ handleDate }) => {
+export const DateRange = ({ handleRange }) => {
   const [showDateModal, setShowDateModal] = useState(false);
-  const [range, setRange] = useState([
-    { name: "Today" },
-    { name: "Yesterday" },
-    { name: "Last 7 Days" },
-    { name: "Last 30 Days" },
-    { name: "This Month" },
-    { name: "Last Month" },
-    { name: "This Year" },
-  ]);
-  const [end, setEnd] = useState(null);
-  const { startFormatted, endFormatted } = getDateRange("thisWeek");
-  console.log(startFormatted);
 
+  const [range, setRange] = useState([
+    { name: "Today", key: "today" },
+    { name: "Yesterday", key: "yesterday" },
+    { name: "This Week", key: "thisWeek" },
+    { name: "Last Week", key: "lastWeek" },
+    { name: "This Month", key: "thisMonth" },
+    { name: "Last Month", key: "lastMonth" },
+    { name: "This Year", key: "thisYear" },
+  ]);
+  const [selectedRange, setSelectedRange] = useState(range[0]);
+  const { start, end, startFormatted, endFormatted } = getDateRange(
+    selectedRange?.key
+  );
+
+  useEffect(() => {
+    if (start && end && handleRange) {
+      handleRange({
+        from: start,
+        to: end,
+      });
+    }
+  }, [selectedRange]);
+
+  const handleSelect = (item) => {
+    setSelectedRange(item);
+    setShowDateModal(false);
+  };
   return (
     <div className="flex w-full justify-between p-4 items-center">
-      <h1 className="text-3xl font-semibold ">{startFormatted} - {endFormatted} </h1>
-      <div className="flex items-center relative ">
-        <button className="flex gap-4 items-center bg-white py-2 px-4 rounded-lg border border-mainBorder text-xl">
+      {startFormatted && endFormatted ? (
+        <h1 className="text-3xl font-semibold">
+          {`${startFormatted.day} ${startFormatted.month} - ${endFormatted.day} ${endFormatted.month} `}
+          {startFormatted.year === endFormatted.year ? (
+            <span className="text-lg text-mainText">{startFormatted.year}</span>
+          ) : (
+            <span className="text-lg text-mainText">
+              {startFormatted.year} - {endFormatted.year}
+            </span>
+          )}
+        </h1>
+      ) : (
+        <h1>Date not Selected</h1>
+      )}
+
+      <div className="flex items-center relative">
+        <button
+          onClick={() => setShowDateModal(!showDateModal)}
+          className="flex gap-4 items-center bg-white py-2 px-4 rounded-lg border border-mainBorder text-xl"
+        >
           <Calendar />
-          This Week
+
+          {selectedRange.name}
         </button>
         {showDateModal && (
-          <div className="flex bg-white shadow-2xl  absolute top-12 z-50 rounded-lg w-[600%] right-0">
-            <div className="flex flex-col gap-12 flex-1  justify-between border-r border-mainBorder">
+          <div className="flex bg-white shadow-2xl absolute top-12 z-50 rounded-lg w-[100%] right-24">
+            <div className="flex flex-col gap-12 flex-1 justify-between border-r border-mainBorder">
               <ul className="flex flex-col font-semibold">
                 {range.map((rg, index) => (
                   <li
+                    onClick={() => handleSelect(rg)}
                     key={index}
-                    className="hover:bg-gray-100 p-4 rounded-lg cursor-pointer"
+                    className="hover:bg-gray-100 p-3   rounded-lg cursor-pointer"
                   >
                     {rg.name}
                   </li>
                 ))}
               </ul>
-              <span className="hover:bg-gray-100 py-3 px-4 rounded-lg cursor-pointer font-semibold">
-                Custom
-              </span>
             </div>
-            <div className="flex-3"></div>
+            {/* <div className="flex-3"></div */}
           </div>
         )}
       </div>

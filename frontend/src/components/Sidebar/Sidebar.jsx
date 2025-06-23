@@ -4,7 +4,7 @@ import Box from "../../assets/Sidebar/Box";
 import Reports from "../../assets/Sidebar/Reports";
 import { NavLink } from "react-router-dom";
 import { Kart } from "../../assets/Sidebar/Kart";
-
+import { CloseIcon } from "../../assets/Close";
 const links = [
   { name: "Dashboard", blank: false, path: "", icon: <Dashboard /> },
   { name: "Products", blank: false, path: "products", icon: <Box /> },
@@ -23,13 +23,19 @@ const links = [
   },
   { name: "Pos", blank: true, path: "pos", icon: <Kart /> },
 ];
-export const Sidebar = (prop) => {
+export const Sidebar = ({ className, handleClose }) => {
   return (
     <div
-      className={`w-full justify-center flex py-12 ${prop.className}
+      className={`w-full max-md:absolute z-50 max-md:left-0 max-md:bg-white items-center flex py-12 flex-col ${className}
       `}
     >
       <ul className="flex flex-col  gap-2">
+        <button
+          onClick={handleClose}
+          className="w-full  md:hidden  justify-end flex"
+        >
+          <CloseIcon className="size-4" />
+        </button>
         {links.map((link, index) => (
           <div className="flex flex-col gap-1 " key={index}>
             <NavLink
@@ -46,14 +52,14 @@ export const Sidebar = (prop) => {
                 <>
                   {link.icon &&
                     React.cloneElement(link.icon, {
-                      className: ` size-8 ${
+                      className: ` size-8 max-md:size-6 ${
                         isActive ? "text-black" : "text-mainText"
                       } `,
                     })}
                   <span
                     className={`${
                       isActive ? "text-black" : "text-mainText"
-                    } text-lg font-medium`}
+                    } text-lg max-md:text-md font-medium`}
                   >
                     {link.name}
                   </span>
@@ -62,7 +68,7 @@ export const Sidebar = (prop) => {
             </NavLink>
 
             {link.category && link.category.length > 0 && (
-              <ul className="border-l  border-mainBorder ml-7.5 ">
+              <ul className="border-l  border-mainBorder ml-7.5 pl-4 ">
                 {link.category.map((subLink, subIndex) => (
                   <NavLink
                     key={subIndex}
@@ -77,7 +83,7 @@ export const Sidebar = (prop) => {
                   >
                     {({ isActive }) => (
                       <span
-                        className={` text-lg font-medium text-nowrap ${
+                        className={` text-lg max-md:text-md font-medium text-nowrap ${
                           isActive ? "text-black" : "text-mainText"
                         }`}
                       >

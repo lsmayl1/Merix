@@ -10,9 +10,25 @@ const {
 const express = require("express");
 const router = express.Router();
 // Get all sales
-router.get("/", async (req, res) => {
+router.post("/", async (req, res) => {
+  const { from, to } = req.body;
+  // Parse the from date explicitly
+  const fromDate = new Date(from);
+  let toDate = to ? new Date(to) : new Date(from);
+  if (!to) toDate.setHours(23, 59, 59, 999); // Set to 23:59:59.999 of the same day
+
+  // Validate dates
+  const isValidDate = (date) => date instanceof Date && !isNaN(date);
+  if (!isValidDate(fromDate) || !isValidDate(toDate)) {
+    return res.status(400).json({ error: "Geçersiz tarih formatı" });
+  }
   try {
     const sales = await Sales.findAll({
+      where: {
+        date: {
+          [Op.between]: [fromDate, toDate],
+        },
+      },
       include: [
         {
           model: SalesDetails,
@@ -110,28 +126,41 @@ router.post("/preview", async (req, res) => {
   try {
     const grouped = {};
 
-    for (const { barcode, quantity: newQuantity } of items) {
+    for (const { barcode, quantity: sentQuantity } of items) {
       let productBarcode = barcode;
-      let quantity = newQuantity || 1;
+      let quantity = sentQuantity || 1;
       let unit = "piece";
 
-      // ✅ Tartım barkodu kontrolü
+      // Tartım barkodu kontrolü
       if (barcode.length === 13 && barcode.startsWith("22")) {
-        const baseCode = barcode.substring(0, 8); // ilk 8: ürün kodu
-        const weightGrams = parseInt(barcode.substring(8), 10); // son 5: ağırlık
-        quantity = weightGrams / 1000;
-        unit = "kg";
-
-        const product = await Products.findOne({
-          where: { barcode: { [Op.like]: `${baseCode}%` } },
+        const kgProduct = await Products.findOne({
+          where: { barcode: barcode },
           attributes: ["barcode"],
         });
 
-        if (!product) continue;
-        productBarcode = product.barcode;
+        if (kgProduct) {
+          // Tam barcode varsa, quantity olarak gönderileni kullan
+          productBarcode = kgProduct.barcode;
+          quantity = sentQuantity || 1;
+          unit = "kg";
+        } else {
+          // Yoksa tartım barkodu olarak işle
+          const baseCode = barcode.substring(0, 8);
+          const weightGrams = parseInt(barcode.substring(8), 10);
+          quantity = weightGrams / 1000; // Kullanıcıdan gelen quantity'yi YOK SAY
+          unit = "kg";
+
+          const product = await Products.findOne({
+            where: { barcode: { [Op.like]: `${baseCode}%` } },
+            attributes: ["barcode"],
+          });
+
+          if (!product) continue;
+          productBarcode = product.barcode;
+        }
       }
 
-      // ✅ Aynı ürün daha önce eklenmişse quantity'yi topla
+      // Aynı ürün daha önce eklenmişse quantity'yi topla
       if (!grouped[productBarcode]) {
         grouped[productBarcode] = {
           productBarcode,
@@ -180,7 +209,7 @@ router.post("/preview", async (req, res) => {
 });
 
 // 🔹 POST /sales
-router.post("/", async (req, res) => {
+router.post("/create", async (req, res) => {
   try {
     const { products, payment_method } = req.body;
 

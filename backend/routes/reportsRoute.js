@@ -207,6 +207,7 @@ router.post("/sold-products", async (req, res) => {
             name: productName,
             totalQuantity: 0,
             totalProfit: null, // Varsayılan olarak null, buyPrice 0 ise hesaplanmayacak
+            totalRevenue: 0,
             unit: unit,
             buyPrice: buyPrice,
             sellPrice: sellPrice,
@@ -214,7 +215,8 @@ router.post("/sold-products", async (req, res) => {
         }
 
         // Toplam miktar ve ciroyu güncelle
-        productSummary[productId].totalQuantity += quantity;
+        productSummary[productId].totalQuantity += Number(quantity) || 0;
+        productSummary[productId].totalRevenue += sellPrice * Number(quantity);
 
         // BuyPrice 0 değilse kârı hesapla
         if (buyPrice !== 0) {
@@ -231,14 +233,15 @@ router.post("/sold-products", async (req, res) => {
     const summaryArray = Object.values(productSummary).map((item) => ({
       productId: item.id,
       productName: item.name,
-      totalSold: item.totalQuantity,
-      unit: item.unit,
+      totalSold: item.totalQuantity.toFixed(2),
+      unit: item.unit == "piece" ? "pcs" : "kg",
       buyPrice: item.buyPrice,
       sellPrice: item.sellPrice,
+      totalRevenue: item.totalRevenue.toFixed(2) + " ₼",
       profit:
         item.totalProfit !== null
-          ? parseFloat(item.totalProfit.toFixed(2))
-          : null, // Profit null ise öyle kalsın
+          ? item.totalProfit.toFixed(2) + " ₼"
+          : 0 + " ₼", // Profit null ise öyle kalsın
     }));
 
     // Yanıtı döndür

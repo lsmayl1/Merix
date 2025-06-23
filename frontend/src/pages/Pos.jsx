@@ -26,7 +26,6 @@ import { NavLink } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import { QtyInput } from "../components/QtyInput";
 export const Pos = () => {
-  // const { data: products } = useGetProductsQuery();
   const columnHelper = createColumnHelper();
   const [inputData, setInputData] = useState([]);
   const [data, setData] = useState([]);
@@ -85,51 +84,115 @@ export const Pos = () => {
     }),
   ];
   const [paymentMethod, setPaymentMethod] = useState("cash");
+  const [receivedAmount, setReceivedAmount] = useState(0);
+  const [AmountToReturn, setAmountToReturn] = useState(0);
   const [postSale, { isLoading: postLoading }] = usePostSaleMutation();
 
   const handleChangeQty = async (barcode, action, qty) => {
     const existProduct = inputData.find((x) => x.barcode == barcode);
 
-    // Eğer ürün zaten ekliyse
     if (existProduct) {
-      setInputData((prevData) =>
-        prevData.map((item) => {
-          if (item.barcode === barcode) {
-            let newQuantity = item.quantity;
+      // Adet bazlı ürünler için eski davranış
+      if (existProduct.unit === "piece") {
+        setInputData((prevData) =>
+          prevData.map((item) => {
+            if (item.barcode === barcode) {
+              let newQuantity = item.quantity;
 
-            if (qty) {
-              newQuantity = Math.max(1, Number(qty));
-            } else if (action === "increase") {
-              newQuantity += 1;
-            } else if (action === "deacrese") {
-              newQuantity = Math.max(1, item.quantity - 1);
+              if (qty !== undefined && qty !== null) {
+                newQuantity = Math.max(1, Number(qty));
+              } else if (action === "increase") {
+                newQuantity += 1;
+              } else if (action === "deacrese") {
+                newQuantity = Math.max(1, item.quantity - 1);
+              }
+
+              return {
+                ...item,
+                quantity: newQuantity,
+              };
             }
+            return item;
+          })
+        );
+        return;
+      }
 
-            return {
-              ...item,
-              quantity: newQuantity,
-            };
-          }
-          return item;
-        })
-      );
-      return;
+      // KG bazlı ürünler için (direct qty update)
+      if (existProduct.unit === "kg") {
+        // Eğer qty varsa güncelle, yoksa artırma/azaltma mantığına göre davranabiliriz
+        setInputData((prevData) =>
+          prevData.map((item) => {
+            if (item.barcode === barcode) {
+              let newQuantity = item.quantity;
+
+              if (qty !== undefined && qty !== null) {
+                newQuantity = Math.max(0.001, Number(qty)); // minimum 1 gram
+              } else if (action === "increase") {
+                newQuantity += 0.1; // örnek olarak 100 gram artır
+              } else if (action === "deacrese") {
+                newQuantity = Math.max(0.001, item.quantity - 0.1);
+              }
+
+              return {
+                ...item,
+                quantity: newQuantity,
+              };
+            }
+            return item;
+          })
+        );
+        return;
+      }
     }
 
-    // Eğer ürün ekli değilse ve "increase" ise yeni ürün ekle
+    // Ürün yoksa ve artırma işlemi ise yeni ürün ekle
     if (action === "increase") {
       if (isFetching) return;
       try {
         const validProduct = await trigger(barcode).unwrap();
         if (!validProduct) return null;
-        setInputData((prevData) => [
-          ...prevData,
-          {
-            quantity: 1,
-            barcode: validProduct.barcode,
-            unit: validProduct.unit,
-          },
-        ]);
+
+        const existProduct = inputData.find(
+          (x) => x.barcode == validProduct.productBarcode
+        );
+
+        if (existProduct) {
+          // Ürün zaten listede varsa, miktarı artır
+          setInputData((prevData) =>
+            prevData.map((item) => {
+              if (item.barcode === validProduct.productBarcode) {
+                let newQuantity = item.quantity;
+
+                if (validProduct.unit === "kg") {
+                  // Tartım barkodundan gelen quantity varsa onu ekle
+                  if (validProduct.quantity) {
+                    newQuantity += validProduct.quantity;
+                  } else {
+                    newQuantity += 0.1;
+                  }
+                } else {
+                  newQuantity += 1;
+                }
+
+                return {
+                  ...item,
+                  quantity: newQuantity,
+                };
+              }
+              return item;
+            })
+          );
+          return;
+        } else
+          setInputData((prevData) => [
+            ...prevData,
+            {
+              quantity: validProduct.quantity ? validProduct.quantity : 1, // kg ürün için default 0.1 (100 gram)
+              barcode: validProduct.barcode,
+              unit: validProduct.unit,
+            },
+          ]);
       } catch (err) {
         toast.error(err.data.error);
         console.log(err);
@@ -171,6 +234,15 @@ export const Pos = () => {
 
     handlePreview();
   }, [inputData]);
+
+  useEffect(() => {
+    if (receivedAmount && data.total) {
+      setAmountToReturn(receivedAmount - data?.total.toFixed(2));
+    } else {
+      setAmountToReturn(0);
+      setReceivedAmount(0);
+    }
+  }, [receivedAmount, data.total]);
 
   return (
     <div className="flex flex-col  overflow-hidden h-screen  gap-2 w-full ">
@@ -229,6 +301,10 @@ export const Pos = () => {
           )}
         </div>
         <div className="flex items-center gap-6">
+          <button onClick={() => setInputData([])} className="text-red-500">
+            {" "}
+            Clear All
+          </button>
           <Setting className="size-8" />
           <ChartPie className="size-8" />
           <NavLink to={"/"}>
@@ -242,40 +318,23 @@ export const Pos = () => {
           // products={products}
           handleChangeQty={handleChangeQty}
         />
-        <div className="flex-1 min-h-0  bg-white p-4 gap-4 h-full flex flex-col justify-between ">
-          <div className="flex flex-col min-h-0 gap-6 ">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-4">
-                <h1 className="text-xl font-semibold">Order Details</h1>
-                {data?.items?.length > 0 && (
-                  <div className="bg-blue-500 py-1 px-6 text-white rounded-full">
-                    items {data?.items?.length}
-                  </div>
-                )}
-              </div>
-              <button onClick={() => setData([])} className="text-red-500">
-                {" "}
-                Clear All
-              </button>
-            </div>
+        <div className="flex-1 min-h-0  bg-white px-4 gap-4 h-full flex flex-col justify-between pb-2 ">
+          <div className="flex flex-col min-h-0 gap-1 ">
+            <div className="flex justify-between items-center"></div>
             <div className="overflow-y-auto min-h-0 max-h-[400px] ">
               <Table columns={columns} data={data?.items} pagination={false} />
             </div>
           </div>
           <div className="flex flex-col h-fit justify-center gap-4">
             <div className="flex flex-col gap-2">
-              <div className="flex flex-col gap-4 border-b border-dashed pb-4 border-gray-300">
+              {/* <div className="flex flex-col gap-4 border-b border-dashed pb-4 border-gray-300">
                 <div className="w-full flex items-center justify-between">
                   <span>Subtotal</span>
                   <span className="text-lg font-medium">
                     {data?.subtotal?.toFixed(2) || "0.00"} ₼
                   </span>
                 </div>
-                <div className="w-full flex items-center justify-between">
-                  <span>Discount (10%)</span>
-                  <span className="text-lg font-medium">0.00 ₼</span>
-                </div>
-              </div>
+              </div> */}
               <div className="flex items-center justify-between">
                 <span className="text-2xl font-medium">Total</span>
                 <span className="text-2xl font-medium">
@@ -327,6 +386,24 @@ export const Pos = () => {
                     Card
                   </span>
                 </button>
+              </div>
+              <div className="flex flex-col gap-4 border-mainBorder border rounded-lg w-full p-2 font-medium ">
+                <div className="flex justify-between items-center">
+                  <h1>Received Amount</h1>
+                  <div className="flex items-center gap-2">
+                    <input
+                      className="text-xl text-right"
+                      type="number"
+                      onChange={(e) => setReceivedAmount(e.target.value)}
+                      value={receivedAmount}
+                    />
+                    <span> ₼</span>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center">
+                  <h1>Amount to Return</h1>
+                  <span className="text-xl">{AmountToReturn.toFixed(2)} ₼</span>
+                </div>
               </div>
               <button
                 disabled={data.length == 0}

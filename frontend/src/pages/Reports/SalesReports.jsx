@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Calendar from "../../assets/Calendar";
 import { KPI } from "../../components/Metric/KPI";
 import { Filters } from "../../assets/Filters";
@@ -7,15 +7,25 @@ import { SearchIcon } from "../../assets/SearchIcon";
 import { Table } from "../../components/Table";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Details } from "../../assets/Details";
-import { useGetAllSalesQuery } from "../../redux/slices/ApiSlice";
+import {
+  useGetAllSalesMutation,
+  useGetSaleMetricsMutation,
+} from "../../redux/slices/ApiSlice";
 import { SaleDetailsModal } from "../../components/Reports/SaleDetailsModal";
 import { DateRange } from "../../components/Date/DateRange";
 
 export const SalesReports = () => {
   const [showFiltersModal, setShowFiltersModal] = useState(false);
-  const { data } = useGetAllSalesQuery();
+  const [getSales] = useGetAllSalesMutation();
+  const [getSaleMetrics] = useGetSaleMetricsMutation();
   const [inputValue, setInputValue] = useState("");
+  const [data, setData] = useState([]);
+  const [metrics, setMetrics] = useState({});
   const columnHelper = createColumnHelper();
+  const [range, setRange] = useState({
+    from: "",
+    to: "",
+  });
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedSale, setSelectedSale] = useState(null);
   const columns = [
@@ -66,26 +76,52 @@ export const SalesReports = () => {
     setShowDetailsModal(true);
   };
 
+  const getAllSales = async () => {
+    try {
+      const res = await getSales(range).unwrap();
+      if (res) {
+        setData(res);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const getMetrics = async () => {
+    try {
+      const res = await getSaleMetrics(range).unwrap();
+      if (res) {
+        setMetrics(res);
+      }
+    } catch (error) {}
+  };
+
+  useEffect(() => {
+    if (range.to && range.from) {
+      getAllSales();
+      getMetrics();
+    }
+  }, [range]);
+
   return (
     <div className="flex flex-col gap-2  w-full h-full relative">
-      <DateRange />
+      <DateRange handleRange={setRange} />
       <KPI
         data={[
           {
             label: "Total Revenue",
-            value: "₼ 12,345",
-          },
-          {
-            label: "Total Profit",
-            value: "₼ 2,345",
+            value: metrics.totalRevenue || 0,
           },
           {
             label: "Total Sales",
-            value: "5,456",
+            value: metrics.totalSales || 0,
           },
           {
-            label: "Total Stock Cost",
-            value: "₼ 10,000",
+            label: "Total Profit",
+            value: metrics.totalProfit || 0,
+          },
+          {
+            label: "Profit Margin",
+            value: metrics.profitMargin || 0,
           },
         ]}
       />
@@ -96,18 +132,8 @@ export const SalesReports = () => {
         />
       )}
       <div className="flex flex-col gap-2 w-full h-full min-h-0  bg-white rounded-lg px-4 py-2 relative">
-        <div className="flex gap-2 items-center">
-          <div className="flex items-center gap-2 w-full relative">
-            <input
-              type="text"
-              placeholder="Search by name or barcode"
-              // value={inputValue}
-              // onChange={(e) => setInputValue(e.target.value)}
-              // onKeyDown={handleInputKeyDown}
-              className="px-12 w-full  py-2 rounded-lg bg-white focus:outline-blue-500 "
-            />
-            <SearchIcon className="absolute left-2" />
-          </div>
+        <div className="flex gap-2 items-center justify-end">
+         
           <div className="flex  relative ">
             <button
               onClick={() => setShowFiltersModal(!showFiltersModal)}

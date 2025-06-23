@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-const API = "http://localhost:3000";
+const API = "http://192.168.1.69:3000/";
 // const API = "";
 
 export const ApiSlice = createApi({
@@ -8,7 +8,8 @@ export const ApiSlice = createApi({
   endpoints: (build) => ({
     // Product
     getProducts: build.query({
-      query: (page = 1) => `/products?page=${page}`,
+      query: ({ page = 1, sort = "asc" }) =>
+        `/products?page=${page}&sort=${sort}`,
       keepUnusedDataFor: 0,
     }),
     getProductById: build.query({
@@ -56,9 +57,11 @@ export const ApiSlice = createApi({
       }),
     }),
     // Sales
-    getAllSales: build.query({
-      query: () => ({
+    getAllSales: build.mutation({
+      query: (data) => ({
         url: "sales",
+        method: "POST",
+        body: data,
       }),
     }),
     getSaleById: build.query({
@@ -73,10 +76,36 @@ export const ApiSlice = createApi({
     }),
     postSale: build.mutation({
       query: (sale) => ({
-        url: "sales",
+        url: "sales/create",
         method: "POST",
         body: sale,
       }),
+    }),
+    getProductsReport: build.mutation({
+      query: (data) => ({
+        url: "reports/sold-products",
+        method: "POST",
+        body: data,
+      }),
+    }),
+
+    // Metrics
+    getSaleMetrics: build.mutation({
+      query: (data) => ({
+        url: "metrics/sale",
+        method: "POST",
+        body: data,
+      }),
+    }),
+    getProductSoldMetrics: build.mutation({
+      query: (data) => ({
+        url: "metrics/products-sold",
+        method: "POST",
+        body: data,
+      }),
+    }),
+    getProductsMetrics: build.query({
+      query: () => "metrics/products",
     }),
   }),
 });
@@ -92,8 +121,13 @@ export const {
   useDeleteProductByIdMutation,
   useGetBulkProductMutation,
 
-  useGetAllSalesQuery,
+  useGetAllSalesMutation,
   useGetSaleByIdQuery,
   usePostSalePreviewMutation,
   usePostSaleMutation,
+  useGetProductsReportMutation,
+
+  useGetSaleMetricsMutation,
+  useGetProductSoldMetricsMutation,
+  useGetProductsMetricsQuery,
 } = ApiSlice;

@@ -3,7 +3,11 @@ import {
   useDeleteProductByIdMutation,
   useGetProductByIdQuery,
   useGetProductsByQueryQuery,
+  useGetProductsMetricsQuery,
   useGetProductsQuery,
+  useLazyGetProductByIdQuery,
+  usePostProductMutation,
+  usePutProductByIdMutation,
 } from "../redux/slices/ApiSlice";
 import Edit from "../assets/Edit";
 import { RecycleBin } from "../assets/recycleBin";
@@ -17,8 +21,10 @@ import { Plus } from "../assets/Plus";
 import { FiltersModal } from "../components/Filters/FiltersModal";
 import { Table } from "../components/Table";
 import { createColumnHelper } from "@tanstack/react-table";
+import { useSearchParams } from "react-router-dom";
 
 export const Products = () => {
+  const { data: metricData } = useGetProductsMetricsQuery();
   const columnHelper = createColumnHelper();
   const columns = [
     columnHelper.accessor("product_id", {
@@ -99,11 +105,13 @@ export const Products = () => {
     }),
   ];
   const [page, setPage] = useState(1);
+  const [searchParams] = useSearchParams();
+  const sort = searchParams.get("name");
   const {
     data,
     isLoading,
     refetch: ProductsRefetch,
-  } = useGetProductsQuery(page);
+  } = useGetProductsQuery({ page, sort });
   const [showProductModal, setShowProductModal] = useState(false);
   const [showFiltersModal, setShowFiltersModal] = useState(false);
   const [query, setQuery] = useState("");
@@ -118,10 +126,14 @@ export const Products = () => {
   const { data: editedProduct, refetch } = useGetProductByIdQuery(editId, {
     skip: !editId,
   });
+  const [trigger] = useLazyGetProductByIdQuery();
   const [deleteProduct] = useDeleteProductByIdMutation();
   const handlePage = () => {
     setPage((prev) => (prev += 1));
   };
+  const [putProduct] = usePutProductByIdMutation();
+  const [postProduct, { isLoading: postLoading, isError: postError }] =
+    usePostProductMutation();
 
   const handleClosePopUp = () => {
     setEditForm(null);
@@ -132,9 +144,9 @@ export const Products = () => {
     if (query && query.length > 2) {
       setFilteredProducts(searchedProducts);
     } else if (data && !isLoading) {
-      setFilteredProducts((prev) => [...prev, ...data]);
+      setFilteredProducts(data);
     }
-  }, [query, searchedProducts, data, isLoading]);
+  }, [query, searchedProducts, data, isLoading, sort]);
 
   useEffect(() => {
     if (editedProduct) {
@@ -179,43 +191,77 @@ export const Products = () => {
   };
 
   const handleBarcode = async (barcode) => {
-    setEditId(barcode);
-    setShowProductModal(true);
+    try {
+      const res = await trigger(barcode).unwrap();
+      console.log(res);
+      setEditId(barcode);
+      setEditForm(res);
+      setShowProductModal(true);
+    } catch (error) {
+      setEditForm({ barcode: barcode });
+      setShowProductModal(true);
+    }
+  };
+
+  const handleUpdateProduct = async (data) => {
+    try {
+      await putProduct(data).unwrap();
+      setShowProductModal(false);
+      setEditId(null);
+      setEditForm(null);
+      ProductsRefetch();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleAddProduct = async (data) => {
+    try {
+      await postProduct(data).unwrap();
+      setShowProductModal(false);
+      ProductsRefetch();
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
     <div className="w-full h-full flex flex-col gap-2 min-h-0 ">
-      <BarcodeField
-        handleBarcode={handleBarcode}
-        shouldFocus={!showProductModal}
-      />{" "}
+      <div className="max-md:hidden">
+        <BarcodeField
+          handleBarcode={handleBarcode}
+          shouldFocus={!showProductModal}
+        />{" "}
+      </div>
       <KPI
         data={[
           {
-            label: "Total Revenue",
-            value: "₼ 12,345",
+            label: "Total Products",
+            value: metricData?.totalProducts,
           },
           {
-            label: "Total Profit",
-            value: "₼ 2,345",
+            label: "Weight-Based Products",
+            value: metricData?.kgBasedProducts,
           },
           {
-            label: "Total Sales",
-            value: "5,456",
+            label: "Unit-Based Productss",
+            value: metricData?.pieceBasedProducts,
           },
           {
-            label: "Total Stock Cost",
-            value: "₼ 10,000",
+            label: "Out of Stock Products",
+            value: metricData?.zeroOrNegativeStock,
           },
         ]}
       />
-      <div className="flex flex-col gap-2 w-full h-full min-h-0  bg-white rounded-lg px-4 py-2 relative">
+      <div className="flex flex-col gap-2 w-full h-full min-h-0  bg-white rounded-lg px-2 py-2 relative">
         {showProductModal && (
           <ProductModal
             handleClose={handleClosePopUp}
             editForm={editForm}
             isEditMode={editId ? true : false}
             handleDelete={handleDeleteProduct}
+            handleUpdateProduct={handleUpdateProduct}
+            handleAddProduct={handleAddProduct}
           />
         )}
         <div className="flex gap-2 items-center">
@@ -226,27 +272,30 @@ export const Products = () => {
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleInputKeyDown}
-              className="px-12 w-full  py-2 rounded-lg bg-white focus:outline-blue-500 "
+              className="px-12 w-full max-md:px-8  py-2 rounded-lg bg-white focus:outline-blue-500 "
             />
-            <SearchIcon className="absolute left-2" />
+            <SearchIcon className="absolute left-2 max-md:size-5" />
           </div>
           <div className="flex  relative ">
             <button
               onClick={() => setShowFiltersModal(!showFiltersModal)}
-              className="border bg-white border-gray-200 rounded-xl text-nowrap px-4 cursor-pointer flex items-center gap-2 py-1"
+              className="border bg-white border-gray-200 rounded-xl text-nowrap px-4 max-md:px-2 cursor-pointer flex max-md:text-xs items-center gap-2 py-1 max-md:py-0"
             >
-              <Filters />
+              <Filters className="max-md:size-5" />
               Filters
             </button>
             {showFiltersModal && (
-              <FiltersModal handleClose={setShowFiltersModal} />
+              <FiltersModal
+                handleClose={setShowFiltersModal}
+                // handleFilter={handleFilter}
+              />
             )}
           </div>
           <button
             onClick={() => setShowProductModal(true)}
-            className="border bg-white border-gray-200 rounded-xl text-nowrap px-4 cursor-pointer flex items-center gap-2 py-1"
+            className="border bg-white border-gray-200 rounded-xl text-nowrap px-4 cursor-pointer max-md:px-2 max-md:text-xs flex items-center gap-2 py-1 max-md:py-0"
           >
-            <Plus />
+            <Plus className="max-md:size-5" />
             Add Product
           </button>
         </div>

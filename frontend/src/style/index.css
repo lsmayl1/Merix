@@ -1,5 +1,13 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
+/* @import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"); */
 @import "tailwindcss";
+
+@font-face {
+  font-family: "Inter";
+  src: url("../assets/fonts/Inter/static/Inter_18pt-Regular.ttf")
+    format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
 
 @theme {
   --color-MaingBg: #f4f6fa;
@@ -21,6 +29,7 @@
 body {
   font-family: "Inter";
 }
+
 input,
 button,
 textarea:focus {

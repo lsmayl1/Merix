@@ -30,7 +30,7 @@ export const Table = ({
                 {headerGroup.headers?.map((header, index) => (
                   <th
                     key={header.id}
-                    className={`px-4 py-2 capitalize ${
+                    className={`px-4 max-md:px-2 max-md:py-1 text-nowrap max-md:text-xs py-2 capitalize ${
                       index == 0
                         ? "text-center rounded-s-lg bg-gray-100"
                         : index == headerGroup.headers.length - 1
@@ -68,7 +68,7 @@ export const Table = ({
                   {row.getVisibleCells().map((cell) => (
                     <td
                       key={cell.id}
-                      className={`px-4 py-2 text-nowrap ${
+                      className={`px-4 py-2 max-md:px-2 max-md:py-1 max-md:text-xs text-nowrap ${
                         cell.column.columnDef.cellClassName || ""
                       }`}
                     >

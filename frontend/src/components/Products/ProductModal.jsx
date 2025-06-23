@@ -9,19 +9,19 @@ import {
   usePutProductByIdMutation,
 } from "../../redux/slices/ApiSlice";
 import Generate from "../../assets/Generate";
+import { Html5QrcodeScanner } from "html5-qrcode";
 export const ProductModal = ({
   handleClose,
   isEditMode,
   editForm,
   handleDelete,
+  handleUpdateProduct,
+  handleAddProduct,
 }) => {
   const isMobile = useMediaQuery({ maxWidth: 768 });
-  const { data, isLoading, isError, refetch } = useGetProductsQuery();
-  const [postProduct, { isLoading: postLoading, isError: postError }] =
-    usePostProductMutation();
+
   const [getBarcode, { isLoading: barcodeLoading, isError: barcodeError }] =
     useGetBarcodeMutation();
-  const [putProduct] = usePutProductByIdMutation();
   const {
     register,
     handleSubmit,
@@ -37,33 +37,17 @@ export const ProductModal = ({
       barcode: editForm?.barcode || null,
       buyPrice: editForm?.buyPrice || 0.0,
       sellPrice: editForm?.sellPrice || 0.0,
+      stock: editForm?.stock || 0,
+      category: "Product",
       newStock: 0,
-      category: "Mehsul",
-      stock: editForm?.stock,
     },
   });
   const nameInputRef = useRef(null);
-  const [showBarcode, setShowBarcode] = useState(false);
-
-  const handleAddProduct = async (data) => {
+  const handleProductCrud = async (data) => {
     if (isEditMode) {
-      try {
-        await putProduct(data).unwrap();
-        handleClose();
-        await refetch();
-      } catch (error) {
-        toast.error(`Xeta ${err?.response}`);
-      }
+      handleUpdateProduct(data);
     } else {
-      try {
-        await postProduct(data).unwrap();
-        handleClose();
-        await refetch();
-        toast.success(`${watch("name") || "Mehsul"} Elave olundu}`);
-      } catch (err) {
-        toast.error(`Xeta ${err?.response}`);
-        console.log(err);
-      }
+      handleAddProduct(data);
     }
   };
   const handleBarcode = async () => {
@@ -87,28 +71,30 @@ export const ProductModal = ({
   }, [editForm]);
 
   return (
-    <div className="absolute inset-0 z-50 flex  h-screen w-full drop-shadow-lg">
+    <div className="absolute inset-0 z-50 flex max-md:-top-54  h-screen w-full drop-shadow-lg">
       <ToastContainer />
 
       <div
-        className={`flex w-full justify-center ${
+        className={`flex w-full  justify-center max-md:p-0 ${
           isMobile ? "py-2 px-2 h-full" : ""
         }`}
       >
         <div
           className={`flex  ${
-            isMobile ? "w-full  h-[90%] justify-between" : " gap-32 h-fit"
-          } flex-col  rounded-xl border border-gray-200 bg-white px-4 py-6`}
+            isMobile
+              ? "w-full max-md:h-full  h-[90%] justify-between"
+              : " gap-32 h-fit"
+          } flex-col  rounded-xl border border-gray-200 bg-white px-4 py-6 `}
         >
           {/* Form Fields */}
           <form
-            onSubmit={handleSubmit(handleAddProduct)}
-            className={`flex flex-col w-full  ${
-              isMobile ? "gap-16" : "gap-12"
+            onSubmit={handleSubmit(handleProductCrud)}
+            className={`flex flex-col w-full  max-md:gap-8 ${
+              isMobile ? "gap-16" : "gap-10"
             }`}
           >
             {/* Product Name */}
-            <div className="flex justify-between items-end gap-16">
+            <div className="flex justify-between items-end ">
               <div className="flex flex-col w-full ">
                 <label htmlFor="name" className="text-md max-lg:text-md">
                   Name
@@ -123,11 +109,11 @@ export const ProductModal = ({
                 <p className="text-red-500 text-sm">{errors?.name?.message}</p>
               </div>
             </div>
-            <div className="flex  gap-4">
+            <div className="flex max-md:flex-col  gap-4">
               {/* Unit Selection */}
               <div className="flex flex-col">
                 <label className="text-md max-lg:text-md">Unit</label>
-                <div className="flex bg-white rounded-lg border border-mainBorder ">
+                <div className="flex bg-white rounded-lg border w-fit border-mainBorder ">
                   <button
                     type="button"
                     onClick={() => setValue("unit", "piece")}
@@ -155,7 +141,7 @@ export const ProductModal = ({
 
               {/* Barcode */}
               <div className="flex  w-full flex-col max-lg:w-full">
-                <label className="text-md max-lg:text-md">Barocode</label>
+                <label className="text-md max-lg:text-md">Barcode</label>
                 <div className="flex items-center gap-1 max-lg:justify-between w-full">
                   <input
                     type="text"
@@ -174,7 +160,7 @@ export const ProductModal = ({
               </div>
             </div>
             {/* Prices */}
-            <div className="flex  gap-2">
+            <div className="flex  gap-2 max-md:flex-col">
               <div className="flex    rounded-lg flex-col">
                 <label className="text-md">Buy Price</label>
                 <div className="flex w-fit gap-2 relative ">
@@ -201,8 +187,9 @@ export const ProductModal = ({
               </div>
             </div>
             {/* Stok */}
-            <div className="flex gap-2  ">
-              {isEditMode && (
+
+            {isEditMode ? (
+              <div className="flex gap-2  ">
                 <div className="flex-col flex">
                   <label
                     htmlFor=""
@@ -216,21 +203,35 @@ export const ProductModal = ({
                     className="border focus:outline-none rounded-lg w-1/2  px-2 py-1  border-mainBorder  "
                   />
                 </div>
-              )}
+                <div className="flex-col flex">
+                  <label
+                    htmlFor=""
+                    className="truncate text-nowrap text-md max-lg:text-md"
+                  >
+                    New Stock
+                  </label>
+                  <input
+                    type="number"
+                    {...register("newStock")}
+                    className="border focus:outline-none rounded-lg w-1/2  px-2 py-1  border-mainBorder  "
+                  />
+                </div>
+              </div>
+            ) : (
               <div className="flex-col flex">
                 <label
                   htmlFor=""
                   className="truncate text-nowrap text-md max-lg:text-md"
                 >
-                  {isEditMode ? "Increase Stock" : "Stock"}
+                  Stock
                 </label>
                 <input
                   type="number"
-                  {...register("newStock")}
-                  className="border focus:outline-none rounded-lg  px-2 py-1 w-1/2  border-mainBorder  "
+                  {...register("stock")}
+                  className="border focus:outline-none rounded-lg w-1/2  px-2 py-1  border-mainBorder  "
                 />
               </div>
-            </div>
+            )}
             {/* Action Buttons */}
             <div className="flex items-center justify-between gap-4">
               {/* <button className="rounded-xl cursor-pointer bg-white border border-mainBorder w-1/4 py-1 px-4     font-semibold max-lg:text-md max-lg:font-normal truncate ">

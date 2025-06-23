@@ -19,11 +19,17 @@ export const getDateRange = (filter) => {
   const getStartOfDay = (date) =>
     new Date(date.getFullYear(), date.getMonth(), date.getDate());
 
+  const getEndOfDay = (date) => {
+    const d = new Date(date);
+    d.setHours(23, 59, 59, 999);
+    return d;
+  };
+
   const formatAzerbaijaniDate = (date) => {
     const day = date.getDate().toString().padStart(2, "0");
     const month = months[date.getMonth()];
     const year = date.getFullYear();
-    return `${day} ${month}`;
+    return { day: day, month: month, year: year };
   };
 
   let start, end;
@@ -31,27 +37,53 @@ export const getDateRange = (filter) => {
   switch (filter) {
     case "today":
       start = getStartOfDay(now);
-      end = new Date(start.getTime() + 86400000);
+      end = getEndOfDay(now);
       break;
+
     case "yesterday":
       const yesterday = new Date(now);
       yesterday.setDate(now.getDate() - 1);
       start = getStartOfDay(yesterday);
-      end = new Date(start.getTime() + 86400000);
+      end = getEndOfDay(yesterday);
       break;
 
     case "thisWeek":
-      start = new Date(now);
-      start.setDate(now.getDate() - now.getDay());
-      end = new Date(start);
-      end.setDate(start.getDate() + 7);
+      // Haftanın ilk günü Pazartesi (1), son günü Pazar (7)
+      const dayOfWeek = now.getDay() === 0 ? 7 : now.getDay(); // Pazar 0 ise 7 yap
+      const monday = new Date(now);
+      monday.setDate(now.getDate() - dayOfWeek + 1);
+      start = getStartOfDay(monday);
+
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+      end = getEndOfDay(sunday);
       break;
 
     case "lastWeek":
-      start = new Date(now);
-      start.setDate(now.getDate() - now.getDay() - 7);
+      const lastWeekStart = new Date(now);
+      lastWeekStart.setDate(now.getDate() - now.getDay() - 7);
+      start = getStartOfDay(lastWeekStart);
       end = new Date(start);
-      end.setDate(start.getDate() + 7);
+      end.setDate(start.getDate() + 6);
+      end = getEndOfDay(end);
+      break;
+
+    case "thisMonth":
+      start = new Date(now.getFullYear(), now.getMonth(), 1);
+      end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      end = getEndOfDay(end);
+      break;
+
+    case "lastMonth":
+      start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      end = new Date(now.getFullYear(), now.getMonth(), 0);
+      end = getEndOfDay(end);
+      break;
+
+    case "thisYear":
+      start = new Date(now.getFullYear(), 0, 1);
+      end = new Date(now.getFullYear(), 11, 31);
+      end = getEndOfDay(end);
       break;
 
     default:

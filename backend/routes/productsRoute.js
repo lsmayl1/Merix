@@ -5,7 +5,7 @@ const { Products, Sequelize, sequelize, Op } = require("../models");
 // Create a product
 router.post("/", async (req, res) => {
   try {
-    const { name, barcode, sellPrice, buyPrice, unit, category, newStock } =
+    const { name, barcode, sellPrice, buyPrice, unit, category, stock } =
       req.body;
 
     if (!barcode) {
@@ -57,10 +57,7 @@ router.post("/", async (req, res) => {
       barcode: barcode || null,
       sellPrice: sellPrice ? parseFloat(sellPrice) : null,
       buyPrice: buyPrice ? parseFloat(buyPrice) : null,
-      stock:
-        existingProduct && newStock
-          ? existingProduct?.stock + Number(newStock)
-          : 0,
+      stock: stock || 0,
       unit,
       category,
     };
@@ -85,14 +82,16 @@ router.post("/", async (req, res) => {
 router.get("/", async (req, res) => {
   try {
     // Query parametreleri (Varsayılan: page=1, limit=20)
-    let { page, limit } = req.query;
+    let { page, limit, sort = "A-Z" } = req.query;
+    const order =
+      sort === "Z-A" ? [["product_id", "DESC"]] : [["product_id", "ASC"]];
     page = parseInt(page) || 1;
     limit = parseInt(limit) || 50;
     const offset = (page - 1) * limit;
 
     // Veriyi getir (SQL seviyesinde sıralama yaparak hızlandır)
     const products = await Products.findAll({
-      order: [["product_id", "DESC"]], // SQL ile sıralama (Daha hızlı!)
+      order,
       limit: limit,
       offset: offset,
     });
@@ -185,15 +184,30 @@ router.get("/:id", async (req, res) => {
     if (product) {
       const productData = product.get({ plain: true });
 
-      res.json({
-        name: productData.name,
-        sellPrice: parseFloat(productData.sellPrice),
-        buyPrice: parseFloat(productData.buyPrice),
-        barcode: originalBarcode, // okutulan barkod
-        productBarcode: productBarcode, // veritabanındaki gerçek barkod
-        quantity,
-        unit,
-      });
+      // Eğer ürün piece ise sadece barcode dön
+      if (unit === "piece") {
+        res.json({
+          product_id: productData.product_id,
+          name: productData.name,
+          sellPrice: parseFloat(productData.sellPrice),
+          buyPrice: parseFloat(productData.buyPrice),
+          barcode: productBarcode,
+          quantity,
+          unit,
+          stock: productData.stock,
+        });
+      } else {
+        // kg ise hem okutulan barkod hem veritabanı barkodu dön
+        res.json({
+          name: productData.name,
+          sellPrice: parseFloat(productData.sellPrice),
+          buyPrice: parseFloat(productData.buyPrice),
+          barcode: originalBarcode, // okutulan barkod
+          productBarcode: productBarcode, // veritabanındaki gerçek barkod
+          quantity,
+          unit,
+        });
+      }
     } else {
       res.status(404).json({ error: "Product not found by ID or barcode" });
     }
