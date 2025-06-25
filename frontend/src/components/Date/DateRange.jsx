@@ -1,20 +1,22 @@
 import React, { useEffect, useState } from "react";
 import Calendar from "../../assets/Calendar";
 import { getDateRange } from "../utils/GetDateRange";
+import { useTranslation } from "react-i18next";
 
 export const DateRange = ({ handleRange }) => {
+  const { t } = useTranslation();
   const [showDateModal, setShowDateModal] = useState(false);
 
   const [range, setRange] = useState([
-    { name: "Today", key: "today" },
-    { name: "Yesterday", key: "yesterday" },
-    { name: "This Week", key: "thisWeek" },
-    { name: "Last Week", key: "lastWeek" },
-    { name: "This Month", key: "thisMonth" },
-    { name: "Last Month", key: "lastMonth" },
-    { name: "This Year", key: "thisYear" },
+    { name: t("today"), key: "today" },
+    { name: t("yesterday"), key: "yesterday" },
+    { name: t("thisWeek"), key: "thisWeek" },
+    { name: t("lastWeek"), key: "lastWeek" },
+    { name: t("thisMonth"), key: "thisMonth" },
+    { name: t("lastMonth"), key: "lastMonth" },
+    { name: t("thisYear"), key: "thisYear" },
   ]);
-  const [selectedRange, setSelectedRange] = useState(range[0]);
+  const [selectedRange, setSelectedRange] = useState(range[4]);
   const { start, end, startFormatted, endFormatted } = getDateRange(
     selectedRange?.key
   );

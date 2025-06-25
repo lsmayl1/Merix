@@ -1,4 +1,73 @@
 {
+  "search":"Axtar",
   "dashboard": "Əsas",
-  "change_language": "Dil Deyiş"
+  "products":"Məhsullar",
+  "reports":"Hesabatlar",
+  "saleReport":"Satış Hesabatı",
+  "productReport":"Məhsul Hesabatı",
+  "pos":"Kassa",
+
+  "revenue":"Dövriyyə",
+  "profit":"Qazanc",
+  "sale":"Satış",
+  "stockCost":"Anbar Dəyəri",
+  "profitMargin" :"Gəlir Marjası",
+   "quantitySold": "Satılan Miqdar",
+
+  "bestSellingProduct":"Ən Çox Satılan Məhsullar",
+  "lowStock":"Aşağı Qalıq",
+
+  "totalProduct":"Ümumi Məhsullar",
+  "WeightBasedProducts":"Çəki Əsaslı Məhsullar",
+  "UnitBasedProducts":"Ədəd Əsaslı Məhsullar",
+  "OutofStockProducts":"Qalığı Olmayan Məhsullar",
+
+   "Searchbynameorbarcode":"Ad və ya barkod ilə axtar",
+   "filters":"Filtrlər",
+   "addProduct":"Məhsul Əlavə Et",
+   "add":"Əlavə Et",
+   
+
+
+   
+  "product": "Məhsul",
+  "barcode": "Barkod",
+  "unit": "Vahid",
+  "piece":"Ədəd",
+  "price":"Qiymət",
+  "buyPrice": "Alış qiyməti",
+  "sellPrice": "Satış qiyməti",
+  "stock": "Qalıq",
+  "addStock" :"Qalıq Artir",
+  "quantity":"Miqdar",
+  "editDelete": "Redaktə/Silmə",
+  "subtotal":"Məbləğ",
+  "total":"Cəmi",
+  "delete":"Sil",
+  "clearAll":"Təmizlə",
+  "empty":"Boş",
+  "date":"Tarix",
+   "today": "Bugün",
+  "yesterday": "Dünən",
+  "thisWeek": "Bu Həftə",
+  "lastWeek": "Ötən Həftə",
+  "thisMonth": "Bu Ay",
+  "lastMonth": "Ötən Ay",
+  "thisYear": "Bu İl",
+
+   "saleAmount": "Satış Məbləği",
+  "paymentMethod": "Ödəmə üsulu",
+  "details": "Ətraflı",
+
+  
+  "cash":"Nağd",
+  "card":"Kart",
+  "receivedAmount": "Qəbul olunan məbləğ",
+  "amountToReturn": "Qaytarılacaq məbləğ",
+
+  "makePayment":"Ödəniş et",
+
+  "name":"Ad",
+  "cancel":"Ləğv Et",
+  "update":"Dəyiş"
 }

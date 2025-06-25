@@ -2,8 +2,18 @@ import React, { useEffect, useState } from "react";
 import { KPI } from "../components/Metric/KPI.jsx";
 import { Table } from "../components/Table/index.jsx";
 import { createColumnHelper } from "@tanstack/react-table";
+import { useTranslation } from "react-i18next";
+import { DateRange } from "../components/Date/DateRange.jsx";
+import { useGetDashboardMetricsMutation } from "../redux/slices/ApiSlice.jsx";
 
 export const Dashboard = () => {
+  const { t } = useTranslation();
+  const [getMetrics] = useGetDashboardMetricsMutation();
+  const [metricData, setMetricData] = useState({});
+  const [range, setRange] = useState({
+    from: "",
+    to: "",
+  });
   const columnHelper = createColumnHelper();
   const ProductsColumn = [
     columnHelper.accessor("product", {
@@ -44,6 +54,18 @@ export const Dashboard = () => {
       cellClassName: "text-center",
     }),
   ];
+  const getDashboardMetrics = async () => {
+    try {
+      const res = await getMetrics(range).unwrap();
+      if (res) setMetricData(res);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    if (range.to && range.from) getDashboardMetrics();
+  }, [range]);
 
   const stockColumn = [
     columnHelper.accessor("product", {
@@ -65,7 +87,6 @@ export const Dashboard = () => {
       cell: (info) => info.getValue(),
     }),
   ];
-
   const data = [
     {
       id: 1,
@@ -173,24 +194,25 @@ export const Dashboard = () => {
   ];
   return (
     <div className="w-full h-full  flex flex-col gap-2 ">
+      <DateRange handleRange={setRange} />
       <div className="flex items-center gap-2 w-full">
         <KPI
           data={[
             {
-              label: "Total Revenue",
-              value: "₼ 12,345",
+              label: t("revenue"),
+              value: metricData?.totalRevenue,
             },
             {
-              label: "Total Profit",
-              value: "₼ 2,345",
+              label: t("profit"),
+              value: metricData?.totalProfit,
             },
             {
-              label: "Total Sales",
-              value: "5,456",
+              label: t("sale"),
+              value: metricData?.totalSales,
             },
             {
-              label: "Total Stock Cost",
-              value: "₼ 10,000",
+              label: t("stockCost"),
+              value: metricData?.totalStockCost,
             },
           ]}
         />
@@ -198,14 +220,12 @@ export const Dashboard = () => {
       <div className="flex gap-2">
         <div className="flex flex-col gap-4 flex-5 overflow-hidden bg-white rounded-xl p-4 ">
           <h1 className="text-mainText text-md font-medium">
-            10 Best Selling Products
+            {t("bestSellingProduct")}
           </h1>
           <Table columns={ProductsColumn} data={data} />
         </div>
         <div className="flex flex-col gap-4 flex-2  overflow-hidden bg-white rounded-xl p-4 ">
-          <h1 className="text-mainText text-md font-medium">
-            Low Stock Overview
-          </h1>
+          <h1 className="text-mainText text-md font-medium">{t("lowStock")}</h1>
           {/* <Table header={stockHeader} data={data} /> */}
           <Table columns={stockColumn} data={data} />
         </div>

@@ -22,8 +22,10 @@ import { FiltersModal } from "../components/Filters/FiltersModal";
 import { Table } from "../components/Table";
 import { createColumnHelper } from "@tanstack/react-table";
 import { useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export const Products = () => {
+  const { t } = useTranslation();
   const { data: metricData } = useGetProductsMetricsQuery();
   const columnHelper = createColumnHelper();
   const columns = [
@@ -33,25 +35,27 @@ export const Products = () => {
       cellClassName: "text-center",
     }),
     columnHelper.accessor("name", {
-      header: "Product",
+      header: t("product"),
       headerClassName: "text-start",
       cellClassName: "text-start",
     }),
     columnHelper.accessor("barcode", {
-      header: "Barcode",
+      header: t("barcode"),
       headerClassName: "text-start bg-gray-100",
       cellClassName: "text-start",
     }),
     columnHelper.accessor("unit", {
-      header: "Unit",
+      header: t("unit"),
       cell: (info) => (
-        <span>{info.getValue() === "piece" ? "eded" : info.getValue()}</span>
+        <span>
+          {info.getValue() === "piece" ? t("piece") : info.getValue()}
+        </span>
       ),
       headerClassName: "text-center bg-gray-100",
       cellClassName: "text-center",
     }),
     columnHelper.accessor("buyPrice", {
-      header: "Buy Price",
+      header: t("buyPrice"),
       cell: (info) => (
         <div className="flex items-center justify-center gap-2">
           <span>{info.getValue().toFixed(2)}</span>₼
@@ -61,7 +65,7 @@ export const Products = () => {
       cellClassName: "text-center",
     }),
     columnHelper.accessor("sellPrice", {
-      header: "Sell Price",
+      header: t("sellPrice"),
       cell: (info) => (
         <div className="flex items-center justify-center gap-2">
           <span>{info.getValue().toFixed(2)}</span>₼
@@ -71,7 +75,7 @@ export const Products = () => {
       cellClassName: "text-center",
     }),
     columnHelper.accessor("stock", {
-      header: "Stok",
+      header: t("stock"),
       cell: (info) => (
         <div className="flex items-center justify-center gap-2">
           <span>{info.getValue()}</span>
@@ -81,7 +85,7 @@ export const Products = () => {
       cellClassName: "text-center",
     }),
     columnHelper.accessor("action", {
-      header: "Edit / Delete",
+      header: t("editDelete"),
       headerClassName: "text-center rounded-e-lg bg-gray-100",
       cellClassName: "text-center",
       cell: ({ row }) => (
@@ -236,19 +240,19 @@ export const Products = () => {
       <KPI
         data={[
           {
-            label: "Total Products",
+            label: t("totalProduct"),
             value: metricData?.totalProducts,
           },
           {
-            label: "Weight-Based Products",
+            label: t("WeightBasedProducts"),
             value: metricData?.kgBasedProducts,
           },
           {
-            label: "Unit-Based Productss",
+            label: t("UnitBasedProducts"),
             value: metricData?.pieceBasedProducts,
           },
           {
-            label: "Out of Stock Products",
+            label: t("OutofStockProducts"),
             value: metricData?.zeroOrNegativeStock,
           },
         ]}
@@ -282,7 +286,7 @@ export const Products = () => {
               className="border bg-white border-gray-200 rounded-xl text-nowrap px-4 max-md:px-2 cursor-pointer flex max-md:text-xs items-center gap-2 py-1 max-md:py-0"
             >
               <Filters className="max-md:size-5" />
-              Filters
+              {t("filters")}
             </button>
             {showFiltersModal && (
               <FiltersModal
@@ -296,7 +300,7 @@ export const Products = () => {
             className="border bg-white border-gray-200 rounded-xl text-nowrap px-4 cursor-pointer max-md:px-2 max-md:text-xs flex items-center gap-2 py-1 max-md:py-0"
           >
             <Plus className="max-md:size-5" />
-            Add Product
+            {t("addProduct")}
           </button>
         </div>
 

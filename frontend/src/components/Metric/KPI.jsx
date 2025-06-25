@@ -11,7 +11,9 @@ export const KPI = ({ data }) => {
           <label className="text-mainText text-nowrap max-md:text-xs font-medium capitalize">
             {item.label}
           </label>
-          <span className="text-3xl font-semibold max-md:text-2xl text-nowrap">{item.value}</span>
+          <span className="text-3xl font-semibold max-md:text-2xl text-nowrap">
+            {item.value || 0}
+          </span>
         </div>
       ))}
     </div>

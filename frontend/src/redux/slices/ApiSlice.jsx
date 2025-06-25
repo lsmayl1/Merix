@@ -107,6 +107,13 @@ export const ApiSlice = createApi({
     getProductsMetrics: build.query({
       query: () => "metrics/products",
     }),
+    getDashboardMetrics: build.mutation({
+      query: (data) => ({
+        url: "metrics/dashboard",
+        method: "POST",
+        body: data,
+      }),
+    }),
   }),
 });
 
@@ -130,4 +137,5 @@ export const {
   useGetSaleMetricsMutation,
   useGetProductSoldMetricsMutation,
   useGetProductsMetricsQuery,
+  useGetDashboardMetricsMutation,
 } = ApiSlice;

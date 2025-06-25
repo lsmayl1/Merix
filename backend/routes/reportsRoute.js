@@ -238,6 +238,10 @@ router.post("/sold-products", async (req, res) => {
       buyPrice: item.buyPrice,
       sellPrice: item.sellPrice,
       totalRevenue: item.totalRevenue.toFixed(2) + " ₼",
+      profitMargin:
+        item.totalProfit !== null
+          ? ((item.totalProfit / item.totalRevenue) * 100).toFixed(2) + " %"
+          : 0 + " ₼",
       profit:
         item.totalProfit !== null
           ? item.totalProfit.toFixed(2) + " ₼"

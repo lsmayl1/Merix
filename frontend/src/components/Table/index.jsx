@@ -4,12 +4,14 @@ import {
   getCoreRowModel,
   flexRender,
 } from "@tanstack/react-table";
+import { useTranslation } from "react-i18next";
 export const Table = ({
   data = [],
   columns = [],
   isLoading,
   pagination = true,
 }) => {
+  const { t } = useTranslation();
   const table = useReactTable({
     data,
     columns,
@@ -59,7 +61,9 @@ export const Table = ({
             ) : data.length == 0 ? (
               <tr>
                 <td colSpan={columns.length} className="text-center py-8">
-                  <div className="flex justify-center items-center">Empty</div>
+                  <div className="flex justify-center items-center">
+                    {t("empty")}
+                  </div>
                 </td>
               </tr>
             ) : (

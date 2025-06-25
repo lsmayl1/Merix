@@ -10,6 +10,7 @@ import {
 } from "../../redux/slices/ApiSlice";
 import Generate from "../../assets/Generate";
 import { Html5QrcodeScanner } from "html5-qrcode";
+import { useTranslation } from "react-i18next";
 export const ProductModal = ({
   handleClose,
   isEditMode,
@@ -18,6 +19,7 @@ export const ProductModal = ({
   handleUpdateProduct,
   handleAddProduct,
 }) => {
+  const { t } = useTranslation();
   const isMobile = useMediaQuery({ maxWidth: 768 });
 
   const [getBarcode, { isLoading: barcodeLoading, isError: barcodeError }] =
@@ -97,12 +99,12 @@ export const ProductModal = ({
             <div className="flex justify-between items-end ">
               <div className="flex flex-col w-full ">
                 <label htmlFor="name" className="text-md max-lg:text-md">
-                  Name
+                  {t("name")}
                 </label>
                 <input
                   ref={nameInputRef}
                   id="name"
-                  placeholder="Product Name"
+                  placeholder={t("name")}
                   {...register("name", { required: "Name Required" })}
                   className="rounded-lg focus:outline-blue-500  border py-1 border-mainBorder px-2"
                 />
@@ -112,7 +114,7 @@ export const ProductModal = ({
             <div className="flex max-md:flex-col  gap-4">
               {/* Unit Selection */}
               <div className="flex flex-col">
-                <label className="text-md max-lg:text-md">Unit</label>
+                <label className="text-md max-lg:text-md">{t("unit")}</label>
                 <div className="flex bg-white rounded-lg border w-fit border-mainBorder ">
                   <button
                     type="button"
@@ -123,7 +125,7 @@ export const ProductModal = ({
                         : ""
                     }`}
                   >
-                    Piece
+                    {t("piece")}
                   </button>
                   <button
                     type="button"
@@ -141,7 +143,7 @@ export const ProductModal = ({
 
               {/* Barcode */}
               <div className="flex  w-full flex-col max-lg:w-full">
-                <label className="text-md max-lg:text-md">Barcode</label>
+                <label className="text-md max-lg:text-md">{t("barcode")}</label>
                 <div className="flex items-center gap-1 max-lg:justify-between w-full">
                   <input
                     type="text"
@@ -162,7 +164,7 @@ export const ProductModal = ({
             {/* Prices */}
             <div className="flex  gap-2 max-md:flex-col">
               <div className="flex    rounded-lg flex-col">
-                <label className="text-md">Buy Price</label>
+                <label className="text-md">{t("buyPrice")}</label>
                 <div className="flex w-fit gap-2 relative ">
                   <input
                     type="number"
@@ -174,7 +176,7 @@ export const ProductModal = ({
                 </div>
               </div>
               <div className="flex    rounded-lg flex-col">
-                <label className="text-md">Sell Price</label>
+                <label className="text-md">{t("sellPrice")}</label>
                 <div className="flex w-fit gap-2 relative ">
                   <input
                     type="number"
@@ -195,7 +197,7 @@ export const ProductModal = ({
                     htmlFor=""
                     className="truncate text-nowrap text-md max-lg:text-md"
                   >
-                    In Stock
+                    {t("stock")}
                   </label>
                   <input
                     type="number"
@@ -208,7 +210,7 @@ export const ProductModal = ({
                     htmlFor=""
                     className="truncate text-nowrap text-md max-lg:text-md"
                   >
-                    New Stock
+                    {t("addStock")}
                   </label>
                   <input
                     type="number"
@@ -223,7 +225,7 @@ export const ProductModal = ({
                   htmlFor=""
                   className="truncate text-nowrap text-md max-lg:text-md"
                 >
-                  Stock
+                  {t("stock")}
                 </label>
                 <input
                   type="number"
@@ -244,7 +246,7 @@ export const ProductModal = ({
                     onClick={() => handleDelete(watch("product_id"))}
                     className="rounded-xl max-lg:text-md cursor-pointer bg-red-500 px-4 py-1 font-semibold text-white"
                   >
-                    Delete
+                    {t("delete")}
                   </button>
                 )}
                 <button
@@ -254,16 +256,16 @@ export const ProductModal = ({
                   }}
                   className="rounded-xl truncate  max-lg:text-md cursor-pointer border border-red-700 px-4 py-1 font-semibold text-red-700"
                 >
-                  Cancel
+                  {t("cancel")}
                 </button>
 
                 {isEditMode ? (
                   <button className="rounded-xl cursor-pointer max-lg:text-md border border-blue-700 px-4 py-1 font-semibold text-blue-700">
-                    Update
+                    {t("update")}
                   </button>
                 ) : (
                   <button className="rounded-xl max-lg:text-md cursor-pointer border border-blue-700 px-4 py-1 font-semibold text-blue-700">
-                    Add
+                    {t("add")}
                   </button>
                 )}
               </div>

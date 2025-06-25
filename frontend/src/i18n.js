@@ -15,4 +15,7 @@ i18next.use(initReactI18next).init({
   },
 });
 
+const savedLang = localStorage.getItem("language") || "en";
+i18next.changeLanguage(savedLang);
+
 export default i18next;

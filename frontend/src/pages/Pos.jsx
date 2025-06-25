@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Plus } from "../assets/Plus";
 import { SearchIcon } from "../assets/SearchIcon";
 import { Setting } from "../assets/Setting";
@@ -25,7 +25,9 @@ import { ProductShortcuts } from "../components/Pos/ProductShortcuts";
 import { NavLink } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import { QtyInput } from "../components/QtyInput";
+import { useTranslation } from "react-i18next";
 export const Pos = () => {
+  const { t } = useTranslation();
   const columnHelper = createColumnHelper();
   const [inputData, setInputData] = useState([]);
   const [data, setData] = useState([]);
@@ -35,22 +37,21 @@ export const Pos = () => {
   const { data: searchData } = useGetProductsByQueryQuery(query, {
     skip: !query || query.length < 3,
   });
-  const [editingQuantities, setEditingQuantities] = useState({});
   const [trigger, { isLoading, isFetching }] = useLazyGetProductByIdQuery();
   const columns = [
     columnHelper.accessor("name", {
-      header: "Name",
+      header: t("product"),
       headerClassName: "text-start rounded-s-lg bg-gray-100",
       cellClassName: "text-start",
     }),
     columnHelper.accessor("sellPrice", {
-      header: "Price",
+      header: t("price"),
       headerClassName: "text-center  bg-gray-100",
       cellClassName: "text-center",
       cell: ({ row }) => <span>{row.original?.sellPrice?.toFixed(2)} ₼</span>,
     }),
     columnHelper.accessor("quantity", {
-      header: "Quantity",
+      header: t("quantity"),
       cell: ({ row }) => (
         <QtyInput
           qty={row.original.quantity}
@@ -63,7 +64,7 @@ export const Pos = () => {
       cellClassName: "text-center",
     }),
     columnHelper.accessor("subtotal", {
-      header: "Subtotal",
+      header: t("subtotal"),
       headerClassName: "text-center  bg-gray-100",
       cellClassName: "text-center",
       cell: ({ row }) => (
@@ -73,7 +74,7 @@ export const Pos = () => {
       ),
     }),
     columnHelper.accessor("action", {
-      header: "Action",
+      header: t("delete"),
       headerClassName: "text-center rounded-e-lg bg-gray-100",
       cellClassName: "text-center",
       cell: ({ row }) => (
@@ -87,6 +88,35 @@ export const Pos = () => {
   const [receivedAmount, setReceivedAmount] = useState(0);
   const [AmountToReturn, setAmountToReturn] = useState(0);
   const [postSale, { isLoading: postLoading }] = usePostSaleMutation();
+  const searchInput = useRef();
+  const modalRef = useRef();
+  const receivedInput = useRef();
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.ctrlKey && e.key === "k") {
+        e.preventDefault();
+        searchInput.current?.focus();
+      } else if (e.key.toLowerCase() === "q") {
+        e.preventDefault();
+        receivedInput.current?.select();
+      }
+    };
+
+    const handleClickOutside = (e) => {
+      if (modalRef.current && !modalRef.current.contains(e.target)) {
+        setQuery("");
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.addEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const handleChangeQty = async (barcode, action, qty) => {
     const existProduct = inputData.find((x) => x.barcode == barcode);
@@ -262,6 +292,7 @@ export const Pos = () => {
           <div className="flex items-center  relative w-full">
             <input
               type="text"
+              ref={searchInput}
               placeholder="Search for products"
               className="border border-mainBorder rounded-lg py-2 px-10 w-full"
               value={query}
@@ -273,13 +304,24 @@ export const Pos = () => {
               }}
             />
             <SearchIcon className="absolute left-2" />
-            <button onClick={() => setQuery("")} className="absolute right-2">
-              <Xcircle />
-            </button>
+            <div className="flex absolute text-gray-400 right-1 gap-4">
+              <div className="">
+                <span className="bg-gray-50 p-1 border border-mainBorder rounded-lg">
+                  Ctrl
+                </span>
+                <span className=" p-1 ">+</span>
+                <span className="bg-gray-50 p-1 border border-mainBorder rounded-lg">
+                  K
+                </span>
+              </div>
+            </div>
           </div>
           {searchData?.length > 0 && query && (
             <div className="absolute w-full h-[400px] z-50 top-12 bg-white rounded-lg border border-mainBorder">
-              <ul className="overflow-auto h-full px-4 flex flex-col  ">
+              <ul
+                ref={modalRef}
+                className="overflow-auto h-full px-4 flex flex-col  "
+              >
                 {searchData?.map((item) => (
                   <li
                     key={item.product_id}
@@ -303,7 +345,7 @@ export const Pos = () => {
         <div className="flex items-center gap-6">
           <button onClick={() => setInputData([])} className="text-red-500">
             {" "}
-            Clear All
+            {t("clearAll")}
           </button>
           <Setting className="size-8" />
           <ChartPie className="size-8" />
@@ -325,9 +367,10 @@ export const Pos = () => {
               <Table columns={columns} data={data?.items} pagination={false} />
             </div>
           </div>
-          <div className="flex flex-col h-fit justify-center gap-4">
-            <div className="flex flex-col gap-2">
-              {/* <div className="flex flex-col gap-4 border-b border-dashed pb-4 border-gray-300">
+          {inputData.length > 0 && (
+            <div className="flex flex-col h-fit justify-center gap-4">
+              <div className="flex flex-col gap-2">
+                {/* <div className="flex flex-col gap-4 border-b border-dashed pb-4 border-gray-300">
                 <div className="w-full flex items-center justify-between">
                   <span>Subtotal</span>
                   <span className="text-lg font-medium">
@@ -335,86 +378,105 @@ export const Pos = () => {
                   </span>
                 </div>
               </div> */}
-              <div className="flex items-center justify-between">
-                <span className="text-2xl font-medium">Total</span>
-                <span className="text-2xl font-medium">
-                  {data?.total?.toFixed(2) || "0.00"} ₼
-                </span>
-              </div>
-            </div>
-            <div className="flex flex-col gap-2">
-              <div className="flex gap-2 items-center">
-                <button
-                  onClick={() => setPaymentMethod("cash")}
-                  className={`flex flex-col gap-1 items-center border  px-6 py-1 rounded-lg w-full ${
-                    paymentMethod == "cash"
-                      ? "border-blue-500 bg-blue-50"
-                      : " border-mainBorder"
-                  }`}
-                >
-                  <Cash
-                    className={`${
-                      paymentMethod == "cash" ? "text-blue-500" : "text-black"
-                    }`}
-                  />
-                  <span
-                    className={`${
-                      paymentMethod == "cash" ? "text-blue-500" : "text-black"
-                    }`}
-                  >
-                    Cash
+                <div className="flex items-center justify-between">
+                  <span className="text-2xl font-medium">{t("total")}</span>
+                  <span className="text-2xl font-medium">
+                    {data?.total?.toFixed(2) || "0.00"} ₼
                   </span>
-                </button>
-                <button
-                  onClick={() => setPaymentMethod("card")}
-                  className={`flex flex-col gap-1 items-center border ${
-                    paymentMethod == "card"
-                      ? "border-blue-500 bg-blue-50"
-                      : " border-mainBorder"
-                  }  px-6 py-1 rounded-lg w-full`}
-                >
-                  <CreditCard
-                    className={`${
-                      paymentMethod == "card" ? "text-blue-500" : "text-black"
-                    }`}
-                  />
-                  <span
-                    className={`${
-                      paymentMethod == "card" ? "text-blue-500" : "text-black"
-                    }`}
-                  >
-                    Card
-                  </span>
-                </button>
+                </div>
               </div>
-              <div className="flex flex-col gap-4 border-mainBorder border rounded-lg w-full p-2 font-medium ">
-                <div className="flex justify-between items-center">
-                  <h1>Received Amount</h1>
-                  <div className="flex items-center gap-2">
-                    <input
-                      className="text-xl text-right"
-                      type="number"
-                      onChange={(e) => setReceivedAmount(e.target.value)}
-                      value={receivedAmount}
-                    />
-                    <span> ₼</span>
+              <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2 border-mainBorder border rounded-lg w-full p-2 font-medium ">
+                  <div className="flex justify-between items-center">
+                    <div className="flex gap-2 items-center">
+                      <h1>{t("receivedAmount")}</h1>{" "}
+                      <span className="bg-gray-100 rounded-full px-2  border border-mainBorder text-gray-400">
+                        Q
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        className="text-xl text-right"
+                        ref={receivedInput}
+                        type="number"
+                        onChange={(e) => setReceivedAmount(e.target.value)}
+                        value={receivedAmount}
+                      />
+                      <span> ₼</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <h1>{t("amountToReturn")}</h1>
+                    <span className="text-xl">
+                      {AmountToReturn.toFixed(2)} ₼
+                    </span>
                   </div>
                 </div>
-                <div className="flex justify-between items-center">
-                  <h1>Amount to Return</h1>
-                  <span className="text-xl">{AmountToReturn.toFixed(2)} ₼</span>
+                <div className="flex items-center gap-2 w-full">
+                  <div className="flex gap-2 items-center w-full h-full">
+                    <button
+                      onClick={() => setPaymentMethod("cash")}
+                      className={`flex flex-col gap-1 items-center border  px-6 py-1 rounded-lg w-full ${
+                        paymentMethod == "cash"
+                          ? "border-blue-500 bg-blue-50"
+                          : " border-mainBorder"
+                      }`}
+                    >
+                      <Cash
+                        className={`${
+                          paymentMethod == "cash"
+                            ? "text-blue-500"
+                            : "text-black"
+                        }`}
+                      />
+                      <span
+                        className={`${
+                          paymentMethod == "cash"
+                            ? "text-blue-500"
+                            : "text-black"
+                        }`}
+                      >
+                        {t("cash")}
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => setPaymentMethod("card")}
+                      className={`flex flex-col gap-1 items-center border ${
+                        paymentMethod == "card"
+                          ? "border-blue-500 bg-blue-50"
+                          : " border-mainBorder"
+                      }  px-6 py-1 rounded-lg w-full`}
+                    >
+                      <CreditCard
+                        className={`${
+                          paymentMethod == "card"
+                            ? "text-blue-500"
+                            : "text-black"
+                        }`}
+                      />
+                      <span
+                        className={`${
+                          paymentMethod == "card"
+                            ? "text-blue-500"
+                            : "text-black"
+                        }`}
+                      >
+                        {t("card")}
+                      </span>
+                    </button>
+                  </div>
+                  <button
+                    disabled={data.length == 0}
+                    onClick={handleSubmitSale}
+                    className="flex justify-center gap-1 items-center border border-mainBorder px-6 h-full rounded-lg w-full"
+                  >
+                    <Payment />
+                    <span>{t("makePayment")}</span>
+                  </button>
                 </div>
               </div>
-              <button
-                disabled={data.length == 0}
-                onClick={handleSubmitSale}
-                className="flex justify-center gap-1 items-center border border-mainBorder px-6 py-5 rounded-lg w-full"
-              >
-                <Payment />
-                <span>Make Payment</span>
-              </button>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

@@ -13,8 +13,10 @@ import {
 } from "../../redux/slices/ApiSlice";
 import { SaleDetailsModal } from "../../components/Reports/SaleDetailsModal";
 import { DateRange } from "../../components/Date/DateRange";
+import { useTranslation } from "react-i18next";
 
 export const SalesReports = () => {
+  const { t } = useTranslation();
   const [showFiltersModal, setShowFiltersModal] = useState(false);
   const [getSales] = useGetAllSalesMutation();
   const [getSaleMetrics] = useGetSaleMetricsMutation();
@@ -35,29 +37,29 @@ export const SalesReports = () => {
       cellClassName: "text-center",
     }),
     columnHelper.accessor("date", {
-      header: "Date",
+      header: t("date"),
       headerClassName: "text-center bg-gray-100",
       cellClassName: "text-center",
     }),
     columnHelper.accessor("total_amount", {
-      header: "Total Sale Amount",
+      header: t("saleAmount"),
       headerClassName: "text-center bg-gray-100",
       cellClassName: "text-center",
       cell: ({ getValue }) => <span>{getValue()} ₼</span>,
     }),
     columnHelper.accessor("payment_method", {
-      header: "Payment Method",
+      header: t("paymentMethod"),
       headerClassName: "text-center bg-gray-100",
       cellClassName: "text-center",
     }),
     columnHelper.accessor("profit", {
-      header: "Profit",
+      header: t("profit"),
       headerClassName: "text-center bg-gray-100",
       cellClassName: "text-center",
       cell: ({ getValue }) => <span>{getValue().toFixed(2)} ₼</span>,
     }),
     columnHelper.accessor("details", {
-      header: "Details",
+      header: t("details"),
       headerClassName: "text-center bg-gray-100 rounded-e-lg",
       cell: ({ row }) => (
         <button
@@ -108,19 +110,19 @@ export const SalesReports = () => {
       <KPI
         data={[
           {
-            label: "Total Revenue",
+            label: t("revenue"),
             value: metrics.totalRevenue || 0,
           },
           {
-            label: "Total Sales",
+            label: t("sale"),
             value: metrics.totalSales || 0,
           },
           {
-            label: "Total Profit",
+            label: t("profit"),
             value: metrics.totalProfit || 0,
           },
           {
-            label: "Profit Margin",
+            label: t("profitMargin"),
             value: metrics.profitMargin || 0,
           },
         ]}
@@ -133,14 +135,13 @@ export const SalesReports = () => {
       )}
       <div className="flex flex-col gap-2 w-full h-full min-h-0  bg-white rounded-lg px-4 py-2 relative">
         <div className="flex gap-2 items-center justify-end">
-         
           <div className="flex  relative ">
             <button
               onClick={() => setShowFiltersModal(!showFiltersModal)}
               className="border bg-white border-gray-200 rounded-xl text-nowrap px-4 cursor-pointer flex items-center gap-2 py-1"
             >
               <Filters />
-              Filters
+              {t("filters")}
             </button>
             {showFiltersModal && (
               <FiltersModal handleClose={setShowFiltersModal} />

@@ -13,8 +13,10 @@ import {
   useGetProductSoldMetricsMutation,
   useGetProductsReportMutation,
 } from "../../redux/slices/ApiSlice";
+import { useTranslation } from "react-i18next";
 
 export const ProductReports = () => {
+  const { t } = useTranslation();
   const [getProductMetric] = useGetProductSoldMetricsMutation();
   const [metricData, setMetricData] = useState({});
   const [data, setData] = useState([]);
@@ -28,28 +30,38 @@ export const ProductReports = () => {
   const [getProductsReport] = useGetProductsReportMutation();
   const columns = [
     columnHelper.accessor("productName", {
-      header: "Product",
+      header: t("product"),
       headerClassName: "text-start rounded-s-lg bg-gray-100",
       cellClassName: "text-start",
     }),
 
     columnHelper.accessor("totalSold", {
-      header: "Units Sold",
+      header: t("quantitySold"),
       headerClassName: "text-center bg-gray-100",
       cellClassName: "text-center",
     }),
     columnHelper.accessor("unit", {
-      header: "Unit",
+      header: t("unit"),
       headerClassName: "text-center bg-gray-100",
       cellClassName: "text-center",
+      cell: (info) => (
+        <span>
+          {info.getValue() === "pcs" ? t("piece") : info.getValue()}
+        </span>
+      ),
     }),
     columnHelper.accessor("totalRevenue", {
-      header: "Total Revenue",
+      header: t("revenue"),
       headerClassName: "text-center bg-gray-100",
       cellClassName: "text-center",
     }),
     columnHelper.accessor("profit", {
-      header: "Total Profit",
+      header: t("profit"),
+      headerClassName: "text-center bg-gray-100",
+      cellClassName: "text-center",
+    }),
+     columnHelper.accessor("profitMargin", {
+      header: t("profitMargin"),
       headerClassName: "text-center bg-gray-100",
       cellClassName: "text-center",
     }),
@@ -89,11 +101,11 @@ export const ProductReports = () => {
       <KPI
         data={[
           {
-            label: "Total Stock Cost",
+            label: t("stockCost"),
             value: metricData?.totalStockCost,
           },
           {
-            label: "Quantity Sold",
+            label: t("quantitySold"),
             value: metricData?.quantitySold,
           },
         ]}
@@ -106,7 +118,7 @@ export const ProductReports = () => {
               className="border bg-white border-gray-200 rounded-xl text-nowrap px-4 cursor-pointer flex items-center gap-2 py-1"
             >
               <Filters />
-              Filters
+              {t("filters")}
             </button>
             {showFiltersModal && (
               <FiltersModal handleClose={setShowFiltersModal} />

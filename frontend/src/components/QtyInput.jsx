@@ -4,7 +4,6 @@ import { Plus } from "../assets/Plus";
 
 export const QtyInput = ({ barcode, handleQty, qty, className, allign }) => {
   const [newQty, setNewQty] = useState(Number(qty).toFixed(2) || 0);
-  console.log(newQty);
   useEffect(() => {
     if (qty == undefined || qty == null) {
       setNewQty(0);

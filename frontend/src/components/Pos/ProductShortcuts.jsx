@@ -11,28 +11,30 @@ import { Table } from "../Table";
 import { createColumnHelper } from "@tanstack/react-table";
 import TrashBin from "../../assets/TrashBin";
 import { QtyInput } from "../QtyInput";
+import { useTranslation } from "react-i18next";
 
 export const ProductShortcuts = ({
   products = [],
   data = [],
   handleChangeQty,
 }) => {
+  const { t } = useTranslation();
   const columnHelper = createColumnHelper();
   const [showAddModal, setShowAddModal] = useState(false);
   const [openContext, setOpenContext] = useState(null);
   const colums = [
     columnHelper.accessor("name", {
-      header: "Name",
+      header: t("product"),
       headerClassName: "text-start rounded-s-lg bg-gray-100",
       cellClassName: "text-start",
     }),
     columnHelper.accessor("sellPrice", {
-      header: "Price",
+      header: t("price"),
       headerClassName: "text-center  bg-gray-100",
       cellClassName: "text-center",
     }),
     columnHelper.accessor("action", {
-      header: "Add",
+      header: t("add"),
       headerClassName: "text-center rounded-e-lg bg-gray-100",
       cellClassName: "text-center",
       cell: ({ row }) => (
@@ -107,11 +109,11 @@ export const ProductShortcuts = ({
       {showAddModal && (
         <div className="w-full h-full absolute z-50  flex items-center justify-center ">
           <div className="bg-white flex flex-col ounded-lg p-5 gap-2 w-9/12 h-2/3 min-h-0 shadow-2xl border border-mainBorder rounded-lg">
-            <h1 className="text-xl font-semibold ">Add Product</h1>
+            <h1 className="text-xl font-semibold ">{t("addProduct")}</h1>
             <div className="flex items-center  relative w-full">
               <input
                 type="text"
-                placeholder="Search for products"
+                placeholder={t("Searchbynameorbarcode")}
                 className="border border-mainBorder rounded-lg py-2 px-10 w-full"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
@@ -183,7 +185,7 @@ export const ProductShortcuts = ({
                 className="absolute w-full  h-full flex items-center justify-center right-0 top-0 rounded-lg bg-blur-xs bg-white gap-2"
               >
                 <TrashBin className="size-8" />
-                <span className="text-xl text-black">Delete</span>
+                <span className="text-xl text-black">{t("delete")}</span>
               </button>
             )}
           </li>
@@ -194,7 +196,7 @@ export const ProductShortcuts = ({
             className="flex items-center gap-2 "
           >
             <Plus />
-            Add Product
+            {t("addProduct")}
           </button>
         </li>
       </ul>

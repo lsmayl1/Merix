@@ -134,4 +134,64 @@ router.post("/products-sold", async (req, res) => {
   }
 });
 
+router.post("/dashboard", async (req, res) => {
+  const { from, to } = req.body;
+
+  try {
+    // Tüm satışları ve detaylarını çek
+    const sales = await Sales.findAll({
+      where: {
+        date: {
+          [Op.between]: [from, to],
+        },
+      },
+      include: [
+        {
+          model: SalesDetails,
+          as: "details",
+          attributes: ["sell_price", "buy_price", "quantity"],
+        },
+      ],
+    });
+
+    let totalRevenue = 0;
+    let totalProfit = 0;
+    let totalSales = sales.length; // Satış sayısı
+
+    sales.forEach((sale) => {
+      if (Array.isArray(sale.details)) {
+        sale.details.forEach((detail) => {
+          const revenue = Number(detail.sell_price) * Number(detail.quantity);
+          let profit = 0;
+          if (Number(detail.buy_price) !== 0) {
+            profit =
+              (Number(detail.sell_price) - Number(detail.buy_price)) *
+              Number(detail.quantity);
+          }
+          totalRevenue += revenue;
+          totalProfit += profit;
+        });
+      }
+    });
+
+    // Tüm ürünlerin toplam stok maliyeti (Products tablosundan)
+    const products = await Products.findAll({
+      attributes: ["buyPrice", "stock"],
+    });
+    let totalStockCost = 0;
+    products.forEach((product) => {
+      totalStockCost += Number(product.buyPrice) * Number(product.stock);
+    });
+
+    res.json({
+      totalRevenue: totalRevenue.toFixed(2) + " ₼",
+      totalSales,
+      totalProfit: totalProfit.toFixed(2) + " ₼",
+      totalStockCost: totalStockCost.toFixed(2) + " ₼",
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 module.exports = router;

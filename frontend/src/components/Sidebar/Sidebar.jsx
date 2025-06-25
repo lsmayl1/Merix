@@ -5,25 +5,28 @@ import Reports from "../../assets/Sidebar/Reports";
 import { NavLink } from "react-router-dom";
 import { Kart } from "../../assets/Sidebar/Kart";
 import { CloseIcon } from "../../assets/Close";
-const links = [
-  { name: "Dashboard", blank: false, path: "", icon: <Dashboard /> },
-  { name: "Products", blank: false, path: "products", icon: <Box /> },
-  {
-    name: "Reports",
-    blank: false,
-    icon: <Reports />,
-    path: "reports",
-    category: [
-      { name: "Sale Report", path: "reports/sale" },
-      {
-        name: "Products Sold Report",
-        path: "reports/products",
-      },
-    ],
-  },
-  { name: "Pos", blank: true, path: "pos", icon: <Kart /> },
-];
+import { useTranslation } from "react-i18next";
+
 export const Sidebar = ({ className, handleClose }) => {
+  const { t } = useTranslation();
+  const links = [
+    { name: t("dashboard"), blank: false, path: "", icon: <Dashboard /> },
+    { name: t("products"), blank: false, path: "products", icon: <Box /> },
+    {
+      name: t("reports"),
+      blank: false,
+      icon: <Reports />,
+      path: "reports",
+      category: [
+        { name: t("saleReport"), path: "reports/sale" },
+        {
+          name: t("productReport"),
+          path: "reports/products",
+        },
+      ],
+    },
+    { name: t("pos"), blank: true, path: "pos", icon: <Kart /> },
+  ];
   return (
     <div
       className={`w-full max-md:absolute z-50 max-md:left-0 max-md:bg-white items-center flex py-12 flex-col ${className}
