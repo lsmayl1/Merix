@@ -16,7 +16,7 @@ export const DateRange = ({ handleRange }) => {
     { name: t("lastMonth"), key: "lastMonth" },
     { name: t("thisYear"), key: "thisYear" },
   ]);
-  const [selectedRange, setSelectedRange] = useState(range[4]);
+  const [selectedRange, setSelectedRange] = useState(range[0]);
   const { start, end, startFormatted, endFormatted } = getDateRange(
     selectedRange?.key
   );

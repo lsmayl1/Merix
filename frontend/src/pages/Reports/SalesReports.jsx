@@ -8,18 +8,21 @@ import { Table } from "../../components/Table";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Details } from "../../assets/Details";
 import {
+  useDeleteSaleMutation,
   useGetAllSalesMutation,
   useGetSaleMetricsMutation,
 } from "../../redux/slices/ApiSlice";
 import { SaleDetailsModal } from "../../components/Reports/SaleDetailsModal";
 import { DateRange } from "../../components/Date/DateRange";
 import { useTranslation } from "react-i18next";
+import TrashBin from "../../assets/TrashBin";
 
 export const SalesReports = () => {
   const { t } = useTranslation();
   const [showFiltersModal, setShowFiltersModal] = useState(false);
-  const [getSales] = useGetAllSalesMutation();
+  const [getSales,{refetch}] = useGetAllSalesMutation();
   const [getSaleMetrics] = useGetSaleMetricsMutation();
+  const [deleteSale,{Loading:deleteLoading}] = useDeleteSaleMutation()
   const [inputValue, setInputValue] = useState("");
   const [data, setData] = useState([]);
   const [metrics, setMetrics] = useState({});
@@ -71,6 +74,19 @@ export const SalesReports = () => {
       ),
       cellClassName: "text-center",
     }),
+    columnHelper.accessor("delete", {
+      header: t("delete"),
+      headerClassName: "text-center bg-gray-100 rounded-e-lg",
+      cell: ({ row }) => (
+        <button
+          onClick={() => handleDeleteSale(row?.original?.sale_id)}
+          className="text-mainText hover:underline"
+        >
+          <TrashBin/>
+        </button>
+      ),
+      cellClassName: "text-center",
+    }),
   ];
   const handleDetails = (id) => {
     if (!id) return;
@@ -103,6 +119,18 @@ export const SalesReports = () => {
       getMetrics();
     }
   }, [range]);
+
+
+  const handleDeleteSale = async (id)=>{
+    if(window.confirm("Silinsin ?")){
+    try {
+      await deleteSale(id).unwrap()
+      await refetch()
+    } catch (error) {
+     console.log(error) 
+    }
+    }
+  }
 
   return (
     <div className="flex flex-col gap-2  w-full h-full relative">

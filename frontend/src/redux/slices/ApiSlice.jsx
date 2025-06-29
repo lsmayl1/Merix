@@ -81,6 +81,13 @@ export const ApiSlice = createApi({
         body: sale,
       }),
     }),
+
+    deleteSale:build.mutation({
+      query:(id)=> ({ 
+        url:`sales/delete/${id}`,
+        method:"DELETE"
+      }),
+    }),
     getProductsReport: build.mutation({
       query: (data) => ({
         url: "reports/sold-products",
@@ -132,6 +139,7 @@ export const {
   useGetSaleByIdQuery,
   usePostSalePreviewMutation,
   usePostSaleMutation,
+  useDeleteSaleMutation,
   useGetProductsReportMutation,
 
   useGetSaleMetricsMutation,

@@ -331,4 +331,37 @@ router.post("/create", async (req, res) => {
   }
 });
 
+router.delete("/delete/:id", async (req, res) => {
+  const { id } = req.params;
+  if (!id) return res.status(400).json({ error: "Id gereklidir" });
+
+  try {
+    // Satış ve detaylarını bul
+    const sale = await Sales.findByPk(id, {
+      include: [{ model: SalesDetails, as: "details" }]
+    });
+    if (!sale) return res.status(404).json({ error: "Satış bulunamadı" });
+
+    // Stokları geri ekle
+    for (const detail of sale.details) {
+      const product = await Products.findByPk(detail.product_id);
+      if (product) {
+        await product.update({
+          stock: Sequelize.literal(`stock + ${detail.quantity}`)
+        });
+      }
+    }
+
+    // Detayları sil
+    await SalesDetails.destroy({ where: { sale_id: id } });
+    // Satışı sil
+    await Sales.destroy({ where: { sale_id: id } });
+
+    res.json({ message: "Satış başarıyla silindi" });
+  } catch (error) {
+    console.error("Satış silme hatası:", error);
+    res.status(500).json({ error: "Satış silinemedi", details: error.message });
+  }
+});
+
 module.exports = router;
