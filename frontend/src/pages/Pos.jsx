@@ -130,11 +130,11 @@ export const Pos = () => {
               let newQuantity = item.quantity;
 
               if (qty !== undefined && qty !== null) {
-                newQuantity = Math.max(1, Number(qty));
+                newQuantity = Math.max(0.001, Number(qty));
               } else if (action === "increase") {
                 newQuantity += 1;
               } else if (action === "deacrese") {
-                newQuantity = Math.max(1, item.quantity - 1);
+                newQuantity = Math.max(0.001, item.quantity - 1);
               }
 
               return {
@@ -157,7 +157,7 @@ export const Pos = () => {
               let newQuantity = item.quantity;
 
               if (qty !== undefined && qty !== null) {
-                newQuantity = Math.max(0.001, Number(qty)); // minimum 1 gram
+                newQuantity = Math.max(0.001, parseFloat(qty)); // minimum 1 gram
               } else if (action === "increase") {
                 newQuantity += 0.1; // örnek olarak 100 gram artır
               } else if (action === "deacrese") {
@@ -195,6 +195,7 @@ export const Pos = () => {
                 let newQuantity = item.quantity;
 
                 if (validProduct.unit === "kg") {
+                  
                   // Tartım barkodundan gelen quantity varsa onu ekle
                   if (validProduct.quantity) {
                     newQuantity += validProduct.quantity;
@@ -237,6 +238,7 @@ export const Pos = () => {
   };
 
   const handleSubmitSale = async () => {
+    if(postLoading) return;
     try {
       const sale = await postSale({
         payment_method: paymentMethod,
@@ -397,9 +399,10 @@ export const Pos = () => {
                     <div className="flex items-center gap-2">
                       <input
                         className="text-xl text-right"
+                        step={0.01}
                         ref={receivedInput}
                         type="number"
-                        onChange={(e) => setReceivedAmount(e.target.value)}
+                        onChange={(e) => setReceivedAmount(e.target.value.replace(",", "."))}
                         value={receivedAmount}
                       />
                       <span> ₼</span>
@@ -466,7 +469,7 @@ export const Pos = () => {
                     </button>
                   </div>
                   <button
-                    disabled={data.length == 0}
+                    disabled={data.length == 0 || postLoading}
                     onClick={handleSubmitSale}
                     className="flex justify-center gap-1 items-center border border-mainBorder px-6 h-full rounded-lg w-full"
                   >

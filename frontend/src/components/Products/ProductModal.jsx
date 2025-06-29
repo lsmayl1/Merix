@@ -214,6 +214,7 @@ export const ProductModal = ({
                   </label>
                   <input
                     type="number"
+                    step={0.01}
                     {...register("newStock")}
                     className="border focus:outline-none rounded-lg w-1/2  px-2 py-1  border-mainBorder  "
                   />
@@ -229,6 +230,7 @@ export const ProductModal = ({
                 </label>
                 <input
                   type="number"
+                  step={0.01}
                   {...register("stock")}
                   className="border focus:outline-none rounded-lg w-1/2  px-2 py-1  border-mainBorder  "
                 />

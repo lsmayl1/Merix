@@ -28,9 +28,6 @@ const SalesDetails = sequelize.define(
     quantity: {
       type: DataTypes.DECIMAL(10, 3),
       allowNull: false,
-      validate: {
-        min: 1,
-      },
     },
     subtotal: {
       type: DataTypes.DECIMAL(10, 2),

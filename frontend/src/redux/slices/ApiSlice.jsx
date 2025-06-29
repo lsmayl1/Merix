@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-const API = "http://192.168.1.69:3000/";
+const API = "http://localhost:3000/";
 // const API = "";
 
 export const ApiSlice = createApi({

@@ -92,7 +92,7 @@ router.get("/", async (req, res) => {
     // Veriyi getir (SQL seviyesinde sıralama yaparak hızlandır)
     const products = await Products.findAll({
       order,
-      limit: limit,
+      
       offset: offset,
     });
 
@@ -309,7 +309,7 @@ router.put("/:id", async (req, res) => {
       if (isNaN(newStockValue)) {
         return res.status(400).json({ error: "newStock must be a number" });
       }
-      updateData.stock = product.stock + newStockValue;
+      updateData.stock = parseFloat(product.stock) + newStockValue;
     }
 
     // Barcode uniqueness check (only if changing)
@@ -447,7 +447,33 @@ router.post("/generate-barcode", async (req, res) => {
           message: "Benzersiz barkod üretilemedi, tüm kodlar dolu olabilir.",
         });
       }
-    }
+    }else if (unit === "kg") {
+  const kgProducts = await Products.findAll({
+    where: { unit: "kg", barcode: { [Op.like]: "22%" } },
+    attributes: ["barcode"],
+    order: [["barcode", "DESC"]],
+  });
+
+  let nextCode;
+  if (kgProducts.length === 0) {
+    nextCode = "00001"; // İlk kg ürünü için başlangıç
+  } else {
+    const lastKgBarcode = kgProducts[0].barcode;
+    let lastCode = parseInt(lastKgBarcode && lastKgBarcode.length >= 7 ? lastKgBarcode.slice(2, 7) : "0", 10);
+    if (isNaN(lastCode)) lastCode = 0;
+    nextCode = String(lastCode + 1).padStart(5, "0");
+  }
+
+  newBarcodeBase = `22${nextCode}00000`; // 12 haneli: 2 + 5 + 5
+  const checkDigit = calculateCheckDigit(newBarcodeBase);
+  newBarcode = newBarcodeBase + checkDigit; // 13 haneli tam barkod
+
+  if (existingBarcodes.includes(newBarcode)) {
+    return res.status(500).json({
+      message: "Benzersiz barkod üretilemedi, tüm kodlar dolu olabilir.",
+    });
+  }
+}
 
     res.status(200).json({
       message: "Yeni barkod başarıyla oluşturuldu",

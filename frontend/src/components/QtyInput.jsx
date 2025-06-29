@@ -3,12 +3,12 @@ import { Minus } from "../assets/Minus";
 import { Plus } from "../assets/Plus";
 
 export const QtyInput = ({ barcode, handleQty, qty, className, allign }) => {
-  const [newQty, setNewQty] = useState(Number(qty).toFixed(2) || 0);
+  const [newQty, setNewQty] = useState(parseFloat(qty).toFixed(2) || 0);
   useEffect(() => {
     if (qty == undefined || qty == null) {
       setNewQty(0);
     } else {
-      setNewQty(Number(qty).toFixed(2) || 0);
+      setNewQty(parseFloat(qty).toFixed(2) || 0);
     }
   }, [qty]);
   return (
@@ -21,6 +21,7 @@ export const QtyInput = ({ barcode, handleQty, qty, className, allign }) => {
       </button>
       <input
         type="number"
+        step={0.01}
         className={`${className} rounded-lg  w-1/6 text-center  text-black`}
         value={newQty}
         onChange={(e) => setNewQty(e.target.value)}
