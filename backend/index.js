@@ -54,12 +54,12 @@ PORT=${process.env.PORT || 3000}
 
 if (isDbConfigured) {
   // Route'ları mount et
-  app.use("/products", productsRoute);
-  app.use("/sales", salesRoutes);
-  app.use("/metrics", metricRoute);
-  app.use("/plu", pluRoute);
-  app.use("/printer", labelPrinterRoute);
-  app.use("/reports", reportsRoute);
+  app.use("/api/products", productsRoute);
+  app.use("/api/sales", salesRoutes);
+  app.use("/api/metrics", metricRoute);
+  app.use("/api/plu", pluRoute);
+  app.use("/api/printer", labelPrinterRoute);
+  app.use("/api/reports", reportsRoute);
 
   // Tüm istekleri React dist klasörüne yönlendir
   app.get("*", (req, res) => {

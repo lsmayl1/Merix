@@ -97,7 +97,7 @@ export const Pos = () => {
       if (e.ctrlKey && e.key === "k") {
         e.preventDefault();
         searchInput.current?.focus();
-      } else if (e.key.toLowerCase() === "q") {
+      } else if (e.key.toLowerCase() === "/") {
         e.preventDefault();
         receivedInput.current?.select();
       }
@@ -279,7 +279,7 @@ export const Pos = () => {
   return (
     <div className="flex flex-col  overflow-hidden h-screen  gap-2 w-full ">
       <ToastContainer />
-      <BarcodeField handleBarcode={(id) => handleChangeQty(id, "increase")} />
+     
       <div className="flex gap-4 items-center justify-between px-8 py-4">
         <div className="flex gap-2 items-center ">
           <button className="border border-mainBorder py-2 px-4 rounded-lg">
@@ -345,15 +345,16 @@ export const Pos = () => {
           )}
         </div>
         <div className="flex items-center gap-6">
-          <button onClick={() => setInputData([])} className="text-red-500">
+          <h1 onClick={() => setInputData([])} className="text-red-500">
             {" "}
             {t("clearAll")}
-          </button>
+          </h1>
           <Setting className="size-8" />
           <ChartPie className="size-8" />
           <NavLink to={"/"}>
             <Logout className="size-8" />
           </NavLink>
+           <BarcodeField handleBarcode={(id) => handleChangeQty(id, "increase")} />
         </div>
       </div>
       <div className="bg-[#F8F8F8] w-full flex h-full px-4  min-h-0">

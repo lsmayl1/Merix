@@ -11,6 +11,7 @@ import {
   Legend,
 } from "chart.js";
 import axios from "axios";
+import { useGetDailyRevenueQuery } from "../../redux/slices/ApiSlice";
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -21,47 +22,25 @@ ChartJS.register(
   Legend
 );
 
-export const LineChart = () => {
-  const [chartData, setData] = useState({});
-  const [showDateOptions, setShowDateOptions] = useState(false);
-  const [dateOptions, setDateOptions] = useState([
-    { name: "Ayliq", id: 1 },
-    { name: "Heftelik", id: 2 },
-    { name: "Gunluk", id: 3 },
-  ]);
-  const [selectedOption, setSelectedOption] = useState(dateOptions[0].name);
-  useEffect(() => {
-    const fetchMontlyData = async () => {
-      try {
-        const res = await axios.get(`${API}/reports//turnover-per-month`);
-        setData(res.data);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    fetchMontlyData();
-  }, []);
+export const LineChart = ({data}) => {
+  // Eğer veri yoksa boş array ata
+  const labels = data ? data.map(item => item.date) : [];
+  const dataPoints = data ? data.map(item => item.revenue) : [];
 
-  // Ay isimleri sıralı olarak
-  const labels = Object.keys(chartData);
-
-  // Değerleri sıralı olarak al
-  const dataPoints = Object.values(chartData);
-
-  const data = {
-    labels: labels, // X ekseni için ay isimleri
+  const chartData = {
+    labels: labels,
     datasets: [
       {
         label: "Satış Miktarı",
-        data: dataPoints, // Y ekseni için değerler
-        borderColor: "rgba(251, 176, 16)",
+        data: dataPoints,
+        borderColor: "rgba(0, 0, 0)",
         backgroundColor: "rgba(251, 176, 16)",
         tension: 0.4,
       },
     ],
   };
 
-  const dataLength = data.datasets[0].data.length;
+  const dataLength = dataPoints.length;
 
   const options = {
     responsive: true, // Ekran boyutuna göre uyumlu olmasını sağlar
@@ -115,39 +94,13 @@ export const LineChart = () => {
 
   return (
     <div
-      className=" w-7/12 h-full  relative flex flex-col gap-7 justify-between p-4 border border-newborder 
-     max-md:order-2 rounded-lg max-md:h-1/2 max-md:w-full"
+      className=" h-128 w-full "
     >
-      <div className="flex justify-between  ">
-        <span className="text-xl">Satis grafigi</span>
-        <div className="flex gap-4 relative">
-          <button
-            className="text-xl border-newborder border px-4 py-2 rounded-lg cursor-pointer"
-            onClick={() => setShowDateOptions((prev) => !prev)}
-          >
-            {selectedOption}
-          </button>
-          {showDateOptions && (
-            <ul className="absolute top-14 right-0 rounded bg-white border border-newborder text-xl flex flex-col gap-4">
-              {dateOptions?.map((option) => (
-                <li
-                  className=" cursor-pointer hover:bg-gray-200 w-full px-6 py-2"
-                  onClick={() => handleOption(option.name)}
-                  key={option.id}
-                >
-                  {option.name}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
       <Line
-        data={data}
+        data={chartData}
         style={{
           height: "100%",
           width: "100%",
-          display: "block",
           overflow: "hidden",
         }}
         options={options}

@@ -158,22 +158,24 @@ router.get("/:id", async (req, res) => {
     }
 
     // Tartım barkodu ise
-    if (!product && param.length === 13 && param.startsWith("22")) {
-      const productCode = param.substring(0, 8); // ilk 8 hane ürün kodu
-      const weightGrams = parseInt(param.substring(8), 10);
-      quantity = weightGrams / 1000;
-      unit = "kg";
+ if (!product && param.length === 13 && param.startsWith("22")) {
+  const productCode = param.substring(0, 7); // ilk 7 hane ürün kodu
+  const weightStr = param.substring(7, 12);  // 7-11 arası son 5 hane ağırlık
+  const weightGrams = parseInt(weightStr, 10);
+  quantity = weightGrams / 1000;
+  unit = "kg";
 
-      product = await Products.findOne({
-        where: {
-          barcode: {
-            [Op.like]: `${productCode}%`,
-          },
-        },
-      });
+  product = await Products.findOne({
+    where: {
+      barcode: {
+        [Op.like]: `${productCode}%`,
+      },
+    },
+  });
 
-      if (product) productBarcode = product.barcode;
-    }
+  if (product) productBarcode = product.barcode;
+}
+
 
     // Normal barkod
     if (!product) {
@@ -242,6 +244,7 @@ router.post("/bulk", async (req, res) => {
 
     // Find products by both criteria
     const products = await Products.findAll({
+      order:[["sellPrice","DESC"]],
       where: {
         [Sequelize.Op.or]: [
           { product_id: { [Sequelize.Op.in]: numericIds } },

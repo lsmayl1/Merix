@@ -39,7 +39,7 @@ export const BarcodeField = ({ handleBarcode, shouldFocus = true }) => {
       ref={inputRef}
       type="number"
       onChange={(e) => setBarcode(e.target.value)}
-      className="absolute opacity-0 left-0"
+      className="focus:bg-red-500 size-2 rounded-full left-0"
       onKeyDown={(e) => handleKey(e)}
     />
   );

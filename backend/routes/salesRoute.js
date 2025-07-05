@@ -145,10 +145,11 @@ router.post("/preview", async (req, res) => {
           unit = "kg";
         } else {
           // Yoksa tartım barkodu olarak işle
-          const baseCode = barcode.substring(0, 8);
-          const weightGrams = parseInt(barcode.substring(8), 10);
-          quantity = weightGrams / 1000; // Kullanıcıdan gelen quantity'yi YOK SAY
-          unit = "kg";
+           const baseCode = barcode.substring(0, 7); // ilk 8 hane ürün kodu
+    const weightStr = barcode.substring(7, 12); // son 5 hane ağırlık
+    const weight = parseInt(weightStr, 10);
+    quantity = weight / 1000; // 3 ondalık hassasiyet
+    unit = "kg";
 
           const product = await Products.findOne({
             where: { barcode: { [Op.like]: `${baseCode}%` } },

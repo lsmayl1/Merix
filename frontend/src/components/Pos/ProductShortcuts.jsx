@@ -163,8 +163,8 @@ export const ProductShortcuts = ({
                 : "bg-white"
             }`}
           >
-            <span className="text-lg font-medium">{item.name}</span>
-            <span className="text-md ">{item.sellPrice?.toFixed(2)} ₼</span>
+            <h1 className="text-lg font-medium">{item.name}</h1>
+            <h1 className="text-md ">{item.sellPrice?.toFixed(2)} ₼</h1>
             <div className="flex justify-end items-end w-full">
               <QtyInput
                 barcode={item.barcode}

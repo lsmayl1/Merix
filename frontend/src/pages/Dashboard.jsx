@@ -4,10 +4,14 @@ import { Table } from "../components/Table/index.jsx";
 import { createColumnHelper } from "@tanstack/react-table";
 import { useTranslation } from "react-i18next";
 import { DateRange } from "../components/Date/DateRange.jsx";
-import { useGetDashboardMetricsMutation } from "../redux/slices/ApiSlice.jsx";
+import { useGetDailyRevenueQuery, useGetDashboardMetricsMutation, useGetHourlyRevenueQuery } from "../redux/slices/ApiSlice.jsx";
+import { Line } from "react-chartjs-2";
+import { LineChart } from "../components/Charts/LineChart.jsx";
 
 export const Dashboard = () => {
   const { t } = useTranslation();
+    const {data:dailyRevenue} = useGetDailyRevenueQuery()
+    const {data:hourlyRevenue} = useGetHourlyRevenueQuery()
   const [getMetrics] = useGetDashboardMetricsMutation();
   const [metricData, setMetricData] = useState({});
   const [range, setRange] = useState({
@@ -87,113 +91,9 @@ export const Dashboard = () => {
       cell: (info) => info.getValue(),
     }),
   ];
-  const data = [
-    {
-      id: 1,
-      barcode: "1234567890123",
-      product: "Product A",
-      sold: 100,
-      revenue: "₼ 1,000",
-      profit: "₼ 200",
-      stock: 4,
-      profitMargin: "20%",
-    },
-    {
-      id: 1,
-      product: "Product A",
-      barcode: "1234567890123",
-      sold: 100,
-      revenue: "₼ 1,000",
-      profit: "₼ 200",
-      stock: 4,
-      profitMargin: "20%",
-    },
-    {
-      id: 2,
-      barcode: "1234567890123",
-      product: "Product B",
-      sold: 150,
-      revenue: "₼ 1,000",
-      profit: "₼ 200",
-      stock: 4,
-      profitMargin: "20%",
-    },
-
-    {
-      id: 3,
-      barcode: "1234567890123",
-      product: "Product C",
-      sold: 200,
-      revenue: "₼ 1,000",
-      profit: "₼ 200",
-      stock: 4,
-      profitMargin: "20%",
-    },
-    {
-      id: 1,
-      barcode: "1234567890123",
-      product: "Product A",
-      sold: 100,
-      revenue: "₼ 1,000",
-      profit: "₼ 200",
-      stock: 4,
-      profitMargin: "20%",
-    },
-    {
-      barcode: "1234567890123",
-      id: 2,
-      product: "Product B",
-      sold: 150,
-      revenue: "₼ 1,000",
-      profit: "₼ 200",
-      stock: 4,
-      profitMargin: "20%",
-    },
-
-    {
-      id: 3,
-      barcode: "1234567890123",
-      product: "Product C",
-      sold: 200,
-      revenue: "₼ 1,000",
-      profit: "₼ 200",
-      stock: 4,
-      profitMargin: "20%",
-    },
-    {
-      id: 1,
-      barcode: "1234567890123",
-      product: "Product A",
-      sold: 100,
-      revenue: "₼ 1,000",
-      profit: "₼ 200",
-      stock: 4,
-      profitMargin: "20%",
-    },
-    {
-      id: 2,
-      barcode: "1234567890123",
-      product: "Product B",
-      sold: 150,
-      revenue: "₼ 1,000",
-      profit: "₼ 200",
-      stock: 4,
-      profitMargin: "20%",
-    },
-
-    {
-      id: 3,
-      barcode: "1234567890123",
-      product: "Product C",
-      sold: 2000,
-      revenue: "₼ 1,000",
-      profit: "₼ 200",
-      stock: 4,
-      profitMargin: "20%",
-    },
-  ];
+  
   return (
-    <div className="w-full h-full  flex flex-col gap-2 ">
+    <div className="w-full h-full  flex flex-col pr-2 gap-4 overflow-auto ">
       <DateRange handleRange={setRange} />
       <div className="flex items-center gap-2 w-full">
         <KPI
@@ -217,19 +117,19 @@ export const Dashboard = () => {
           ]}
         />
       </div>
-      <div className="flex gap-2">
-        <div className="flex flex-col gap-4 flex-5 overflow-hidden bg-white rounded-xl p-4 ">
-          <h1 className="text-mainText text-md font-medium">
-            {t("bestSellingProduct")}
-          </h1>
-          <Table columns={ProductsColumn} data={data} />
-        </div>
-        <div className="flex flex-col gap-4 flex-2  overflow-hidden bg-white rounded-xl p-4 ">
-          <h1 className="text-mainText text-md font-medium">{t("lowStock")}</h1>
-          {/* <Table header={stockHeader} data={data} /> */}
-          <Table columns={stockColumn} data={data} />
-        </div>
+      <div className="flex flex-col bg-white w-full p-4 h-full  rounded-lg  ">
+         <h1 className="text-xl text-mainText">
+      Gunluk  
+      </h1>
+        <LineChart data={dailyRevenue}/>
       </div>
+       <div className="flex  flex-col bg-white w-full p-4 h-full  rounded-lg  ">
+        <h1 className="text-xl text-mainText">
+      Saatliq
+      </h1>
+        <LineChart data={hourlyRevenue}/>
+      </div>
+   
     </div>
   );
 };

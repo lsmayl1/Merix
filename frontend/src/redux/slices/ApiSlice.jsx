@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-const API = "http://localhost:3000/";
-// const API = "";
+// const API = "/api";
+const API = "http://localhost:3000/api";
 
 export const ApiSlice = createApi({
   reducerPath: "api",
@@ -121,6 +121,13 @@ export const ApiSlice = createApi({
         body: data,
       }),
     }),
+
+    getDailyRevenue:build.query({
+      query:()=>`metrics/daily-revenue`
+    }),
+     getHourlyRevenue:build.query({
+      query:()=>`metrics/hourly-revenue`
+    })
   }),
 });
 
@@ -146,4 +153,7 @@ export const {
   useGetProductSoldMetricsMutation,
   useGetProductsMetricsQuery,
   useGetDashboardMetricsMutation,
+
+  useGetDailyRevenueQuery,
+  useGetHourlyRevenueQuery
 } = ApiSlice;

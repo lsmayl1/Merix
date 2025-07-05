@@ -232,10 +232,7 @@ export const Products = () => {
   return (
     <div className="w-full h-full flex flex-col gap-2 min-h-0 ">
       <div className="max-md:hidden">
-        <BarcodeField
-          handleBarcode={handleBarcode}
-          shouldFocus={!showProductModal}
-        />{" "}
+        
       </div>
       <KPI
         data={[
@@ -302,7 +299,12 @@ export const Products = () => {
             <Plus className="max-md:size-5" />
             {t("addProduct")}
           </button>
+           <BarcodeField
+          handleBarcode={handleBarcode}
+          shouldFocus={!showProductModal}
+        />
         </div>
+       
 
         <div className="min-h-0 w-full px-2">
           <Table
