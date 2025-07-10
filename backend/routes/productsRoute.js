@@ -92,7 +92,7 @@ router.get("/", async (req, res) => {
     // Veriyi getir (SQL seviyesinde sıralama yaparak hızlandır)
     const products = await Products.findAll({
       order,
-      
+      limit,
       offset: offset,
     });
 

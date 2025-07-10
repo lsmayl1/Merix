@@ -217,12 +217,10 @@ router.get("/daily-revenue", async (req, res) => {
     });
 
     // Sonucu istenen array formatına çevir
-    const result = Object.entries(dailyTotals).map(
-      ([date, revenue]) => ({
-        date,
-        revenue: Number(revenue.toFixed(2))
-      })
-    );
+    const result = Object.entries(dailyTotals).map(([date, revenue]) => ({
+      date,
+      revenue: Number(revenue.toFixed(2)),
+    }));
 
     res.json(result);
   } catch (error) {
@@ -254,12 +252,79 @@ router.get("/hourly-revenue", async (req, res) => {
     });
 
     // Sonucu array of object olarak döndür
-    const result = Object.entries(hourlyTotals).map(
-      ([date, revenue]) => ({
-        date,
-        revenue: Number(revenue.toFixed(2))
-      })
-    );
+    const result = Object.entries(hourlyTotals).map(([date, revenue]) => ({
+      date,
+      revenue: Number(revenue.toFixed(2)),
+    }));
+
+    res.json(result);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.get("/bestSellers", async (req, res) => {
+  try {
+    // En çok satılan 20 ürünü bul
+    const bestSellers = await SalesDetails.findAll({
+      attributes: [
+        "product_id",
+        [sequelize.fn("SUM", sequelize.col("SalesDetails.quantity")), "sold"],
+      ],
+      group: [
+        "SalesDetails.product_id",
+        "product.product_id",
+        "product.name",
+        "product.barcode",
+        "product.stock",
+      ],
+      order: [[sequelize.literal("sold"), "DESC"]],
+      limit: 20,
+      include: [
+        {
+          model: Products,
+          as: "product",
+          attributes: ["product_id", "name", "barcode", "stock"],
+        },
+      ],
+      raw: true,
+      nest: true,
+    });
+
+    // Kalan ürünleri bul (bestSeller olmayanlar)
+    const bestSellerIds = bestSellers.map((item) => item.product_id);
+
+    const restProducts = await Products.findAll({
+      where: {
+        product_id: { [Op.notIn]: bestSellerIds },
+      },
+      order: [["stock", "ASC"]],
+      limit: 20,
+      attributes: ["product_id", "name", "barcode", "stock"],
+      raw: true,
+    });
+
+    // restProducts'a sold alanı ekle (0 olarak)
+    const restProductsWithSold = restProducts.map((item) => ({
+      ...item,
+      sold: 0,
+    }));
+
+    // Sonuçları birleştir
+    const result = [
+      ...bestSellers.map((item) => ({
+        product_id: item.product_id,
+        name: item.product.name,
+        barcode: item.product.barcode,
+        sold: Number(item.sold),
+        stock: item.product.stock,
+      })),
+      ...restProductsWithSold,
+    ];
+
+    // Tümünü tekrar stok miktarına göre azdan çoğa sırala
+    result.sort((a, b) => a.stock - b.stock);
 
     res.json(result);
   } catch (error) {

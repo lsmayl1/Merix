@@ -91,6 +91,7 @@ export const Pos = () => {
   const searchInput = useRef();
   const modalRef = useRef();
   const receivedInput = useRef();
+    const barcodeRef = useRef();
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -114,7 +115,7 @@ export const Pos = () => {
 
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
-      window.addEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -153,7 +154,7 @@ export const Pos = () => {
         // Eğer qty varsa güncelle, yoksa artırma/azaltma mantığına göre davranabiliriz
         setInputData((prevData) =>
           prevData.map((item) => {
-            if (item.barcode === barcode) {
+            if (item.barcode === barcode ) {
               let newQuantity = item.quantity;
 
               if (qty !== undefined && qty !== null) {
@@ -221,6 +222,7 @@ export const Pos = () => {
             {
               quantity: validProduct.quantity ? validProduct.quantity : 1, // kg ürün için default 0.1 (100 gram)
               barcode: validProduct.barcode,
+              productBarcode:validProduct?.productBarcode,
               unit: validProduct.unit,
             },
           ]);
@@ -231,11 +233,16 @@ export const Pos = () => {
     }
   };
 
-  const handleDeleteProduct = (id) => {
-    console.log("cliced");
-    const newData = inputData.filter((x) => String(x.barcode) !== String(id));
-    setInputData(newData);
-  };
+const handleDeleteProduct = (id) => {
+  console.log(id);
+  
+  const newData = inputData.filter(
+    (x) => String(x.barcode) !== String(id) && String(x.productBarcode) !== String(id)
+  );
+
+  setInputData(newData);
+};
+
 
   const handleSubmitSale = async () => {
     if(postLoading) return;
@@ -247,7 +254,7 @@ export const Pos = () => {
 
       setData([]);
       setInputData([]);
-      console.log(sale);
+      barcodeRef.current?.focus();
     } catch (error) {
       console.log(error);
     }
@@ -349,12 +356,12 @@ export const Pos = () => {
             {" "}
             {t("clearAll")}
           </h1>
-          <Setting className="size-8" />
-          <ChartPie className="size-8" />
+          {/* <Setting className="size-8" />
+          <ChartPie className="size-8" /> */}
           <NavLink to={"/"}>
             <Logout className="size-8" />
           </NavLink>
-           <BarcodeField handleBarcode={(id) => handleChangeQty(id, "increase")} />
+           <BarcodeField ref={barcodeRef} handleBarcode={(id) => handleChangeQty(id, "increase")} />
         </div>
       </div>
       <div className="bg-[#F8F8F8] w-full flex h-full px-4  min-h-0">

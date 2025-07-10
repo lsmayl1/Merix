@@ -4,14 +4,19 @@ import { Table } from "../components/Table/index.jsx";
 import { createColumnHelper } from "@tanstack/react-table";
 import { useTranslation } from "react-i18next";
 import { DateRange } from "../components/Date/DateRange.jsx";
-import { useGetDailyRevenueQuery, useGetDashboardMetricsMutation, useGetHourlyRevenueQuery } from "../redux/slices/ApiSlice.jsx";
+import {
+  useGetDailyRevenueQuery,
+  useGetDashboardMetricsMutation,
+  useGetHourlyRevenueQuery,
+} from "../redux/slices/ApiSlice.jsx";
 import { Line } from "react-chartjs-2";
 import { LineChart } from "../components/Charts/LineChart.jsx";
+import { StockOverview } from "../components/Products/StockOverview.jsx";
 
 export const Dashboard = () => {
   const { t } = useTranslation();
-    const {data:dailyRevenue} = useGetDailyRevenueQuery()
-    const {data:hourlyRevenue} = useGetHourlyRevenueQuery()
+  const { data: dailyRevenue } = useGetDailyRevenueQuery();
+  const { data: hourlyRevenue } = useGetHourlyRevenueQuery();
   const [getMetrics] = useGetDashboardMetricsMutation();
   const [metricData, setMetricData] = useState({});
   const [range, setRange] = useState({
@@ -71,27 +76,6 @@ export const Dashboard = () => {
     if (range.to && range.from) getDashboardMetrics();
   }, [range]);
 
-  const stockColumn = [
-    columnHelper.accessor("product", {
-      header: "Product",
-      headerClassName: "text-start bg-gray-100 rounded-s-lg",
-      cellClassName: "text-start",
-      cell: (info) => info.getValue(),
-    }),
-    columnHelper.accessor("barcode", {
-      header: "Barcode",
-      headerClassName: "text-start bg-gray-100 ",
-      cellClassName: "text-start",
-      cell: (info) => info.getValue(),
-    }),
-    columnHelper.accessor("stock", {
-      header: "Stock",
-      headerClassName: "text-center bg-gray-100 rounded-e-lg",
-      cellClassName: "text-center",
-      cell: (info) => info.getValue(),
-    }),
-  ];
-  
   return (
     <div className="w-full h-full  flex flex-col pr-2 gap-4 overflow-auto ">
       <DateRange handleRange={setRange} />
@@ -118,18 +102,20 @@ export const Dashboard = () => {
         />
       </div>
       <div className="flex flex-col bg-white w-full p-4 h-full  rounded-lg  ">
-         <h1 className="text-xl text-mainText">
-      Gunluk  
-      </h1>
-        <LineChart data={dailyRevenue}/>
+        <h1 className="text-xl text-mainText">Gunluk</h1>
+        <LineChart data={dailyRevenue} />
       </div>
-       <div className="flex  flex-col bg-white w-full p-4 h-full  rounded-lg  ">
-        <h1 className="text-xl text-mainText">
-      Saatliq
-      </h1>
-        <LineChart data={hourlyRevenue}/>
+      <div className="flex  flex-col bg-white w-full p-4 h-full  rounded-lg  ">
+        <h1 className="text-xl text-mainText">Saatliq</h1>
+        <LineChart data={hourlyRevenue} />
       </div>
-   
+
+      <div className="w-full flex flex-col gap-4 rounded-lg p-4 bg-white h-1/2">
+        <h1 className="text-2xl">En cox satilanlar</h1>
+        <div className="px-48 overflow-auto">
+          <StockOverview />
+        </div>
+      </div>
     </div>
   );
 };

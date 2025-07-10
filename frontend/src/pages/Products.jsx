@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   useDeleteProductByIdMutation,
   useGetProductByIdQuery,
@@ -138,6 +138,8 @@ export const Products = () => {
   const [putProduct] = usePutProductByIdMutation();
   const [postProduct, { isLoading: postLoading, isError: postError }] =
     usePostProductMutation();
+
+    const barcodeRef = useRef()
 
   const handleClosePopUp = () => {
     setEditForm(null);

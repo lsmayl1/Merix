@@ -82,10 +82,10 @@ export const ApiSlice = createApi({
       }),
     }),
 
-    deleteSale:build.mutation({
-      query:(id)=> ({ 
-        url:`sales/delete/${id}`,
-        method:"DELETE"
+    deleteSale: build.mutation({
+      query: (id) => ({
+        url: `sales/delete/${id}`,
+        method: "DELETE",
       }),
     }),
     getProductsReport: build.mutation({
@@ -122,12 +122,15 @@ export const ApiSlice = createApi({
       }),
     }),
 
-    getDailyRevenue:build.query({
-      query:()=>`metrics/daily-revenue`
+    getDailyRevenue: build.query({
+      query: () => `metrics/daily-revenue`,
     }),
-     getHourlyRevenue:build.query({
-      query:()=>`metrics/hourly-revenue`
-    })
+    getHourlyRevenue: build.query({
+      query: () => `metrics/hourly-revenue`,
+    }),
+    getBestSellers: build.query({
+      query: () => `metrics/bestSellers`,
+    }),
   }),
 });
 
@@ -153,7 +156,8 @@ export const {
   useGetProductSoldMetricsMutation,
   useGetProductsMetricsQuery,
   useGetDashboardMetricsMutation,
+  useGetBestSellersQuery,
 
   useGetDailyRevenueQuery,
-  useGetHourlyRevenueQuery
+  useGetHourlyRevenueQuery,
 } = ApiSlice;

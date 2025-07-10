@@ -215,6 +215,7 @@ export const ProductModal = ({
                   <input
                     type="number"
                     step={0.01}
+                    min={-999999999}
                     {...register("newStock")}
                     className="border focus:outline-none rounded-lg w-1/2  px-2 py-1  border-mainBorder  "
                   />

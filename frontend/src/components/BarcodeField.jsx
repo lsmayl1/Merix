@@ -1,8 +1,14 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useImperativeHandle, useRef, useState } from "react";
 
-export const BarcodeField = ({ handleBarcode, shouldFocus = true }) => {
+export const BarcodeField = ({ handleBarcode, shouldFocus = true },ref) => {
   const [barcode, setBarcode] = useState("");
   const inputRef = useRef(null);
+
+  useImperativeHandle(ref, () => ({
+    focus: () => {
+      inputRef.current && inputRef.current.focus();
+    }
+  }));
 
   useEffect(() => {
     if (shouldFocus && inputRef.current) {
