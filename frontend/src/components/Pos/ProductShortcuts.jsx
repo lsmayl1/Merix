@@ -104,6 +104,9 @@ export const ProductShortcuts = ({
       console.log(error);
     }
   };
+
+
+
   return (
     <div className="flex-1 min-h-0 overflow-auto relative">
       {showAddModal && (

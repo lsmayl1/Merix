@@ -91,7 +91,7 @@ export const Pos = () => {
   const searchInput = useRef();
   const modalRef = useRef();
   const receivedInput = useRef();
-    const barcodeRef = useRef();
+  const barcodeRef = useRef();
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -154,7 +154,7 @@ export const Pos = () => {
         // Eğer qty varsa güncelle, yoksa artırma/azaltma mantığına göre davranabiliriz
         setInputData((prevData) =>
           prevData.map((item) => {
-            if (item.barcode === barcode ) {
+            if (item.barcode === barcode) {
               let newQuantity = item.quantity;
 
               if (qty !== undefined && qty !== null) {
@@ -196,7 +196,6 @@ export const Pos = () => {
                 let newQuantity = item.quantity;
 
                 if (validProduct.unit === "kg") {
-                  
                   // Tartım barkodundan gelen quantity varsa onu ekle
                   if (validProduct.quantity) {
                     newQuantity += validProduct.quantity;
@@ -222,7 +221,7 @@ export const Pos = () => {
             {
               quantity: validProduct.quantity ? validProduct.quantity : 1, // kg ürün için default 0.1 (100 gram)
               barcode: validProduct.barcode,
-              productBarcode:validProduct?.productBarcode,
+              productBarcode: validProduct?.productBarcode,
               unit: validProduct.unit,
             },
           ]);
@@ -231,21 +230,24 @@ export const Pos = () => {
         console.log(err);
       }
     }
+
+    barcodeRef.current?.focus();
   };
 
-const handleDeleteProduct = (id) => {
-  console.log(id);
-  
-  const newData = inputData.filter(
-    (x) => String(x.barcode) !== String(id) && String(x.productBarcode) !== String(id)
-  );
+  const handleDeleteProduct = (id) => {
+    console.log(id);
 
-  setInputData(newData);
-};
+    const newData = inputData.filter(
+      (x) =>
+        String(x.barcode) !== String(id) &&
+        String(x.productBarcode) !== String(id)
+    );
 
+    setInputData(newData);
+  };
 
   const handleSubmitSale = async () => {
-    if(postLoading) return;
+    if (postLoading) return;
     try {
       const sale = await postSale({
         payment_method: paymentMethod,
@@ -254,7 +256,9 @@ const handleDeleteProduct = (id) => {
 
       setData([]);
       setInputData([]);
-      barcodeRef.current?.focus();
+      setTimeout(() => {
+        barcodeRef.current?.focus();
+      }, 100);
     } catch (error) {
       console.log(error);
     }
@@ -283,10 +287,20 @@ const handleDeleteProduct = (id) => {
     }
   }, [receivedAmount, data.total]);
 
+  const handleChangeQtyAndFocus = (...args) => {
+    handleChangeQty(...args);
+    barcodeRef.current?.focus();
+  };
+
+  const handlePaymentMethodChange = (method) => {
+    setPaymentMethod(method);
+    barcodeRef.current?.focus();
+  };
+
   return (
     <div className="flex flex-col  overflow-hidden h-screen  gap-2 w-full ">
       <ToastContainer />
-     
+
       <div className="flex gap-4 items-center justify-between px-8 py-4">
         <div className="flex gap-2 items-center ">
           <button className="border border-mainBorder py-2 px-4 rounded-lg">
@@ -361,14 +375,17 @@ const handleDeleteProduct = (id) => {
           <NavLink to={"/"}>
             <Logout className="size-8" />
           </NavLink>
-           <BarcodeField ref={barcodeRef} handleBarcode={(id) => handleChangeQty(id, "increase")} />
+          <BarcodeField
+            ref={barcodeRef}
+            handleBarcode={(id) => handleChangeQty(id, "increase")}
+          />
         </div>
       </div>
       <div className="bg-[#F8F8F8] w-full flex h-full px-4  min-h-0">
         <ProductShortcuts
           data={data?.items}
           // products={products}
-          handleChangeQty={handleChangeQty}
+          handleChangeQty={handleChangeQtyAndFocus}
         />
         <div className="flex-1 min-h-0  bg-white px-4 gap-4 h-full flex flex-col justify-between pb-2 ">
           <div className="flex flex-col min-h-0 gap-1 ">
@@ -410,7 +427,9 @@ const handleDeleteProduct = (id) => {
                         step={0.01}
                         ref={receivedInput}
                         type="number"
-                        onChange={(e) => setReceivedAmount(e.target.value.replace(",", "."))}
+                        onChange={(e) =>
+                          setReceivedAmount(e.target.value.replace(",", "."))
+                        }
                         value={receivedAmount}
                       />
                       <span> ₼</span>
@@ -426,7 +445,7 @@ const handleDeleteProduct = (id) => {
                 <div className="flex items-center gap-2 w-full">
                   <div className="flex gap-2 items-center w-full h-full">
                     <button
-                      onClick={() => setPaymentMethod("cash")}
+                      onClick={() => handlePaymentMethodChange("cash")}
                       className={`flex flex-col gap-1 items-center border  px-6 py-1 rounded-lg w-full ${
                         paymentMethod == "cash"
                           ? "border-blue-500 bg-blue-50"
@@ -451,7 +470,7 @@ const handleDeleteProduct = (id) => {
                       </span>
                     </button>
                     <button
-                      onClick={() => setPaymentMethod("card")}
+                      onClick={() => handlePaymentMethodChange("card")}
                       className={`flex flex-col gap-1 items-center border ${
                         paymentMethod == "card"
                           ? "border-blue-500 bg-blue-50"
