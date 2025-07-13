@@ -56,7 +56,7 @@ export const Pos = () => {
         <QtyInput
           qty={row.original.quantity}
           barcode={row.original.barcode}
-          handleQty={handleChangeQty}
+          handleQty={handleChangeQtyAndFocus}
           allign={"justify-center"}
         />
       ),
@@ -92,6 +92,10 @@ export const Pos = () => {
   const modalRef = useRef();
   const receivedInput = useRef();
   const barcodeRef = useRef();
+
+  useEffect(() => {
+  document.title = "Kassa";
+}, []);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -297,6 +301,7 @@ export const Pos = () => {
     barcodeRef.current?.focus();
   };
 
+
   return (
     <div className="flex flex-col  overflow-hidden h-screen  gap-2 w-full ">
       <ToastContainer />
@@ -390,7 +395,7 @@ export const Pos = () => {
         <div className="flex-1 min-h-0  bg-white px-4 gap-4 h-full flex flex-col justify-between pb-2 ">
           <div className="flex flex-col min-h-0 gap-1 ">
             <div className="flex justify-between items-center"></div>
-            <div className="overflow-y-auto min-h-0 max-h-[400px] ">
+            <div className="overflow-y-auto min-h-0  ">
               <Table columns={columns} data={data?.items} pagination={false} />
             </div>
           </div>

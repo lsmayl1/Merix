@@ -30,6 +30,7 @@ export const QtyInput = ({ barcode, handleQty, qty, className, allign }) => {
             handleQty(barcode, null, newQty);
           }
         }}
+        onBlur={() => handleQty(barcode, null, newQty)}
       />
 
       <button
