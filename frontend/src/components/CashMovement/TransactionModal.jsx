@@ -3,8 +3,10 @@ import { CreditCard } from "../../assets/CreditCard";
 import { Cash } from "../../assets/Cash";
 import CloseSquare from "../../assets/Navigation/CloseSquare";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 
 export const TransactionModal = ({ handleClose, onSubmit }) => {
+  const { t } = useTranslation();
   const [transactionType, setTransactionType] = useState("in");
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const {
@@ -34,7 +36,7 @@ export const TransactionModal = ({ handleClose, onSubmit }) => {
   };
   return (
     <div className="absolute right-0 top-0 w-full h-full flex items-center justify-center ">
-      <div className="flex overflow-auto flex-col gap-6 bg-white  w-1/2 border border-mainBorder  rounded-lg items-center px-2 py-12">
+      <div className="flex overflow-auto flex-col gap-10 bg-white  w-1/2 border border-mainBorder  rounded-lg items-center px-2 py-18">
         <div className="w-full flex justify-end px-12">
           <button onClick={handleClose}>
             <CloseSquare className={"size-10"} />
@@ -45,31 +47,32 @@ export const TransactionModal = ({ handleClose, onSubmit }) => {
             onClick={() => handleTransactionTypeChange("in")}
             className={`${
               transactionType === "in"
-                ? "bg-blue-500 text-white"
+                ? "bg-green-500 text-white"
                 : "border border-mainBorder"
             }  py-2 px-4 rounded-lg w-full`}
           >
-            Pay In
+            {t("income")}
           </button>
           <button
             onClick={() => handleTransactionTypeChange("out")}
             className={` ${
               transactionType === "out"
-                ? "bg-blue-500 text-white"
+                ? "bg-red-500 text-white"
                 : "border border-mainBorder"
             }
                 border border-mainBorder py-2 px-4 w-full rounded-lg`}
           >
-            Pay Out
+            {t("expense")}
           </button>
         </div>
         <form
-          className="w-1/2 flex flex-col gap-4"
+          className="w-1/2 flex flex-col gap-12"
           onSubmit={handleSubmit(validateSubmit)}
         >
           <div className="flex flex-col gap-1 ">
-            <label>Amount</label>
+            <label>{t("amount")}</label>
             <input
+              step={0.001}
               type="number"
               {...register("amount", {
                 required: "Amount is required",
@@ -85,7 +88,7 @@ export const TransactionModal = ({ handleClose, onSubmit }) => {
             )}
           </div>
           <div className="flex flex-col gap-1 ">
-            <label>Description</label>
+            <label>{t("description")}</label>
             <input
               type="text"
               {...register("description", {
@@ -103,6 +106,7 @@ export const TransactionModal = ({ handleClose, onSubmit }) => {
           </div>
           <div className="flex gap-2 items-center ">
             <button
+              type="button"
               onClick={() => handlePaymentMethodChange("cash")}
               className={`flex flex-col gap-1 items-center border  px-6 py-1 rounded-lg w-full ${
                 paymentMethod == "cash"
@@ -120,10 +124,11 @@ export const TransactionModal = ({ handleClose, onSubmit }) => {
                   paymentMethod == "cash" ? "text-blue-500" : "text-black"
                 }`}
               >
-                Cash
+                {t("cash")}
               </span>
             </button>
             <button
+              type="button"
               onClick={() => handlePaymentMethodChange("card")}
               className={`flex flex-col gap-1 items-center border ${
                 paymentMethod == "card"
@@ -141,7 +146,7 @@ export const TransactionModal = ({ handleClose, onSubmit }) => {
                   paymentMethod == "card" ? "text-blue-500" : "text-black"
                 }`}
               >
-                Card
+                {t("card")}
               </span>
             </button>
           </div>
@@ -151,14 +156,14 @@ export const TransactionModal = ({ handleClose, onSubmit }) => {
               type="button"
               className="rounded-xl truncate  w-full max-lg:text-md cursor-pointer border border-red-700 px-4 py-1 font-semibold text-red-700"
             >
-              Cancel
+              {t("cancel")}
             </button>
 
             <button
               type="submit"
               className="rounded-xl cursor-pointer w-full max-lg:text-md border border-blue-700 px-4 py-1 font-semibold text-blue-700"
             >
-              Create
+              {t("create")}
             </button>
           </div>
         </form>

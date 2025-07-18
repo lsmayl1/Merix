@@ -80,5 +80,8 @@
 
   "name":"Ad",
   "cancel":"Ləğv Et",
-  "update":"Dəyiş"
+  "update":"Dəyiş",
+  "create":"Yarat",
+
+  "createTransaction":"Əməliyyat Yarat"
 }

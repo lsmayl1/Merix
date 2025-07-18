@@ -73,9 +73,10 @@
 
   "makePayment":"Make Payment",
   "name":"Nme",
-
+  "createTransaction":"Create Transaction",
   "cancel":"Cancel",
-  "update":"Update"
+  "update":"Update",
+  "create":"Create"
 
 
 

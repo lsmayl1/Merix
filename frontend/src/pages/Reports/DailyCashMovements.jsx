@@ -132,7 +132,7 @@ export const DailyCashMovements = () => {
             className="border bg-white border-gray-200 rounded-xl text-nowrap px-4 cursor-pointer max-md:px-2 max-md:text-xs flex items-center gap-2 py-1 max-md:py-0"
           >
             <Plus className="max-md:size-5" />
-            Create Transactions
+            {t("createTransaction")}
           </button>
         </div>
         <Table columns={columns} data={data?.transactions} />
