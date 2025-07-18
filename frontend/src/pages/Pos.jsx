@@ -94,8 +94,8 @@ export const Pos = () => {
   const barcodeRef = useRef();
 
   useEffect(() => {
-  document.title = "Kassa";
-}, []);
+    document.title = "Kassa";
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -300,7 +300,6 @@ export const Pos = () => {
     setPaymentMethod(method);
     barcodeRef.current?.focus();
   };
-
 
   return (
     <div className="flex flex-col  overflow-hidden h-screen  gap-2 w-full ">

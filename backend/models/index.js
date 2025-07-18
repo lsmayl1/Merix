@@ -4,7 +4,7 @@ const Sales = require("./sales");
 const Products = require("./products");
 const SalesDetails = require("./salesDetails");
 const Plu = require("./plu");
-
+const CashTransactions = require("./cashTransactions");
 // 🔹 İlişkileri Tanımla
 Sales.hasMany(SalesDetails, { foreignKey: "sale_id", as: "details" });
 SalesDetails.belongsTo(Sales, { foreignKey: "sale_id", as: "sale" });
@@ -24,4 +24,5 @@ module.exports = {
   SalesDetails,
   Plu,
   Op,
+  CashTransactions,
 };

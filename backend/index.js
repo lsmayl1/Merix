@@ -8,6 +8,7 @@ const pluRoute = require("./routes/pluRoute");
 const labelPrinterRoute = require("./routes/labelPrinterRoute");
 const reportsRoute = require("./routes/reportsRoute");
 const metricRoute = require("./routes/MetricRoute");
+const cashTransactionsRoute = require("./routes/CashTransactionsRoute");
 const app = express();
 const path = require("path");
 const bodyParser = require("body-parser");
@@ -60,6 +61,7 @@ if (isDbConfigured) {
   app.use("/api/plu", pluRoute);
   app.use("/api/printer", labelPrinterRoute);
   app.use("/api/reports", reportsRoute);
+  app.use("/api/cash-transactions", cashTransactionsRoute);
 
   // Tüm istekleri React dist klasörüne yönlendir
   app.get("*", (req, res) => {

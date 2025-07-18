@@ -72,6 +72,12 @@ export const ProductModal = ({
     }
   }, [editForm]);
 
+  useEffect(() => {
+  if (editForm) {
+    reset(editForm);
+  }
+}, [editForm, reset]);
+
   return (
     <div className="absolute inset-0 z-50 flex max-md:-top-54  h-screen w-full drop-shadow-lg">
       <ToastContainer />
@@ -145,12 +151,23 @@ export const ProductModal = ({
               <div className="flex  w-full flex-col max-lg:w-full">
                 <label className="text-md max-lg:text-md">{t("barcode")}</label>
                 <div className="flex items-center gap-1 max-lg:justify-between w-full">
-                  <input
-                    type="text"
-                    placeholder="Enter Barcode or Generate"
-                    {...register("barcode")}
-                    className=" rounded-lg border w-full border-mainBorder py-1 px-2 focus:outline-blue-500"
-                  />
+                  <div className="flex flex-col gap-2 w-full">
+                    <input
+                      type="text"
+                      placeholder="Enter Barcode or Generate"
+                      {...register("barcode", {
+                        required: "Barcode Required",
+                        pattern: {
+                          value: /^[0-9]+$/,
+                          message: "Barcode must be numeric",
+                        },
+                      })}
+                      className=" rounded-lg border w-full border-mainBorder py-1 px-2 focus:outline-blue-500"
+                    />
+                    <p className="text-red-500 text-sm">
+                      {errors?.barcode?.message}
+                    </p>
+                  </div>
                   <button
                     type={"button"}
                     onClick={handleBarcode}
@@ -169,11 +186,14 @@ export const ProductModal = ({
                   <input
                     type="number"
                     step={0.01}
-                    {...register("buyPrice")}
+                    {...register("buyPrice", {
+                      required: "Buy Price Required",
+                    })}
                     className=" border  border-mainBorder rounded-lg px-2 py-1 focus:outline-blue-500"
                   />
                   <span className="px-2 text-xl absolute right-0">₼</span>
                 </div>
+                <p className="text-red-500">{errors?.buyPrice?.message}</p>
               </div>
               <div className="flex    rounded-lg flex-col">
                 <label className="text-md">{t("sellPrice")}</label>
@@ -214,7 +234,7 @@ export const ProductModal = ({
                   </label>
                   <input
                     type="number"
-                    step={0.01}
+                    step={0.00001}
                     min={-999999999}
                     {...register("newStock")}
                     className="border focus:outline-none rounded-lg w-1/2  px-2 py-1  border-mainBorder  "

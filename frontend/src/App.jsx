@@ -8,6 +8,7 @@ import { Products } from "./pages/Products";
 import { ProductReports } from "./pages/Reports/ProductReports";
 import { ReportsLayout } from "./components/layout/ReportsLayout";
 import { Pos } from "./pages/Pos";
+import { DailyCashMovements } from "./pages/Reports/DailyCashMovements";
 export const App = () => {
   return (
     <Routes>
@@ -18,6 +19,7 @@ export const App = () => {
           <Route index element={<Navigate to="sale" replace />} />
           <Route index path="sale" element={<SalesReports />} />
           <Route path="products" element={<ProductReports />} />
+          <Route path="cash-movements" element={<DailyCashMovements />} />
         </Route>
       </Route>
       <Route path="pos" element={<Pos />} />

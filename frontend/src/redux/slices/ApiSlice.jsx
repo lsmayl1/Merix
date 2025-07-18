@@ -1,10 +1,9 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-// const API = "/api";
-const API = "http://localhost:3000/api";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { baseQuery } from "../baseQuery";
 
 export const ApiSlice = createApi({
   reducerPath: "api",
-  baseQuery: fetchBaseQuery({ baseUrl: API }),
+  baseQuery,
   endpoints: (build) => ({
     // Product
     getProducts: build.query({
@@ -16,6 +15,7 @@ export const ApiSlice = createApi({
       query: (id) => ({
         url: `/products/${id}`,
       }),
+      keepUnusedDataFor: 0,
     }),
     postProduct: build.mutation({
       query: (newProduct) => ({

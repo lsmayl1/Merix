@@ -23,6 +23,10 @@ export const Sidebar = ({ className, handleClose }) => {
           name: t("productReport"),
           path: "reports/products",
         },
+        {
+          name: t("cashMovement"),
+          path: "reports/cash-movements",
+        },
       ],
     },
     { name: t("pos"), blank: true, path: "pos", icon: <Kart /> },
