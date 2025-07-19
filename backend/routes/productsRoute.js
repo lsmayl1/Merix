@@ -5,14 +5,13 @@ const { Products, Sequelize, sequelize, Op } = require("../models");
 // Create a product
 router.post("/", async (req, res) => {
   try {
-    const { name, barcode, sellPrice, buyPrice, unit, category, stock } =
-      req.body;
+    const { name, barcode, sellPrice, buyPrice, unit, stock } = req.body;
 
     if (!barcode) {
       return res.status(400).json({ error: "Barkod yoxdur !" });
     }
     // Zorunlu alanları kontrol et
-    if (!name || !unit || !category) {
+    if (!name || !unit) {
       return res.status(400).json({ error: "Ad veya Vahid teyin olunmuyub" });
     }
 
@@ -59,7 +58,7 @@ router.post("/", async (req, res) => {
       buyPrice: buyPrice ? parseFloat(buyPrice) : null,
       stock: stock || 0,
       unit,
-      category,
+      category: "Mehsul",
     };
 
     const product = await Products.create(productData);
@@ -158,24 +157,23 @@ router.get("/:id", async (req, res) => {
     }
 
     // Tartım barkodu ise
- if (!product && param.length === 13 && param.startsWith("22")) {
-  const productCode = param.substring(0, 7); // ilk 7 hane ürün kodu
-  const weightStr = param.substring(7, 12);  // 7-11 arası son 5 hane ağırlık
-  const weightGrams = parseInt(weightStr, 10);
-  quantity = weightGrams / 1000;
-  unit = "kg";
+    if (!product && param.length === 13 && param.startsWith("22")) {
+      const productCode = param.substring(0, 7); // ilk 7 hane ürün kodu
+      const weightStr = param.substring(7, 12); // 7-11 arası son 5 hane ağırlık
+      const weightGrams = parseInt(weightStr, 10);
+      quantity = weightGrams / 1000;
+      unit = "kg";
 
-  product = await Products.findOne({
-    where: {
-      barcode: {
-        [Op.like]: `${productCode}%`,
-      },
-    },
-  });
+      product = await Products.findOne({
+        where: {
+          barcode: {
+            [Op.like]: `${productCode}%`,
+          },
+        },
+      });
 
-  if (product) productBarcode = product.barcode;
-}
-
+      if (product) productBarcode = product.barcode;
+    }
 
     // Normal barkod
     if (!product) {
@@ -244,7 +242,7 @@ router.post("/bulk", async (req, res) => {
 
     // Find products by both criteria
     const products = await Products.findAll({
-      order:[["sellPrice","DESC"]],
+      order: [["sellPrice", "DESC"]],
       where: {
         [Sequelize.Op.or]: [
           { product_id: { [Sequelize.Op.in]: numericIds } },
@@ -450,33 +448,38 @@ router.post("/generate-barcode", async (req, res) => {
           message: "Benzersiz barkod üretilemedi, tüm kodlar dolu olabilir.",
         });
       }
-    }else if (unit === "kg") {
-  const kgProducts = await Products.findAll({
-    where: { unit: "kg", barcode: { [Op.like]: "22%" } },
-    attributes: ["barcode"],
-    order: [["barcode", "DESC"]],
-  });
+    } else if (unit === "kg") {
+      const kgProducts = await Products.findAll({
+        where: { unit: "kg", barcode: { [Op.like]: "22%" } },
+        attributes: ["barcode"],
+        order: [["barcode", "DESC"]],
+      });
 
-  let nextCode;
-  if (kgProducts.length === 0) {
-    nextCode = "00001"; // İlk kg ürünü için başlangıç
-  } else {
-    const lastKgBarcode = kgProducts[0].barcode;
-    let lastCode = parseInt(lastKgBarcode && lastKgBarcode.length >= 7 ? lastKgBarcode.slice(2, 7) : "0", 10);
-    if (isNaN(lastCode)) lastCode = 0;
-    nextCode = String(lastCode + 1).padStart(5, "0");
-  }
+      let nextCode;
+      if (kgProducts.length === 0) {
+        nextCode = "00001"; // İlk kg ürünü için başlangıç
+      } else {
+        const lastKgBarcode = kgProducts[0].barcode;
+        let lastCode = parseInt(
+          lastKgBarcode && lastKgBarcode.length >= 7
+            ? lastKgBarcode.slice(2, 7)
+            : "0",
+          10
+        );
+        if (isNaN(lastCode)) lastCode = 0;
+        nextCode = String(lastCode + 1).padStart(5, "0");
+      }
 
-  newBarcodeBase = `22${nextCode}00000`; // 12 haneli: 2 + 5 + 5
-  const checkDigit = calculateCheckDigit(newBarcodeBase);
-  newBarcode = newBarcodeBase + checkDigit; // 13 haneli tam barkod
+      newBarcodeBase = `22${nextCode}00000`; // 12 haneli: 2 + 5 + 5
+      const checkDigit = calculateCheckDigit(newBarcodeBase);
+      newBarcode = newBarcodeBase + checkDigit; // 13 haneli tam barkod
 
-  if (existingBarcodes.includes(newBarcode)) {
-    return res.status(500).json({
-      message: "Benzersiz barkod üretilemedi, tüm kodlar dolu olabilir.",
-    });
-  }
-}
+      if (existingBarcodes.includes(newBarcode)) {
+        return res.status(500).json({
+          message: "Benzersiz barkod üretilemedi, tüm kodlar dolu olabilir.",
+        });
+      }
+    }
 
     res.status(200).json({
       message: "Yeni barkod başarıyla oluşturuldu",
