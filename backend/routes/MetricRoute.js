@@ -6,6 +6,7 @@ const {
   Products,
   sequelize,
   Sequelize,
+  ProductStock,
   Op,
 } = require("../models");
 
@@ -68,7 +69,30 @@ router.post("/sale", async (req, res) => {
 
 router.get("/products", async (req, res) => {
   try {
-    const products = await Products.findAll();
+    const products = await Products.findAll({
+      attributes: [
+        "product_id",
+        "name",
+        "barcode",
+        "sellPrice",
+        "buyPrice",
+        "unit",
+        "category",
+      ],
+    });
+
+    // Tüm ürünlerin stoklarını ProductStock tablosundan çek
+    const productIds = products.map((p) => p.product_id);
+    const stocks = await ProductStock.findAll({
+      where: { product_id: productIds },
+      attributes: ["product_id", "current_stock"],
+    });
+
+    // Stokları kolay erişim için objeye çevir
+    const stockMap = {};
+    stocks.forEach((s) => {
+      stockMap[s.product_id] = s.current_stock;
+    });
 
     // Sayılar yoksa 0, varsa binlik ayraçlı string olarak döndürülür
     const totalProducts = products?.length || 0;
@@ -77,13 +101,22 @@ router.get("/products", async (req, res) => {
     const pieceBasedProducts =
       products?.filter((p) => p.unit === "piece").length || 0;
     const zeroOrNegativeStock =
-      products?.filter((p) => Number(p.stock) <= 0).length || 0;
+      products?.filter((p) => (stockMap[p.product_id] ?? 0) <= 0).length || 0;
+
+    // Toplam stok miktarı (ProductStock tablosundaki current_stock alanı)
+    const totalStock = products
+      ? products.reduce(
+          (sum, p) => sum + Number(stockMap[p.product_id] ?? 0),
+          0
+        )
+      : 0;
 
     res.json({
       totalProducts: totalProducts.toLocaleString("tr-TR"),
       kgBasedProducts: kgBasedProducts.toLocaleString("tr-TR"),
       pieceBasedProducts: pieceBasedProducts.toLocaleString("tr-TR"),
       zeroOrNegativeStock: zeroOrNegativeStock.toLocaleString("tr-TR"),
+      totalStock: totalStock.toLocaleString("tr-TR"),
     });
   } catch (error) {
     console.log(error);
@@ -176,11 +209,30 @@ router.post("/dashboard", async (req, res) => {
 
     // Tüm ürünlerin toplam stok maliyeti (Products tablosundan)
     const products = await Products.findAll({
-      attributes: ["buyPrice", "stock"],
+      attributes: ["buyPrice", "product_id"],
+    });
+    if (!products || products.length === 0) {
+      return res.json({
+        totalRevenue: "0 ₼",
+        totalSales: 0,
+        totalProfit: "0 ₼",
+        totalStockCost: "0 ₼",
+      });
+    }
+    // Toplam stok maliyetini hesapla
+    const stock = await ProductStock.findAll({
+      where: {
+        product_id: products.map((p) => p.product_id),
+      },
     });
     let totalStockCost = 0;
+    const stockMap = {};
+    stock.forEach((s) => {
+      stockMap[s.product_id] = Number(s.current_stock);
+    });
     products.forEach((product) => {
-      totalStockCost += Number(product.buyPrice) * Number(product.stock);
+      const currentStock = stockMap[product.product_id] || 0;
+      totalStockCost += Number(product.buyPrice) * currentStock;
     });
 
     res.json({
@@ -277,7 +329,6 @@ router.get("/bestSellers", async (req, res) => {
         "product.product_id",
         "product.name",
         "product.barcode",
-        "product.stock",
       ],
       order: [[sequelize.literal("sold"), "DESC"]],
       limit: 20,
@@ -285,7 +336,7 @@ router.get("/bestSellers", async (req, res) => {
         {
           model: Products,
           as: "product",
-          attributes: ["product_id", "name", "barcode", "stock"],
+          attributes: ["product_id", "name", "barcode"],
         },
       ],
       raw: true,
@@ -295,20 +346,43 @@ router.get("/bestSellers", async (req, res) => {
     // Kalan ürünleri bul (bestSeller olmayanlar)
     const bestSellerIds = bestSellers.map((item) => item.product_id);
 
+    // Stokları ProductStock tablosundan çek
+    const allProductIds = [
+      ...bestSellerIds,
+      ...(
+        await Products.findAll({
+          where: { product_id: { [Op.notIn]: bestSellerIds } },
+          attributes: ["product_id"],
+          raw: true,
+        })
+      ).map((p) => p.product_id),
+    ];
+    const productStocks = await ProductStock.findAll({
+      where: { product_id: allProductIds },
+      attributes: ["product_id", "current_stock"],
+      raw: true,
+    });
+    const stockMap = {};
+    productStocks.forEach((s) => {
+      stockMap[s.product_id] = s.current_stock;
+    });
+
+    // Kalan ürünleri bul (bestSeller olmayanlar)
     const restProducts = await Products.findAll({
       where: {
         product_id: { [Op.notIn]: bestSellerIds },
       },
-      order: [["stock", "ASC"]],
+      order: [["product_id", "ASC"]],
       limit: 20,
-      attributes: ["product_id", "name", "barcode", "stock"],
+      attributes: ["product_id", "name", "barcode"],
       raw: true,
     });
 
-    // restProducts'a sold alanı ekle (0 olarak)
+    // restProducts'a sold alanı ekle (0 olarak) ve stock ekle
     const restProductsWithSold = restProducts.map((item) => ({
       ...item,
       sold: 0,
+      stock: stockMap[item.product_id] ?? 0,
     }));
 
     // Sonuçları birleştir
@@ -318,7 +392,7 @@ router.get("/bestSellers", async (req, res) => {
         name: item.product.name,
         barcode: item.product.barcode,
         sold: Number(item.sold),
-        stock: item.product.stock,
+        stock: stockMap[item.product_id] ?? 0,
       })),
       ...restProductsWithSold,
     ];

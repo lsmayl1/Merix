@@ -5,13 +5,16 @@ import {
   flexRender,
 } from "@tanstack/react-table";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 export const Table = ({
   data = [],
   columns = [],
   isLoading,
+  path,
   pagination = true,
 }) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const table = useReactTable({
     data,
     columns,
@@ -22,6 +25,12 @@ export const Table = ({
       },
     },
   });
+
+  const handleRowClick = (row) => {
+    if (path) {
+      navigate(`${path}/${row.original.product_id}`);
+    }
+  };
   return (
     <div className="w-full h-full flex flex-col  min-h-0 rounded-lg justify-between   bg-white gap-1">
       <div className="overflow-y-auto flex flex-col min-h-0  h-full">
@@ -68,7 +77,11 @@ export const Table = ({
               </tr>
             ) : (
               table.getRowModel()?.rows?.map((row) => (
-                <tr key={row.id} className="hover:bg-gray-100">
+                <tr
+                  onClick={() => handleRowClick(row)}
+                  key={row.id}
+                  className="hover:bg-gray-100"
+                >
                   {row.getVisibleCells().map((cell) => (
                     <td
                       key={cell.id}

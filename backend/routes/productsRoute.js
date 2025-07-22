@@ -1,6 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const { Products, Sequelize, sequelize, Op } = require("../models");
+const {
+  Products,
+  Sequelize,
+  sequelize,
+  Op,
+  ProductStock,
+} = require("../models");
 
 // Create a product
 router.post("/", async (req, res) => {
@@ -93,15 +99,37 @@ router.get("/", async (req, res) => {
       order,
       limit,
       offset: offset,
+      attributes: [
+        "product_id",
+        "name",
+        "barcode",
+        "sellPrice",
+        "buyPrice",
+        "unit",
+        "category",
+      ],
     });
 
-    // Veriyi dönüştür (buyPrice ve sellPrice float'a çevriliyor)
+    // Tüm ürünlerin stoklarını ProductStock tablosundan çek
+    const productIds = products.map((p) => p.product_id);
+    const stocks = await ProductStock.findAll({
+      where: { product_id: productIds },
+      attributes: ["product_id", "current_stock"],
+    });
+
+    // Stokları kolay erişim için objeye çevir
+    const stockMap = {};
+    stocks.forEach((s) => {
+      stockMap[s.product_id] = s.current_stock;
+    });
+
+    // Ürünleri dönüştür, stock bilgisini ekle
     const transformedProducts = products.map((product) => ({
       ...product.get({ plain: true }),
       buyPrice: parseFloat(product.buyPrice),
       sellPrice: parseFloat(product.sellPrice),
+      stock: stockMap[product.product_id] ?? 0,
     }));
-
     res.json(transformedProducts);
   } catch (error) {
     res.status(500).json({ error: error.message });

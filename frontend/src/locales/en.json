@@ -76,7 +76,9 @@
   "createTransaction":"Create Transaction",
   "cancel":"Cancel",
   "update":"Update",
-  "create":"Create"
+  "create":"Create",
+
+  "stockMovements": "Stock Movements"
 
 
 

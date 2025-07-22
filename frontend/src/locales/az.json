@@ -83,5 +83,7 @@
   "update":"Dəyiş",
   "create":"Yarat",
 
-  "createTransaction":"Əməliyyat Yarat"
+  "createTransaction":"Əməliyyat Yarat",
+
+  "stockMovements": "Anbar Hərəkətləri"
 }

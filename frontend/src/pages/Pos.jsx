@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Plus } from "../assets/Plus";
 import { SearchIcon } from "../assets/SearchIcon";
 import { Setting } from "../assets/Setting";
@@ -13,14 +13,11 @@ import { CreditCard } from "../assets/CreditCard";
 import Payment from "../assets/Payment";
 import {
   useGetProductsByQueryQuery,
-  useGetProductsQuery,
   useLazyGetProductByIdQuery,
   usePostSaleMutation,
   usePostSalePreviewMutation,
 } from "../redux/slices/ApiSlice";
-import { Kart } from "../assets/Sidebar/Kart";
 import { BarcodeField } from "../components/BarcodeField";
-import { Xcircle } from "../assets/Xcircle";
 import { ProductShortcuts } from "../components/Pos/ProductShortcuts";
 import { NavLink } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
@@ -239,27 +236,24 @@ export const Pos = () => {
   };
 
   const handleDeleteProduct = (id) => {
-    console.log(id);
-
     const newData = inputData.filter(
       (x) =>
         String(x.barcode) !== String(id) &&
         String(x.productBarcode) !== String(id)
     );
-
     setInputData(newData);
   };
 
   const handleSubmitSale = async () => {
     if (postLoading) return;
     try {
-      const sale = await postSale({
+      await postSale({
         payment_method: paymentMethod,
         products: data?.items,
       }).unwrap();
-
       setData([]);
       setInputData([]);
+      setPaymentMethod("cash");
       setTimeout(() => {
         barcodeRef.current?.focus();
       }, 100);
@@ -301,17 +295,25 @@ export const Pos = () => {
     barcodeRef.current?.focus();
   };
 
+  const handleDuplicateTab = () => {
+    const newWindow = window.open(window.location.href, "_blank");
+
+    // Eğer yönlendirme yapılmasını istiyorsan (aktif sekme o olsun):
+    if (newWindow) {
+      newWindow.focus();
+    }
+  };
+
   return (
     <div className="flex flex-col  overflow-hidden h-screen  gap-2 w-full ">
       <ToastContainer />
 
       <div className="flex gap-4 items-center justify-between px-8 py-4">
         <div className="flex gap-2 items-center ">
-          <button className="border border-mainBorder py-2 px-4 rounded-lg">
-            {" "}
-            Order 1
-          </button>
-          <button className="p-2  border border-mainBorder rounded-lg">
+          <button
+            onClick={handleDuplicateTab}
+            className="p-2  border border-mainBorder rounded-lg"
+          >
             <Plus />
           </button>
         </div>
@@ -374,8 +376,7 @@ export const Pos = () => {
             {" "}
             {t("clearAll")}
           </h1>
-          {/* <Setting className="size-8" />
-          <ChartPie className="size-8" /> */}
+
           <NavLink to={"/"}>
             <Logout className="size-8" />
           </NavLink>
@@ -401,14 +402,6 @@ export const Pos = () => {
           {inputData.length > 0 && (
             <div className="flex flex-col h-fit justify-center gap-4">
               <div className="flex flex-col gap-2">
-                {/* <div className="flex flex-col gap-4 border-b border-dashed pb-4 border-gray-300">
-                <div className="w-full flex items-center justify-between">
-                  <span>Subtotal</span>
-                  <span className="text-lg font-medium">
-                    {data?.subtotal?.toFixed(2) || "0.00"} ₼
-                  </span>
-                </div>
-              </div> */}
                 <div className="flex items-center justify-between">
                   <span className="text-2xl font-medium">{t("total")}</span>
                   <span className="text-2xl font-medium">

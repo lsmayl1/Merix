@@ -6,12 +6,21 @@ import { NavLink } from "react-router-dom";
 import { Kart } from "../../assets/Sidebar/Kart";
 import { CloseIcon } from "../../assets/Close";
 import { useTranslation } from "react-i18next";
+import Delivery from "../../assets/Navigation/Delivery";
+import StockBox from "../../assets/Navigation/StockBox";
 
 export const Sidebar = ({ className, handleClose }) => {
   const { t } = useTranslation();
   const links = [
     { name: t("dashboard"), blank: false, path: "", icon: <Dashboard /> },
     { name: t("products"), blank: false, path: "products", icon: <Box /> },
+    {
+      name: t("stockMovements"),
+      blank: false,
+      path: "stock-movements",
+      icon: <StockBox />,
+    },
+
     {
       name: t("reports"),
       blank: false,

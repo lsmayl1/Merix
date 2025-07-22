@@ -8,21 +8,22 @@ import {
   useLazyGetProductByIdQuery,
   usePostProductMutation,
   usePutProductByIdMutation,
-} from "../redux/slices/ApiSlice";
-import Edit from "../assets/Edit";
-import { RecycleBin } from "../assets/recycleBin";
-import TrashBin from "../assets/TrashBin";
-import { ProductModal } from "../components/Products/ProductModal";
-import { BarcodeField } from "../components/BarcodeField";
-import { KPI } from "../components/Metric/KPI";
-import { SearchIcon } from "../assets/SearchIcon";
-import { Filters } from "../assets/Filters";
-import { Plus } from "../assets/Plus";
-import { FiltersModal } from "../components/Filters/FiltersModal";
-import { Table } from "../components/Table";
+} from "../../redux/slices/ApiSlice";
+import Edit from "../../assets/Edit";
+import { RecycleBin } from "../../assets/recycleBin";
+import TrashBin from "../../assets/TrashBin";
+import { ProductModal } from "../../components/Products/ProductModal";
+import { BarcodeField } from "../../components/BarcodeField";
+import { KPI } from "../../components/Metric/KPI";
+import { SearchIcon } from "../../assets/SearchIcon";
+import { Filters } from "../../assets/Filters";
+import { Plus } from "../../assets/Plus";
+import { FiltersModal } from "../../components/Filters/FiltersModal";
+import { Table } from "../../components/Table";
 import { createColumnHelper } from "@tanstack/react-table";
-import { useSearchParams } from "react-router-dom";
+import { NavLink, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { Details } from "../../assets/Details";
 
 export const Products = () => {
   const { t } = useTranslation();
@@ -89,13 +90,20 @@ export const Products = () => {
       headerClassName: "text-center rounded-e-lg bg-gray-100",
       cellClassName: "text-center",
       cell: ({ row }) => (
-        <div className="flex justify-center  gap-2">
+        <div className="flex justify-center  gap-4">
           <button
             className="cursor-pointer"
             onClick={() => handleEditProduct(row.original.product_id)}
           >
             <Edit />
           </button>
+
+          <NavLink
+            to={`/products/${row.original.product_id}`}
+            className="cursor-pointer"
+          >
+            <Details className="size-5" />
+          </NavLink>
           <button
             className="cursor-pointer"
             onClick={() => handleDeleteProduct(row.original.product_id)}
@@ -132,14 +140,10 @@ export const Products = () => {
   });
   const [trigger] = useLazyGetProductByIdQuery();
   const [deleteProduct] = useDeleteProductByIdMutation();
-  const handlePage = () => {
-    setPage((prev) => (prev += 1));
-  };
+
   const [putProduct] = usePutProductByIdMutation();
   const [postProduct, { isLoading: postLoading, isError: postError }] =
     usePostProductMutation();
-
-    const barcodeRef = useRef()
 
   const handleClosePopUp = () => {
     setEditForm(null);
@@ -233,9 +237,7 @@ export const Products = () => {
 
   return (
     <div className="w-full h-full flex flex-col gap-2 min-h-0 ">
-      <div className="max-md:hidden">
-        
-      </div>
+      <div className="max-md:hidden"></div>
       <KPI
         data={[
           {
@@ -301,12 +303,11 @@ export const Products = () => {
             <Plus className="max-md:size-5" />
             {t("addProduct")}
           </button>
-           <BarcodeField
-          handleBarcode={handleBarcode}
-          shouldFocus={!showProductModal}
-        />
+          <BarcodeField
+            handleBarcode={handleBarcode}
+            shouldFocus={!showProductModal}
+          />
         </div>
-       
 
         <div className="min-h-0 w-full px-2">
           <Table

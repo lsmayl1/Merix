@@ -16,14 +16,15 @@ import { SaleDetailsModal } from "../../components/Reports/SaleDetailsModal";
 import { DateRange } from "../../components/Date/DateRange";
 import { useTranslation } from "react-i18next";
 import TrashBin from "../../assets/TrashBin";
+import { Cash } from "../../assets/Cash";
+import { CreditCard } from "../../assets/CreditCard";
 
 export const SalesReports = () => {
   const { t } = useTranslation();
   const [showFiltersModal, setShowFiltersModal] = useState(false);
-  const [getSales,{refetch}] = useGetAllSalesMutation();
+  const [getSales, { refetch }] = useGetAllSalesMutation();
   const [getSaleMetrics] = useGetSaleMetricsMutation();
-  const [deleteSale,{Loading:deleteLoading}] = useDeleteSaleMutation()
-  const [inputValue, setInputValue] = useState("");
+  const [deleteSale, { Loading: deleteLoading }] = useDeleteSaleMutation();
   const [data, setData] = useState([]);
   const [metrics, setMetrics] = useState({});
   const columnHelper = createColumnHelper();
@@ -82,7 +83,7 @@ export const SalesReports = () => {
           onClick={() => handleDeleteSale(row?.original?.sale_id)}
           className="text-mainText hover:underline"
         >
-          <TrashBin/>
+          <TrashBin />
         </button>
       ),
       cellClassName: "text-center",
@@ -120,17 +121,16 @@ export const SalesReports = () => {
     }
   }, [range]);
 
-
-  const handleDeleteSale = async (id)=>{
-    if(window.confirm("Silinsin ?")){
-    try {
-      await deleteSale(id).unwrap()
-      await refetch()
-    } catch (error) {
-     console.log(error) 
+  const handleDeleteSale = async (id) => {
+    if (window.confirm("Silinsin ?")) {
+      try {
+        await deleteSale(id).unwrap();
+        await refetch();
+      } catch (error) {
+        console.log(error);
+      }
     }
-    }
-  }
+  };
 
   return (
     <div className="flex flex-col gap-2  w-full h-full relative">
@@ -162,7 +162,17 @@ export const SalesReports = () => {
         />
       )}
       <div className="flex flex-col gap-2 w-full h-full min-h-0  bg-white rounded-lg px-4 py-2 relative">
-        <div className="flex gap-2 items-center justify-end">
+        <div className="flex gap-2 items-center justify-between w-full px-2">
+          <div className="flex items-center gap-6">
+            <div className="flex gap-2 items-center text-xl font-semibold">
+              <Cash />
+              <span>{data?.paymentTotals?.cash}</span>
+            </div>
+            <div className="flex gap-2 items-center text-xl font-semibold">
+              <CreditCard />
+              <span>{data?.paymentTotals?.card}</span>
+            </div>
+          </div>
           <div className="flex  relative ">
             <button
               onClick={() => setShowFiltersModal(!showFiltersModal)}
@@ -180,7 +190,7 @@ export const SalesReports = () => {
         <div className="min-h-0 w-full h-full px-2 relative">
           <Table
             columns={columns}
-            data={data}
+            data={data?.sales}
             // isLoading={isLoading}
           />
         </div>

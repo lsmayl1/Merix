@@ -35,11 +35,7 @@ const Products = sequelize.define(
       type: DataTypes.ENUM("piece", "kg"),
       allowNull: false,
     },
-    stock: {
-      type: DataTypes.DECIMAL(10, 3),
-      allowNull: true,
-      defaultValue: 0,  
-    },
+
     timestamp: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW, // Automatically set to current timestamp

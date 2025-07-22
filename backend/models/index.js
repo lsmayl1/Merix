@@ -5,10 +5,21 @@ const Products = require("./products");
 const SalesDetails = require("./salesDetails");
 const Plu = require("./plu");
 const CashTransactions = require("./cashTransactions");
+const StockTransactions = require("./stockTransactions");
+const ProductStock = require("./productStock");
 // 🔹 İlişkileri Tanımla
 Sales.hasMany(SalesDetails, { foreignKey: "sale_id", as: "details" });
 SalesDetails.belongsTo(Sales, { foreignKey: "sale_id", as: "sale" });
 
+StockTransactions.belongsTo(Products, {
+  foreignKey: "product_id",
+  as: "product",
+});
+
+ProductStock.belongsTo(Products, {
+  foreignKey: "product_id",
+  as: "product",
+});
 Products.hasMany(SalesDetails, {
   foreignKey: "product_id",
   as: "salesDetails",
@@ -25,4 +36,6 @@ module.exports = {
   Plu,
   Op,
   CashTransactions,
+  StockTransactions,
+  ProductStock,
 };

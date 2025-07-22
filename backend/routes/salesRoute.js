@@ -3,6 +3,7 @@ const {
   Sales,
   SalesDetails,
   Products,
+  ProductStock,
   sequelize,
   Sequelize,
   Op,
@@ -39,6 +40,17 @@ router.post("/", async (req, res) => {
       ],
     });
 
+    // Nakit ve kart toplamlarını hesapla
+    let cashTotal = 0;
+    let cardTotal = 0;
+    sales.forEach((sale) => {
+      if (sale.payment_method === "cash") {
+        cashTotal += Number(sale.total_amount);
+      } else if (sale.payment_method === "card") {
+        cardTotal += Number(sale.total_amount);
+      }
+    });
+
     const formattedSales = sales.map((sale) => {
       const details = sale.details;
       let profit = 0;
@@ -65,7 +77,13 @@ router.post("/", async (req, res) => {
         profit: Number(profit.toFixed(2)),
       };
     });
-    res.json(formattedSales);
+    res.json({
+      sales: formattedSales,
+      paymentTotals: {
+        cash: cashTotal.toFixed(2) + " ₼",
+        card: cardTotal.toFixed(2) + " ₼",
+      },
+    });
   } catch (err) {
     console.log(err);
   }
@@ -145,11 +163,11 @@ router.post("/preview", async (req, res) => {
           unit = "kg";
         } else {
           // Yoksa tartım barkodu olarak işle
-           const baseCode = barcode.substring(0, 7); // ilk 8 hane ürün kodu
-    const weightStr = barcode.substring(7, 12); // son 5 hane ağırlık
-    const weight = parseInt(weightStr, 10);
-    quantity = weight / 1000; // 3 ondalık hassasiyet
-    unit = "kg";
+          const baseCode = barcode.substring(0, 7); // ilk 8 hane ürün kodu
+          const weightStr = barcode.substring(7, 12); // son 5 hane ağırlık
+          const weight = parseInt(weightStr, 10);
+          quantity = weight / 1000; // 3 ondalık hassasiyet
+          unit = "kg";
 
           const product = await Products.findOne({
             where: { barcode: { [Op.like]: `${baseCode}%` } },
@@ -292,12 +310,29 @@ router.post("/create", async (req, res) => {
 
       await Promise.all(
         stockUpdates.map(async (update) => {
-          await update.product.update(
-            {
-              stock: sequelize.literal(`stock - ${update.quantity}`),
-            },
-            { transaction: t }
-          );
+          const productStock = await ProductStock.findOne({
+            where: { product_id: update.product.product_id },
+            transaction: t,
+          });
+          if (productStock) {
+            await productStock.update(
+              {
+                current_stock: sequelize.literal(
+                  `current_stock - ${update.quantity}`
+                ),
+                updated_at: new Date(),
+              },
+              { transaction: t }
+            );
+          } else {
+            await ProductStock.create(
+              {
+                product_id: update.product.product_id,
+                current_stock: -update.quantity,
+              },
+              { transaction: t }
+            );
+          }
         })
       );
 
@@ -339,7 +374,7 @@ router.delete("/delete/:id", async (req, res) => {
   try {
     // Satış ve detaylarını bul
     const sale = await Sales.findByPk(id, {
-      include: [{ model: SalesDetails, as: "details" }]
+      include: [{ model: SalesDetails, as: "details" }],
     });
     if (!sale) return res.status(404).json({ error: "Satış bulunamadı" });
 
@@ -348,7 +383,7 @@ router.delete("/delete/:id", async (req, res) => {
       const product = await Products.findByPk(detail.product_id);
       if (product) {
         await product.update({
-          stock: Sequelize.literal(`stock + ${detail.quantity}`)
+          stock: Sequelize.literal(`stock + ${detail.quantity}`),
         });
       }
     }

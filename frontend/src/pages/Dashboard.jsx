@@ -19,6 +19,7 @@ export const Dashboard = () => {
   const { data: hourlyRevenue } = useGetHourlyRevenueQuery();
   const [getMetrics] = useGetDashboardMetricsMutation();
   const [metricData, setMetricData] = useState({});
+  const [timeFrame, setTimeFrame] = useState("daily");
   const [range, setRange] = useState({
     from: "",
     to: "",
@@ -101,8 +102,14 @@ export const Dashboard = () => {
           ]}
         />
       </div>
-      <div className="flex flex-col bg-white w-full p-4 h-full  rounded-lg  ">
-        <h1 className="text-xl text-mainText">Gunluk</h1>
+      <div className="flex flex-col bg-white w-full justify-end  p-4 h-full  rounded-lg  ">
+        <div className="flex justify-end gap-12 items-center mb-4">
+          <button className={`border border-mainBorder px-4 py-1 rounded-lg *:`}>
+            Daily
+          </button>
+          <button>Weekly</button>
+          <button>Monthly</button>
+        </div>
         <LineChart data={dailyRevenue} />
       </div>
       <div className="flex  flex-col bg-white w-full p-4 h-full  rounded-lg  ">

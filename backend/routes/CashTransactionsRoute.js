@@ -1,17 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const { CashTransactions, Sequelize, Sales } = require("../models");
-
+const formatDate = require("../utils/dateUtils");
 // GetAll Transactions
-function formatDate(date) {
-  const d = new Date(date);
-  const day = String(d.getDate()).padStart(2, "0");
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const year = String(d.getFullYear()).slice(-2);
-  const hour = String(d.getHours()).padStart(2, "0");
-  const min = String(d.getMinutes()).padStart(2, "0");
-  return `${day}.${month}.${year} ${hour}:${min}`;
-}
+
 router.get("/", async (req, res) => {
   try {
     // Bugünün başlangıcı ve bitişi
@@ -70,13 +62,17 @@ router.get("/", async (req, res) => {
       ? parseFloat(dailySales[0].dailyRevenue).toFixed(2)
       : "0.00";
 
-  res.json({
-  transactions: formatted,
-  todayIncome: `${todayIncome.toFixed(2)} ₼`,
-  todayExpense: `- ${todayExpense.toFixed(2)} ₼`,
-  todayTotal: `${(todayIncome - todayExpense + parseFloat(dailyRevenue)).toFixed(2)} ₼`,
-  dailyRevenue: `${dailyRevenue} ₼`,
-});
+    res.json({
+      transactions: formatted,
+      todayIncome: `${todayIncome.toFixed(2)} ₼`,
+      todayExpense: `- ${todayExpense.toFixed(2)} ₼`,
+      todayTotal: `${(
+        todayIncome -
+        todayExpense +
+        parseFloat(dailyRevenue)
+      ).toFixed(2)} ₼`,
+      dailyRevenue: `${dailyRevenue} ₼`,
+    });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Internal server error" });
