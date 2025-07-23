@@ -370,7 +370,7 @@ export const Pos = () => {
                   >
                     <div className=" flex gap-4 w-1/2">
                       <span className="flex-2">{item.name}</span>
-                      <span>{item.stock.toFixed(2)}</span>
+                      <span>{item?.stock}</span>
                     </div>
                     <span>{item.sellPrice.toFixed(2)} ₼</span>
 
