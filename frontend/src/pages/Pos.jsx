@@ -1,10 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Plus } from "../assets/Plus";
 import { SearchIcon } from "../assets/SearchIcon";
-import { Setting } from "../assets/Setting";
-import { ChartPie } from "../assets/chart-pie";
 import { Logout } from "../assets/Logout";
-import { Minus } from "../assets/Minus";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Table } from "../components/Table";
 import TrashBin from "../assets/TrashBin";
@@ -23,6 +20,8 @@ import { NavLink } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import { QtyInput } from "../components/QtyInput";
 import { useTranslation } from "react-i18next";
+import { SearchModal } from "../components/Pos/SearchModal";
+import { ChartPie } from "../assets/chart-pie";
 export const Pos = () => {
   const { t } = useTranslation();
   const columnHelper = createColumnHelper();
@@ -96,12 +95,17 @@ export const Pos = () => {
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.ctrlKey && e.key === "k") {
+      const key = e.key.toLowerCase();
+
+      if (e.ctrlKey && key === "k") {
         e.preventDefault();
         searchInput.current?.focus();
-      } else if (e.key.toLowerCase() === "/") {
+      } else if (key === "/") {
         e.preventDefault();
         receivedInput.current?.select();
+      } else if (key === "escape") {
+        setQuery("");
+        barcodeRef.current?.focus();
       }
     };
 
@@ -254,6 +258,7 @@ export const Pos = () => {
       setData([]);
       setInputData([]);
       setPaymentMethod("cash");
+
       setTimeout(() => {
         barcodeRef.current?.focus();
       }, 100);
@@ -329,68 +334,24 @@ export const Pos = () => {
             <Plus />
           </button>
         </div>
-        <div className="flex flex-col relative w-1/2">
-          <div className="flex items-center  relative w-full">
-            <input
-              type="text"
-              ref={searchInput}
-              placeholder="Search for products"
-              className="border border-mainBorder rounded-lg py-2 px-10 w-full"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  setQuery(e.target.value);
-                }
-              }}
-            />
-            <SearchIcon className="absolute left-2" />
-            <div className="flex absolute text-gray-400 right-1 gap-4">
-              <div className="">
-                <span className="bg-gray-50 p-1 border border-mainBorder rounded-lg">
-                  Ctrl
-                </span>
-                <span className=" p-1 ">+</span>
-                <span className="bg-gray-50 p-1 border border-mainBorder rounded-lg">
-                  K
-                </span>
-              </div>
-            </div>
-          </div>
-          {searchData?.length > 0 && query && (
-            <div className="absolute w-full h-[400px] z-50 top-12 bg-white rounded-lg border border-mainBorder">
-              <ul
-                ref={modalRef}
-                className="overflow-auto h-full px-4 flex flex-col  "
-              >
-                {searchData?.map((item) => (
-                  <li
-                    key={item.product_id}
-                    className="flex items-center justify-between hover:bg-gray-100 px-4 py-2"
-                  >
-                    <div className=" flex gap-4 w-1/2">
-                      <span className="flex-2">{item.name}</span>
-                      <span>{item?.stock}</span>
-                    </div>
-                    <span>{item.sellPrice.toFixed(2)} ₼</span>
-
-                    <button
-                      onClick={() => handleChangeQty(item.barcode, "increase")}
-                      className=" p-1 mr-12 bg-white border border-mainBorder rounded-lg"
-                    >
-                      <Plus className="size-6" />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
+        <SearchModal
+          data={searchData}
+          setQuery={setQuery}
+          query={query}
+          barcodeRef={barcodeRef}
+          handleAdd={handleChangeQtyAndFocus}
+        />
         <div className="flex items-center gap-6">
-          <h1 onClick={() => setInputData([])} className="text-red-500">
+          <h1
+            onClick={() => setInputData([])}
+            className="text-red-500 cursor-pointer"
+          >
             {" "}
             {t("clearAll")}
           </h1>
+          <NavLink to={"/reports/sale"}>
+            <ChartPie className="size-8" />
+          </NavLink>
 
           <NavLink to={"/"}>
             <Logout className="size-8" />
