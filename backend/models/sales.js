@@ -25,6 +25,7 @@ const Sales = sequelize.define(
     transaction_type: {
       type: DataTypes.ENUM("sale", "return"), // İşlem türü:
       allowNull: false,
+      defaultValue: "sale", // Varsayılan olarak "sale"
     },
   },
   {
