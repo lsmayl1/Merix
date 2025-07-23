@@ -113,23 +113,26 @@ router.get("/", async (req, res) => {
     // Tüm ürünlerin stoklarını ProductStock tablosundan çek
     const productIds = products.map((p) => p.product_id);
     const stocks = await ProductStock.findAll({
-      where: { product_id: productIds },
+      where: {
+        product_id: {
+          [Op.in]: productIds,
+        },
+      },
       attributes: ["product_id", "current_stock"],
     });
 
-    // Stokları kolay erişim için objeye çevir
     const stockMap = {};
     stocks.forEach((s) => {
-      stockMap[s.product_id] = s.current_stock;
+      stockMap[String(s.product_id)] = s.current_stock;
     });
 
-    // Ürünleri dönüştür, stock bilgisini ekle
     const transformedProducts = products.map((product) => ({
       ...product.get({ plain: true }),
       buyPrice: parseFloat(product.buyPrice),
       sellPrice: parseFloat(product.sellPrice),
-      stock: stockMap[product.product_id] ?? 0,
+      stock: stockMap[String(product.product_id)] ?? 0,
     }));
+
     res.json(transformedProducts);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -156,11 +159,31 @@ router.get("/search", async (req, res) => {
       limit: 50, // En fazla 20 ürün getir
     });
 
-    // Veriyi dönüştür
+ // 2. Ürün ID'lerini al
+    const productIds = products.map((p) => p.product_id);
+
+    // 3. Stokları al
+    const stocks = await ProductStock.findAll({
+      where: {
+        product_id: {
+          [Op.in]: productIds,
+        },
+      },
+      attributes: ["product_id", "current_stock"],
+    });
+
+    // 4. Stokları map'e çevir
+    const stockMap = {};
+    stocks.forEach((s) => {
+      stockMap[s.product_id] = s.current_stock;
+    });
+
+    // 5. Dönüştürülmüş ürün listesi
     const transformedProducts = products.map((product) => ({
       ...product.get({ plain: true }),
       buyPrice: parseFloat(product.buyPrice),
       sellPrice: parseFloat(product.sellPrice),
+      stock: stockMap[product.product_id] ?? 0,
     }));
 
     res.json(transformedProducts);

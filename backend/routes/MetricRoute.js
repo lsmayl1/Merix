@@ -7,6 +7,7 @@ const {
   sequelize,
   Sequelize,
   ProductStock,
+  StockTransactions,
   Op,
 } = require("../models");
 
@@ -206,33 +207,22 @@ router.post("/dashboard", async (req, res) => {
         });
       }
     });
+    const productStocks = await ProductStock.findAll({
+      include: [
+        {
+          model: Products,
+          as: "product",
+          attributes: ["buyPrice"],
+        },
+      ],
+    });
 
-    // Tüm ürünlerin toplam stok maliyeti (Products tablosundan)
-    const products = await Products.findAll({
-      attributes: ["buyPrice", "product_id"],
-    });
-    if (!products || products.length === 0) {
-      return res.json({
-        totalRevenue: "0 ₼",
-        totalSales: 0,
-        totalProfit: "0 ₼",
-        totalStockCost: "0 ₼",
-      });
-    }
-    // Toplam stok maliyetini hesapla
-    const stock = await ProductStock.findAll({
-      where: {
-        product_id: products.map((p) => p.product_id),
-      },
-    });
     let totalStockCost = 0;
-    const stockMap = {};
-    stock.forEach((s) => {
-      stockMap[s.product_id] = Number(s.current_stock);
-    });
-    products.forEach((product) => {
-      const currentStock = stockMap[product.product_id] || 0;
-      totalStockCost += Number(product.buyPrice) * currentStock;
+
+    productStocks.forEach((stock) => {
+      const quantity = Number(stock.current_stock) || 0;
+      const buyPrice = Number(stock.product.buyPrice); // as'e dikkat
+      totalStockCost += quantity * buyPrice;
     });
 
     res.json({
@@ -243,75 +233,6 @@ router.post("/dashboard", async (req, res) => {
     });
   } catch (err) {
     console.log(err);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-router.get("/daily-revenue", async (req, res) => {
-  try {
-    const sales = await Sales.findAll();
-
-    // Günlük toplamları hesaplamak için bir nesne
-    const dailyTotals = {};
-
-    sales.forEach((sale) => {
-      // Tarihi "YYYY-MM-DD" formatına çevir
-      const dateObj = new Date(sale.date);
-      const year = dateObj.getFullYear();
-      const month = String(dateObj.getMonth() + 1).padStart(2, "0");
-      const day = String(dateObj.getDate()).padStart(2, "0");
-      const formattedDate = `${year}-${month}-${day}`;
-
-      if (!dailyTotals[formattedDate]) {
-        dailyTotals[formattedDate] = 0;
-      }
-      dailyTotals[formattedDate] += Number(sale.total_amount || 0);
-    });
-
-    // Sonucu istenen array formatına çevir
-    const result = Object.entries(dailyTotals).map(([date, revenue]) => ({
-      date,
-      revenue: Number(revenue.toFixed(2)),
-    }));
-
-    res.json(result);
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-router.get("/hourly-revenue", async (req, res) => {
-  try {
-    const sales = await Sales.findAll();
-
-    // Saatlik toplamları hesaplamak için bir nesne
-    const hourlyTotals = {};
-
-    sales.forEach((sale) => {
-      const dateObj = new Date(sale.date);
-      const year = dateObj.getFullYear();
-      const month = String(dateObj.getMonth() + 1).padStart(2, "0");
-      const day = String(dateObj.getDate()).padStart(2, "0");
-      const hour = String(dateObj.getHours()).padStart(2, "0");
-      // "YYYY-MM-DD HH" formatı
-      const formattedHour = `${day} ${hour}:00`;
-
-      if (!hourlyTotals[formattedHour]) {
-        hourlyTotals[formattedHour] = 0;
-      }
-      hourlyTotals[formattedHour] += Number(sale.total_amount || 0);
-    });
-
-    // Sonucu array of object olarak döndür
-    const result = Object.entries(hourlyTotals).map(([date, revenue]) => ({
-      date,
-      revenue: Number(revenue.toFixed(2)),
-    }));
-
-    res.json(result);
-  } catch (error) {
-    console.log(error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -406,21 +327,6 @@ router.get("/bestSellers", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
-function getWeekNumber(date) {
-  const target = new Date(date.valueOf());
-  const dayNr = (date.getDay() + 6) % 7; // Pazartesi: 0
-  target.setDate(target.getDate() - dayNr + 3); // Haftanın perşembesine git
-  const firstThursday = new Date(target.getFullYear(), 0, 4);
-  const weekNumber =
-    Math.round(
-      ((target - firstThursday) / 86400000 -
-        3 +
-        ((firstThursday.getDay() + 6) % 7)) /
-        7
-    ) + 1;
-  return weekNumber;
-}
 
 function getWeekNumber(date) {
   const target = new Date(date.valueOf());

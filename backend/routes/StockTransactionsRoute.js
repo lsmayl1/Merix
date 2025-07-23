@@ -51,7 +51,6 @@ router.post("/", async (req, res) => {
       .json({ error: "An error occurred while fetching stock transactions." });
   }
 });
-// POST a new stock transaction
 router.post("/create", async (req, res) => {
   const {
     product_id,
@@ -63,51 +62,57 @@ router.post("/create", async (req, res) => {
   } = req.body;
 
   try {
-    // amount otomatik hesaplanıyor
-    const amount = parseFloat(unit_price) * parseFloat(quantity);
+    // string -> number dönüşümleri
+    const parsedQuantity = parseFloat(quantity);
+    const parsedUnitPrice = parseFloat(unit_price);
+    const amount = parsedUnitPrice * parsedQuantity;
 
-    // Yeni stok hareketi oluştur
+    // 1. Yeni stok hareketini kaydet
     const newTransaction = await StockTransactions.create({
       product_id,
-      unit_price,
-      quantity,
+      unit_price: parsedUnitPrice,
+      quantity: parsedQuantity,
       date,
       description,
       amount,
       transaction_type,
     });
 
-    // ProductStock güncelle
+    // 2. ProductStock kaydını getir veya oluştur
     let productStock = await ProductStock.findOne({ where: { product_id } });
+
     if (!productStock) {
-      // Eğer ürün için stok yoksa, yeni kaydı oluştur
+      const initialStock =
+        transaction_type === "in" ? parsedQuantity : -parsedQuantity;
+
       productStock = await ProductStock.create({
         product_id,
-        current_stock: transaction_type === "in" ? quantity : -quantity,
+        current_stock: initialStock,
         updated_at: new Date(),
       });
     } else {
-      // Stok güncelle
+      const currentStock = parseFloat(productStock.current_stock || 0);
       const newStock =
         transaction_type === "in"
-          ? productStock.current_stock + quantity
-          : productStock.current_stock - quantity;
+          ? currentStock + parsedQuantity
+          : currentStock - parsedQuantity;
+
       await productStock.update({
         current_stock: newStock,
         updated_at: new Date(),
       });
     }
 
-    // Son stok bilgisini dön
+    // 3. Güncellenmiş stok ile cevap dön
     res.status(201).json({
       transaction: newTransaction,
       currentStock: productStock.current_stock,
     });
   } catch (error) {
+    console.error(error);
     res.status(500).json({
       error: "An error occurred while creating the stock",
     });
-    console.log(error);
   }
 });
 

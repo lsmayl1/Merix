@@ -304,6 +304,18 @@ export const Pos = () => {
     }
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.ctrlKey && e.key === "Enter") {
+        e.preventDefault();
+        handleSubmitSale();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleSubmitSale]);
+
   return (
     <div className="flex flex-col  overflow-hidden h-screen  gap-2 w-full ">
       <ToastContainer />
@@ -356,7 +368,10 @@ export const Pos = () => {
                     key={item.product_id}
                     className="flex items-center justify-between hover:bg-gray-100 px-4 py-2"
                   >
-                    <span className="w-1/2">{item.name}</span>
+                    <div className=" flex gap-4 w-1/2">
+                      <span className="flex-2">{item.name}</span>
+                      <span>{item.stock.toFixed(2)}</span>
+                    </div>
                     <span>{item.sellPrice.toFixed(2)} ₼</span>
 
                     <button
