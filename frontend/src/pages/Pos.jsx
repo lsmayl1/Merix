@@ -315,7 +315,7 @@ export const Pos = () => {
     const handleKeyDown = (e) => {
       if (e.ctrlKey && e.key === "Enter") {
         e.preventDefault();
-        handleSubmitSale();
+        handleSubmitSale("sale");
       }
     };
 
