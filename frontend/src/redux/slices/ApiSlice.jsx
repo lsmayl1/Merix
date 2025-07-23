@@ -123,11 +123,9 @@ export const ApiSlice = createApi({
     }),
 
     getDailyRevenue: build.query({
-      query: () => `metrics/daily-revenue`,
+      query: (query) => `metrics/revenue?type=${query}`,
     }),
-    getHourlyRevenue: build.query({
-      query: () => `metrics/hourly-revenue`,
-    }),
+
     getBestSellers: build.query({
       query: () => `metrics/bestSellers`,
     }),

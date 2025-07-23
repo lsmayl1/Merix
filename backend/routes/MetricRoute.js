@@ -406,4 +406,96 @@ router.get("/bestSellers", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
+function getWeekNumber(date) {
+  const target = new Date(date.valueOf());
+  const dayNr = (date.getDay() + 6) % 7; // Pazartesi: 0
+  target.setDate(target.getDate() - dayNr + 3); // Haftanın perşembesine git
+  const firstThursday = new Date(target.getFullYear(), 0, 4);
+  const weekNumber =
+    Math.round(
+      ((target - firstThursday) / 86400000 -
+        3 +
+        ((firstThursday.getDay() + 6) % 7)) /
+        7
+    ) + 1;
+  return weekNumber;
+}
+
+function getWeekNumber(date) {
+  const target = new Date(date.valueOf());
+  const dayNr = (date.getDay() + 6) % 7;
+  target.setDate(target.getDate() - dayNr + 3);
+  const firstThursday = new Date(target.getFullYear(), 0, 4);
+  const weekNumber =
+    Math.round(
+      ((target - firstThursday) / 86400000 -
+        3 +
+        ((firstThursday.getDay() + 6) % 7)) /
+        7
+    ) + 1;
+  return weekNumber;
+}
+
+router.get("/revenue", async (req, res) => {
+  try {
+    const { type = "daily" } = req.query;
+    const sales = await Sales.findAll();
+    const totals = {};
+
+    sales.forEach((sale) => {
+      const dateObj = new Date(sale.date);
+      let key;
+
+      switch (type) {
+        case "hourly":
+          key = `${dateObj.getFullYear()}-${String(
+            dateObj.getMonth() + 1
+          ).padStart(2, "0")}-${String(dateObj.getDate()).padStart(
+            2,
+            "0"
+          )} ${String(dateObj.getHours()).padStart(2, "0")}:00`;
+          break;
+        case "daily":
+          key = `${dateObj.getFullYear()}-${String(
+            dateObj.getMonth() + 1
+          ).padStart(2, "0")}-${String(dateObj.getDate()).padStart(2, "0")}`;
+          break;
+        case "weekly":
+          const weekStart = new Date(dateObj);
+          weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+          key = `${weekStart.getFullYear()}-W${getWeekNumber(weekStart)}`;
+          break;
+        case "monthly":
+          key = `${dateObj.getFullYear()}-${String(
+            dateObj.getMonth() + 1
+          ).padStart(2, "0")}`;
+          break;
+        default:
+          return res.status(400).json({ error: "Invalid type parameter" });
+      }
+
+      totals[key] = (totals[key] || 0) + Number(sale.total_amount || 0);
+    });
+
+    const result = Object.entries(totals).map(([date, revenue]) => ({
+      date,
+      revenue: Number(revenue.toFixed(2)),
+    }));
+
+    // Ortalama hesaplama
+    const totalRevenue = result.reduce((sum, item) => sum + item.revenue, 0);
+    const average =
+      result.length > 0 ? Number((totalRevenue / result.length).toFixed(2)) : 0;
+
+    res.json({
+      average: average + " ₼",
+      data: result,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 module.exports = router;

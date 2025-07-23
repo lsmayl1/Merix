@@ -15,11 +15,13 @@ import { StockOverview } from "../components/Products/StockOverview.jsx";
 
 export const Dashboard = () => {
   const { t } = useTranslation();
-  const { data: dailyRevenue } = useGetDailyRevenueQuery();
-  const { data: hourlyRevenue } = useGetHourlyRevenueQuery();
+  const [timeframe, setTimeframe] = useState("daily");
+
+  const { data: Revenue } = useGetDailyRevenueQuery(timeframe, {
+    skip: !timeframe,
+  });
   const [getMetrics] = useGetDashboardMetricsMutation();
   const [metricData, setMetricData] = useState({});
-  const [timeFrame, setTimeFrame] = useState("daily");
   const [range, setRange] = useState({
     from: "",
     to: "",
@@ -103,18 +105,49 @@ export const Dashboard = () => {
         />
       </div>
       <div className="flex flex-col bg-white w-full justify-end  p-4 h-full  rounded-lg  ">
-        <div className="flex justify-end gap-12 items-center mb-4">
-          <button className={`border border-mainBorder px-4 py-1 rounded-lg *:`}>
-            Daily
-          </button>
-          <button>Weekly</button>
-          <button>Monthly</button>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex  items-center   gap-4">
+            <h1 className=" font-medium text-xl text-mainText">
+              Ortalama Dovriyye
+            </h1>
+            <span className="text-3xl text-end font-semibold ">{Revenue?.average}</span>
+          </div>
+          <div className="flex justify-end gap-6  items-center ">
+            <button
+              onClick={() => setTimeframe("hourly")}
+              className={`${
+                timeframe === "hourly" ? "bg-blue-700 text-white" : "bg-white"
+              } border border-mainBorder px-4 py-1 rounded-lg`}
+            >
+              Hourly
+            </button>
+            <button
+              onClick={() => setTimeframe("daily")}
+              className={`${
+                timeframe === "daily" ? "bg-blue-700 text-white" : "bg-white"
+              } border border-mainBorder px-4 py-1 rounded-lg`}
+            >
+              Daily
+            </button>
+            <button
+              onClick={() => setTimeframe("weekly")}
+              className={`${
+                timeframe === "weekly" ? "bg-blue-700 text-white" : "bg-white"
+              } border border-mainBorder px-4 py-1 rounded-lg *:`}
+            >
+              Weekly
+            </button>
+            <button
+              onClick={() => setTimeframe("monthly")}
+              className={`${
+                timeframe === "monthly" ? "bg-blue-700 text-white" : "bg-white"
+              } border border-mainBorder px-4 py-1 rounded-lg *:`}
+            >
+              Monthly
+            </button>
+          </div>
         </div>
-        <LineChart data={dailyRevenue} />
-      </div>
-      <div className="flex  flex-col bg-white w-full p-4 h-full  rounded-lg  ">
-        <h1 className="text-xl text-mainText">Saatliq</h1>
-        <LineChart data={hourlyRevenue} />
+        <LineChart data={Revenue?.data} />
       </div>
 
       <div className="w-full flex flex-col gap-4 rounded-lg p-4 bg-white h-1/2">
