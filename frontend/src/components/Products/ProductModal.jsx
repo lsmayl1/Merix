@@ -2,14 +2,8 @@ import React, { useEffect, useRef, useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import { useMediaQuery } from "react-responsive";
 import { useForm } from "react-hook-form";
-import {
-  useGetBarcodeMutation,
-  useGetProductsQuery,
-  usePostProductMutation,
-  usePutProductByIdMutation,
-} from "../../redux/slices/ApiSlice";
+import { useGetBarcodeMutation } from "../../redux/slices/ApiSlice";
 import Generate from "../../assets/Generate";
-import { Html5QrcodeScanner } from "html5-qrcode";
 import { useTranslation } from "react-i18next";
 export const ProductModal = ({
   handleClose,
@@ -39,9 +33,7 @@ export const ProductModal = ({
       barcode: editForm?.barcode || null,
       buyPrice: editForm?.buyPrice || 0.0,
       sellPrice: editForm?.sellPrice || 0.0,
-      stock: editForm?.stock || 0,
       category: "Product",
-      newStock: 0,
     },
   });
   const nameInputRef = useRef(null);
@@ -68,15 +60,14 @@ export const ProductModal = ({
       setValue("barcode", editForm.barcode);
       setValue("buyPrice", editForm.buyPrice);
       setValue("sellPrice", editForm.sellPrice);
-      setValue("stock", editForm.stock);
     }
   }, [editForm]);
 
   useEffect(() => {
-  if (editForm) {
-    reset(editForm);
-  }
-}, [editForm, reset]);
+    if (editForm) {
+      reset(editForm);
+    }
+  }, [editForm, reset]);
 
   return (
     <div className="absolute inset-0 z-50 flex max-md:-top-54  h-screen w-full drop-shadow-lg">
@@ -151,7 +142,7 @@ export const ProductModal = ({
               <div className="flex  w-full flex-col max-lg:w-full">
                 <label className="text-md max-lg:text-md">{t("barcode")}</label>
                 <div className="flex items-center gap-1 max-lg:justify-between w-full">
-                  <div className="flex flex-col gap-2 w-full">
+                  <div className="flex  flex-col gap-2 w-full">
                     <input
                       type="text"
                       placeholder="Enter Barcode or Generate"
@@ -164,14 +155,16 @@ export const ProductModal = ({
                       })}
                       className=" rounded-lg border w-full border-mainBorder py-1 px-2 focus:outline-blue-500"
                     />
-                    <p className="text-red-500 text-sm">
-                      {errors?.barcode?.message}
-                    </p>
+                    {errors?.barcode && (
+                      <p className="text-red-500 text-sm">
+                        {errors?.barcode?.message}
+                      </p>
+                    )}
                   </div>
                   <button
                     type={"button"}
                     onClick={handleBarcode}
-                    className="cursor-pointer py-1 px-2 rounded-lg bg-blue-500  text-white"
+                    className="cursor-pointer h-full py-1 px-2 rounded-lg bg-blue-500  text-white"
                   >
                     <Generate className={"size-6"} />
                   </button>
@@ -185,78 +178,43 @@ export const ProductModal = ({
                 <div className="flex w-fit gap-2 relative ">
                   <input
                     type="number"
-                    step={0.01}
+                    step={0.0001}
                     {...register("buyPrice", {
                       required: "Buy Price Required",
+                      validate: (value) =>
+                        parseFloat(value) > 0 ||
+                        "Buy Price must be greater than 0",
                     })}
                     className=" border  border-mainBorder rounded-lg px-2 py-1 focus:outline-blue-500"
                   />
                   <span className="px-2 text-xl absolute right-0">₼</span>
                 </div>
-                <p className="text-red-500">{errors?.buyPrice?.message}</p>
+                <p className="text-red-500 text-xs">
+                  {errors?.buyPrice?.message}
+                </p>
               </div>
               <div className="flex    rounded-lg flex-col">
                 <label className="text-md">{t("sellPrice")}</label>
                 <div className="flex w-fit gap-2 relative ">
                   <input
                     type="number"
-                    step="0.01"
-                    {...register("sellPrice")}
+                    step={0.0001}
+                    {...register("sellPrice", {
+                      required: "Sell Price Required",
+                      validate: (value) =>
+                        parseFloat(value) > 0 ||
+                        "Sell Price must be greater than 0",
+                    })}
                     className=" border  border-mainBorder rounded-lg px-2 py-1 focus:outline-blue-500"
                   />
                   <span className="px-2 text-xl absolute right-0">₼</span>
                 </div>
+                <p className="text-red-500 text-xs">
+                  {errors?.sellPrice?.message}
+                </p>
               </div>
             </div>
-            {/* Stok */}
 
-            {isEditMode ? (
-              <div className="flex gap-2  ">
-                <div className="flex-col flex">
-                  <label
-                    htmlFor=""
-                    className="truncate text-nowrap text-md max-lg:text-md"
-                  >
-                    {t("stock")}
-                  </label>
-                  <input
-                    type="number"
-                    value={watch("stock")}
-                    className="border focus:outline-none rounded-lg w-1/2  px-2 py-1  border-mainBorder  "
-                  />
-                </div>
-                <div className="flex-col flex">
-                  <label
-                    htmlFor=""
-                    className="truncate text-nowrap text-md max-lg:text-md"
-                  >
-                    {t("addStock")}
-                  </label>
-                  <input
-                    type="number"
-                    step={0.00001}
-                    min={-999999999}
-                    {...register("newStock")}
-                    className="border focus:outline-none rounded-lg w-1/2  px-2 py-1  border-mainBorder  "
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="flex-col flex">
-                <label
-                  htmlFor=""
-                  className="truncate text-nowrap text-md max-lg:text-md"
-                >
-                  {t("stock")}
-                </label>
-                <input
-                  type="number"
-                  step={0.01}
-                  {...register("stock")}
-                  className="border focus:outline-none rounded-lg w-1/2  px-2 py-1  border-mainBorder  "
-                />
-              </div>
-            )}
             {/* Action Buttons */}
             <div className="flex items-center justify-between gap-4">
               {/* <button className="rounded-xl cursor-pointer bg-white border border-mainBorder w-1/4 py-1 px-4     font-semibold max-lg:text-md max-lg:font-normal truncate ">

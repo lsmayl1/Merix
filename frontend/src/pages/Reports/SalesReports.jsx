@@ -62,6 +62,16 @@ export const SalesReports = () => {
       cellClassName: "text-center",
       cell: ({ getValue }) => <span>{getValue().toFixed(2)} ₼</span>,
     }),
+    columnHelper.accessor("transaction_type", {
+      header: t("Əməliyyat Növü"),
+      headerClassName: "text-center bg-gray-100",
+      cellClassName: "text-center",
+      cell: ({ getValue }) => {
+        if (getValue() === "sale") return t("sale");
+        if (getValue() === "return") return t("return");
+        return getValue();
+      },
+    }),
     columnHelper.accessor("details", {
       header: t("details"),
       headerClassName: "text-center bg-gray-100 rounded-e-lg",
@@ -111,7 +121,10 @@ export const SalesReports = () => {
       if (res) {
         setMetrics(res);
       }
-    } catch (error) {}
+    } catch (error) {
+      console.log(error);
+      setMetrics({});
+    }
   };
 
   useEffect(() => {

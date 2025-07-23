@@ -230,7 +230,7 @@ router.post("/preview", async (req, res) => {
 // 🔹 POST /sales
 router.post("/create", async (req, res) => {
   try {
-    const { products, payment_method } = req.body;
+    const { products, payment_method, type } = req.body;
 
     if (!Array.isArray(products) || products.length === 0) {
       return res.status(400).json({ error: "Products array cannot be empty" });
@@ -240,14 +240,22 @@ router.post("/create", async (req, res) => {
     if (!validPaymentMethods.includes(payment_method)) {
       return res.status(400).json({ error: "Invalid payment method" });
     }
+    if (!type) {
+      return res.status(400).json({ error: "Transaction type is required" });
+    }
+
+    const validTypes = ["sale", "return"];
+    if (!validTypes.includes(type)) {
+      return res.status(400).json({ error: "Invalid transaction type" });
+    }
 
     let totalAmount = 0;
     const salesDetails = [];
     const stockUpdates = [];
 
     for (const item of products) {
-      let barcode = item.barcode;
-      let quantity = item.quantity ?? 1;
+      const barcode = item.barcode;
+      const quantity = item.quantity ?? 1;
 
       const product = await Products.findOne({ where: { barcode } });
 
@@ -266,6 +274,9 @@ router.post("/create", async (req, res) => {
       const subtotal = product.sellPrice * quantity;
       totalAmount += subtotal;
 
+      const newStock =
+        type === "sale" ? product.stock - quantity : product.stock + quantity;
+
       salesDetails.push({
         product_id: product.product_id,
         product_name: product.name,
@@ -274,12 +285,13 @@ router.post("/create", async (req, res) => {
         buy_price: product.buyPrice,
         sell_price: product.sellPrice,
         previous_stock: product.stock,
-        new_stock: product.stock - quantity,
+        new_stock: newStock,
       });
 
       stockUpdates.push({
         product,
         quantity,
+        isReturn: type === "return",
       });
     }
 
@@ -288,6 +300,7 @@ router.post("/create", async (req, res) => {
         {
           total_amount: totalAmount,
           payment_method,
+          transaction_type: type,
         },
         { transaction: t }
       );
@@ -314,21 +327,28 @@ router.post("/create", async (req, res) => {
             where: { product_id: update.product.product_id },
             transaction: t,
           });
+
+          const stockChange = update.isReturn
+            ? `current_stock + ${update.quantity}`
+            : `current_stock - ${update.quantity}`;
+
           if (productStock) {
             await productStock.update(
               {
-                current_stock: sequelize.literal(
-                  `current_stock - ${update.quantity}`
-                ),
+                current_stock: sequelize.literal(stockChange),
                 updated_at: new Date(),
               },
               { transaction: t }
             );
           } else {
+            const initialStock = update.isReturn
+              ? update.quantity
+              : -update.quantity;
+
             await ProductStock.create(
               {
                 product_id: update.product.product_id,
-                current_stock: -update.quantity,
+                current_stock: initialStock,
               },
               { transaction: t }
             );
@@ -340,7 +360,10 @@ router.post("/create", async (req, res) => {
     });
 
     const response = {
-      message: "Sale completed successfully",
+      message:
+        type === "sale"
+          ? "Sale completed successfully"
+          : "Return completed successfully",
       sale: {
         ...result.toJSON(),
         salesDetails: salesDetails.map((detail) => ({
@@ -361,7 +384,7 @@ router.post("/create", async (req, res) => {
   } catch (error) {
     console.error("Outer error details:", error);
     return res.status(500).json({
-      error: "Failed to complete sale",
+      error: "Failed to complete transaction",
       details: error.message,
     });
   }

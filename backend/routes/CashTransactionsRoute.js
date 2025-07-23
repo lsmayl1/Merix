@@ -1,10 +1,20 @@
 const express = require("express");
 const router = express.Router();
-const { CashTransactions, Sequelize, Sales } = require("../models");
+const { CashTransactions, Sequelize, Sales, Op } = require("../models");
 const formatDate = require("../utils/dateUtils");
 // GetAll Transactions
 
-router.get("/", async (req, res) => {
+router.post("/", async (req, res) => {
+  const { from, to } = req.body;
+  const fromDate = new Date(from);
+  let toDate = to ? new Date(to) : new Date(from);
+  if (!to) toDate.setHours(23, 59, 59, 999); // Set to 23:59:59.999 of the same day
+
+  // Validate dates
+  const isValidDate = (date) => date instanceof Date && !isNaN(date);
+  if (!isValidDate(fromDate) || !isValidDate(toDate)) {
+    return res.status(400).json({ error: "Geçersiz tarih formatı" });
+  }
   try {
     // Bugünün başlangıcı ve bitişi
     const todayStart = new Date();
@@ -16,8 +26,7 @@ router.get("/", async (req, res) => {
     const transactions = await CashTransactions.findAll({
       where: {
         date: {
-          [Sequelize.Op.gte]: todayStart,
-          [Sequelize.Op.lte]: todayEnd,
+          [Op.between]: [fromDate, toDate],
         },
       },
       order: [["date", "DESC"]],
@@ -48,8 +57,8 @@ router.get("/", async (req, res) => {
     const dailySales = await Sales.findAll({
       where: {
         date: {
-          [Sequelize.Op.gte]: todayStart,
-          [Sequelize.Op.lte]: todayEnd,
+          [Sequelize.Op.gte]: fromDate,
+          [Sequelize.Op.lte]: toDate,
         },
       },
       attributes: [

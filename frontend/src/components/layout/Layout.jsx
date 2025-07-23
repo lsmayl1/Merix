@@ -22,7 +22,7 @@ export const Layout = () => {
           />
         )}
 
-        <div className="flex-[6] p-2 px-2  w-full h-full overflow-hidden max-md:overflow-auto min-h-0 ">
+        <div className="flex-[6]  px-2  w-full h-full overflow-hidden max-md:overflow-auto min-h-0 ">
           <Outlet />
         </div>
       </div>

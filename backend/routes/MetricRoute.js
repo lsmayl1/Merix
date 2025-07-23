@@ -15,7 +15,6 @@ router.post("/sale", async (req, res) => {
   const { from, to } = req.body;
 
   try {
-    // Tüm satışları ve detaylarını çek
     const sales = await Sales.findAll({
       where: {
         date: {
@@ -33,32 +32,39 @@ router.post("/sale", async (req, res) => {
 
     let totalRevenue = 0;
     let totalProfit = 0;
-    let totalSales = sales.length; // Satış sayısı
+    let totalSales = 0; // Satış sayı yalnız 'sale' üçün
 
     sales.forEach((sale) => {
+      const isReturn = sale.transaction_type === "return";
+
+      if (sale.transaction_type === "sale") totalSales++;
+
       if (Array.isArray(sale.details)) {
         sale.details.forEach((detail) => {
           const revenue = Number(detail.sell_price) * Number(detail.quantity);
-          let profit = 0;
-          if (Number(detail.buy_price) !== 0) {
-            profit =
-              (Number(detail.sell_price) - Number(detail.buy_price)) *
-              Number(detail.quantity);
+          const profit =
+            (Number(detail.sell_price) - Number(detail.buy_price)) *
+            Number(detail.quantity);
+
+          if (isReturn) {
+            totalRevenue -= revenue;
+            totalProfit -= profit;
+          } else {
+            totalRevenue += revenue;
+            totalProfit += profit;
           }
-          totalRevenue += revenue;
-          totalProfit += profit;
         });
       }
     });
 
     const profitMargin =
-      totalRevenue > 0 && totalProfit > 0
+      totalRevenue !== 0
         ? ((totalProfit / totalRevenue) * 100).toFixed(2) + " %"
         : "0 %";
 
     res.json({
       totalRevenue: totalRevenue.toFixed(2) + " ₼",
-      totalSales,
+      totalSales, // yalnız `sale` sayılır
       totalProfit: totalProfit.toFixed(2) + " ₼",
       profitMargin,
     });
@@ -172,7 +178,6 @@ router.post("/dashboard", async (req, res) => {
   const { from, to } = req.body;
 
   try {
-    // Tüm satışları ve detaylarını çek
     const sales = await Sales.findAll({
       where: {
         date: {
@@ -190,23 +195,35 @@ router.post("/dashboard", async (req, res) => {
 
     let totalRevenue = 0;
     let totalProfit = 0;
-    let totalSales = sales.length; // Satış sayısı
+    let totalSales = 0; // yalnız `type === 'sale'` sayılacaq
 
     sales.forEach((sale) => {
+      const isReturn = sale.transaction_type === "return";
+
+      if (sale.transaction_type === "sale") totalSales++;
+
       if (Array.isArray(sale.details)) {
         sale.details.forEach((detail) => {
           const revenue = Number(detail.sell_price) * Number(detail.quantity);
           let profit = 0;
+
           if (Number(detail.buy_price) !== 0) {
             profit =
               (Number(detail.sell_price) - Number(detail.buy_price)) *
               Number(detail.quantity);
           }
-          totalRevenue += revenue;
-          totalProfit += profit;
+
+          if (isReturn) {
+            totalRevenue -= revenue;
+            totalProfit -= profit;
+          } else {
+            totalRevenue += revenue;
+            totalProfit += profit;
+          }
         });
       }
     });
+
     const productStocks = await ProductStock.findAll({
       include: [
         {
@@ -221,7 +238,7 @@ router.post("/dashboard", async (req, res) => {
 
     productStocks.forEach((stock) => {
       const quantity = Number(stock.current_stock) || 0;
-      const buyPrice = Number(stock.product.buyPrice); // as'e dikkat
+      const buyPrice = Number(stock.product.buyPrice) || 0;
       totalStockCost += quantity * buyPrice;
     });
 
@@ -381,7 +398,13 @@ router.get("/revenue", async (req, res) => {
           return res.status(400).json({ error: "Invalid type parameter" });
       }
 
-      totals[key] = (totals[key] || 0) + Number(sale.total_amount || 0);
+      const amount = Number(sale.total_amount || 0);
+
+      if (sale.transaction_type === "return") {
+        totals[key] = (totals[key] || 0) - amount;
+      } else {
+        totals[key] = (totals[key] || 0) + amount;
+      }
     });
 
     const result = Object.entries(totals).map(([date, revenue]) => ({
@@ -389,7 +412,6 @@ router.get("/revenue", async (req, res) => {
       revenue: Number(revenue.toFixed(2)),
     }));
 
-    // Ortalama hesaplama
     const totalRevenue = result.reduce((sum, item) => sum + item.revenue, 0);
     const average =
       result.length > 0 ? Number((totalRevenue / result.length).toFixed(2)) : 0;

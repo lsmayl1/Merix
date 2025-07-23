@@ -10,7 +10,6 @@ import {
   useGetStockMovementsMutation,
 } from "../../redux/slices/StockMovementsSlice";
 import TrashBin from "../../assets/TrashBin";
-import { ReducerType } from "@reduxjs/toolkit";
 import { DateRange } from "../../components/Date/DateRange";
 
 export const StockMovements = () => {
@@ -123,17 +122,20 @@ export const StockMovements = () => {
           handleClose={() => setShowModal(false)}
         />
       )}
-      <div className="flex justify-end w-full">
-        <button
-          onClick={() => setShowModal(true)}
-          className="border bg-white border-gray-200 rounded-xl text-nowrap px-4 cursor-pointer max-md:px-2 max-md:text-xs flex items-center gap-2 py-1 max-md:py-0"
-        >
-          <Plus className="max-md:size-5" />
-          {t("createTransaction")}
-        </button>
-      </div>
-      <div className=" w-full h-full rounded-lg p-4 bg-white">
-        <Table columns={columns} data={data} />
+      <div className="flex flex-col h-full justify-end w-full bg-white p-2 rounded-lg gap-2 ">
+        <div className="flex justify-end items-center w-full">
+          <button
+            onClick={() => setShowModal(true)}
+            className="border w-1/5 bg-white border-gray-200 rounded-xl text-nowrap px-4 cursor-pointer max-md:px-2 max-md:text-xs flex items-center gap-2 py-1 max-md:py-0"
+          >
+            <Plus className="max-md:size-5" />
+            {t("createTransaction")}
+          </button>
+        </div>
+
+        <div className=" w-full h-full rounded-lg  bg-white">
+          <Table columns={columns} data={data} />
+        </div>
       </div>
     </div>
   );

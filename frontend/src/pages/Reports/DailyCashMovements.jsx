@@ -1,21 +1,27 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { KPI } from "../../components/Metric/KPI";
 import { Table } from "../../components/Table";
 import { createColumnHelper } from "@tanstack/react-table";
 import {
   useCreateCashMovementMutation,
   useDeleteCashMovementMutation,
-  useGetCashMovementsQuery,
+  useGetCashMovementsMutation,
 } from "../../redux/slices/CashMovementSlice";
 import Edit from "../../assets/Edit";
 import TrashBin from "../../assets/TrashBin";
 import { Plus } from "../../assets/Plus";
 import { TransactionModal } from "../../components/CashMovement/TransactionModal";
 import { useTranslation } from "react-i18next";
+import { DateRange } from "../../components/Date/DateRange";
 
 export const DailyCashMovements = () => {
   const { t } = useTranslation();
-  const { data, refetch } = useGetCashMovementsQuery();
+  const [range, setRange] = useState({
+    from: "",
+    to: "",
+  });
+  const [getCashMovements, { data, refetch }] =
+    useGetCashMovementsMutation(range);
   const [createTransaction, { isLoading }] = useCreateCashMovementMutation();
   const [deleteTransaction, { isLoadings }] = useDeleteCashMovementMutation();
   const columnHelper = createColumnHelper();
@@ -79,7 +85,7 @@ export const DailyCashMovements = () => {
       const transaction = await createTransaction(data);
       console.log(transaction);
       setShowTransactionModal(false);
-      await refetch();
+      getCashMovements(range);
     } catch (error) {
       console.log(error);
     }
@@ -96,9 +102,15 @@ export const DailyCashMovements = () => {
       console.log(error);
     }
   };
+  useEffect(() => {
+    if (range.from && range.to) {
+      getCashMovements(range);
+    }
+  }, [range]);
 
   return (
-    <div className="w-full h-full flex flex-col py-4 gap-2 relative">
+    <div className="w-full h-full flex flex-col  gap-2 relative">
+      <DateRange handleRange={setRange} />
       {showTransactionModal && (
         <TransactionModal
           handleClose={() => setShowTransactionModal(false)}

@@ -22,6 +22,7 @@ import { QtyInput } from "../components/QtyInput";
 import { useTranslation } from "react-i18next";
 import { SearchModal } from "../components/Pos/SearchModal";
 import { ChartPie } from "../assets/chart-pie";
+import Return from "../assets/Navigation/Return";
 export const Pos = () => {
   const { t } = useTranslation();
   const columnHelper = createColumnHelper();
@@ -248,12 +249,13 @@ export const Pos = () => {
     setInputData(newData);
   };
 
-  const handleSubmitSale = async () => {
+  const handleSubmitSale = async (type) => {
     if (postLoading) return;
     try {
       await postSale({
         payment_method: paymentMethod,
         products: data?.items,
+        type: type || "sale",
       }).unwrap();
       setData([]);
       setInputData([]);
@@ -380,18 +382,18 @@ export const Pos = () => {
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">
                   <span className="text-2xl font-medium">{t("total")}</span>
-                  <span className="text-2xl font-medium">
+                  <span className="text-3xl font-medium">
                     {data?.total?.toFixed(2) || "0.00"} ₼
                   </span>
                 </div>
               </div>
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2 ">
                 <div className="flex flex-col gap-2 border-mainBorder border rounded-lg w-full p-2 font-medium ">
                   <div className="flex justify-between items-center">
                     <div className="flex gap-2 items-center">
                       <h1>{t("receivedAmount")}</h1>{" "}
                       <span className="bg-gray-100 rounded-full px-2  border border-mainBorder text-gray-400">
-                        Q
+                        /
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -470,11 +472,28 @@ export const Pos = () => {
                   </div>
                   <button
                     disabled={data.length == 0 || postLoading}
-                    onClick={handleSubmitSale}
-                    className="flex justify-center gap-1 items-center border border-mainBorder px-6 h-full rounded-lg w-full"
+                    onClick={() => {
+                      if (
+                        window.confirm(
+                          "Qaytarılma əməliyyatı etmək istədiyinizə əminsiniz?"
+                        )
+                      )
+                        handleSubmitSale("return");
+                    }}
+                    className="flex justify-center  gap-2 items-center border border-mainBorder px-6 h-full rounded-lg w-full"
                   >
-                    <Payment />
-                    <span>{t("makePayment")}</span>
+                    <Return className={"text-red-500"} />
+                    <span className="text-red-500">{t("Qaytarılma")}</span>
+                  </button>
+                </div>
+                <div cname="flex items-center gap-2 w-full h-full">
+                  <button
+                    disabled={data.length == 0 || postLoading}
+                    onClick={() => handleSubmitSale("sale")}
+                    className="flex justify-center text-2xl gap-2 items-center border border-mainBorder px-6 h-16 rounded-lg w-full"
+                  >
+                    <Payment className={"size-8 text-green-500"} />
+                    <span className="text-green-500"> {t("Satış")}</span>
                   </button>
                 </div>
               </div>

@@ -15,6 +15,12 @@ import { StockOverview } from "../components/Products/StockOverview.jsx";
 
 export const Dashboard = () => {
   const { t } = useTranslation();
+  const [timeframeVariable, setTimeframeVariable] = useState([
+    { label: "Hourly", value: "hourly" },
+    { label: "Daily", value: "daily" },
+    { label: "Weekly", value: "weekly" },
+    { label: "Monthly", value: "monthly" },
+  ]);
   const [timeframe, setTimeframe] = useState("daily");
 
   const { data: Revenue } = useGetDailyRevenueQuery(timeframe, {
@@ -115,38 +121,19 @@ export const Dashboard = () => {
             </span>
           </div>
           <div className="flex justify-end gap-6  items-center ">
-            <button
-              onClick={() => setTimeframe("hourly")}
-              className={`${
-                timeframe === "hourly" ? "bg-blue-700 text-white" : "bg-white"
-              } border border-mainBorder px-4 py-1 rounded-lg`}
-            >
-              Hourly
-            </button>
-            <button
-              onClick={() => setTimeframe("daily")}
-              className={`${
-                timeframe === "daily" ? "bg-blue-700 text-white" : "bg-white"
-              } border border-mainBorder px-4 py-1 rounded-lg`}
-            >
-              Daily
-            </button>
-            <button
-              onClick={() => setTimeframe("weekly")}
-              className={`${
-                timeframe === "weekly" ? "bg-blue-700 text-white" : "bg-white"
-              } border border-mainBorder px-4 py-1 rounded-lg *:`}
-            >
-              Weekly
-            </button>
-            <button
-              onClick={() => setTimeframe("monthly")}
-              className={`${
-                timeframe === "monthly" ? "bg-blue-700 text-white" : "bg-white"
-              } border border-mainBorder px-4 py-1 rounded-lg *:`}
-            >
-              Monthly
-            </button>
+            {timeframeVariable.map((item) => (
+              <button
+                key={item.value}
+                onClick={() => setTimeframe(item.value)}
+                className={`${
+                  timeframe === item.value
+                    ? "bg-blue-700 text-white"
+                    : "bg-white"
+                } border border-mainBorder px-4 py-1 rounded-lg`}
+              >
+                {t(item.value)}
+              </button>
+            ))}
           </div>
         </div>
         <LineChart data={Revenue?.data} />

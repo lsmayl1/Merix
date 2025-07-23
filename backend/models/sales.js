@@ -22,6 +22,10 @@ const Sales = sequelize.define(
       type: DataTypes.ENUM("cash", "card"), // Ödeme yöntemi: nakit, kart, kredi
       allowNull: false,
     },
+    transaction_type: {
+      type: DataTypes.ENUM("sale", "return"), // İşlem türü:
+      allowNull: false,
+    },
   },
   {
     timestamps: false, // Sequelize’nin otomatik createdAt/updatedAt eklemesini kapat

@@ -6,8 +6,12 @@ export const CashMovementSlice = createApi({
   reducerPath: "cashMovement",
   baseQuery,
   endpoints: (build) => ({
-    getCashMovements: build.query({
-      query: () => `/cash-transactions/`,
+    getCashMovements: build.mutation({
+      query: (date) => ({
+        url: `/cash-transactions`,
+        method: "POST",
+        body: date,
+      }),
       keepUnusedDataFor: 0,
     }),
     createCashMovement: build.mutation({
@@ -27,7 +31,7 @@ export const CashMovementSlice = createApi({
 });
 
 export const {
-  useGetCashMovementsQuery,
+  useGetCashMovementsMutation,
   useCreateCashMovementMutation,
   useDeleteCashMovementMutation,
 } = CashMovementSlice;

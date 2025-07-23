@@ -85,5 +85,10 @@
 
   "createTransaction":"Əməliyyat Yarat",
 
-  "stockMovements": "Anbar Hərəkətləri"
+  "stockMovements": "Anbar Hərəkətləri",
+  "hourly": "Saatlıq",
+  "daily": "Gündəlik",
+  "weekly": "Həftəlik",
+  "monthly": "Aylıq",
+  "return": "Qaytarma"
 }
