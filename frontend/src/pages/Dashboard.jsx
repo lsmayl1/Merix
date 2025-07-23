@@ -110,7 +110,9 @@ export const Dashboard = () => {
             <h1 className=" font-medium text-xl text-mainText">
               Ortalama Dovriyye
             </h1>
-            <span className="text-3xl text-end font-semibold ">{Revenue?.average}</span>
+            <span className="text-3xl text-end font-semibold ">
+              {Revenue?.average}
+            </span>
           </div>
           <div className="flex justify-end gap-6  items-center ">
             <button
