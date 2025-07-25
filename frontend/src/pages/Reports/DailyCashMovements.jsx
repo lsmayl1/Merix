@@ -119,7 +119,7 @@ export const DailyCashMovements = () => {
       )}
       <KPI
         data={[
-          { label: t("todayRevenue"), value: data?.dailyRevenue },
+          { label: t("todayRevenue"), value: data?.totalRevenue },
           { label: t("todayIncome"), value: data?.todayIncome },
           { label: t("todayExpense"), value: data?.todayExpense },
           { label: t("todayTotal"), value: data?.todayTotal },

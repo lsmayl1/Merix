@@ -1,28 +1,30 @@
 const express = require("express");
 const router = express.Router();
-const { CashTransactions, Sequelize, Sales, Op } = require("../models");
+const {
+  CashTransactions,
+  Sequelize,
+  Sales,
+  Op,
+  SalesDetails,
+} = require("../models");
 const formatDate = require("../utils/dateUtils");
 // GetAll Transactions
 
 router.post("/", async (req, res) => {
   const { from, to } = req.body;
+
   const fromDate = new Date(from);
   let toDate = to ? new Date(to) : new Date(from);
-  if (!to) toDate.setHours(23, 59, 59, 999); // Set to 23:59:59.999 of the same day
+  if (!to) toDate.setHours(23, 59, 59, 999); // Aynı günün sonuna kadar
 
-  // Validate dates
+  // Tarih kontrolü
   const isValidDate = (date) => date instanceof Date && !isNaN(date);
   if (!isValidDate(fromDate) || !isValidDate(toDate)) {
     return res.status(400).json({ error: "Geçersiz tarih formatı" });
   }
-  try {
-    // Bugünün başlangıcı ve bitişi
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    const todayEnd = new Date();
-    todayEnd.setHours(23, 59, 59, 999);
 
-    // Bugünkü işlemleri çek
+  try {
+    // Günlük nakit işlemleri
     const transactions = await CashTransactions.findAll({
       where: {
         date: {
@@ -32,7 +34,6 @@ router.post("/", async (req, res) => {
       order: [["date", "DESC"]],
     });
 
-    // Toplam gelir ve gideri tek döngüde hesapla
     let todayIncome = 0;
     let todayExpense = 0;
 
@@ -42,10 +43,12 @@ router.post("/", async (req, res) => {
       } else if (t.transactionType === "out") {
         todayExpense += parseFloat(t.amount);
       }
+
       const amount =
         t.transactionType === "out"
           ? `- ${parseFloat(t.amount).toFixed(2)}`
           : `+ ${parseFloat(t.amount).toFixed(2)}`;
+
       return {
         ...t.toJSON(),
         date: formatDate(t.date),
@@ -53,38 +56,58 @@ router.post("/", async (req, res) => {
       };
     });
 
-    // Günlük ciroyu Sales tablosundan hesapla
+    // Satışlardan ciro ve kar hesapla
+    let totalRevenue = 0;
+    let totalProfit = 0;
+
     const dailySales = await Sales.findAll({
       where: {
         date: {
-          [Sequelize.Op.gte]: fromDate,
-          [Sequelize.Op.lte]: toDate,
+          [Op.between]: [fromDate, toDate],
         },
       },
-      attributes: [
-        [Sequelize.fn("SUM", Sequelize.col("total_amount")), "dailyRevenue"],
+      include: [
+        {
+          model: SalesDetails,
+          as: "details", // ilişkideki alias buysa
+          attributes: ["sell_price", "buy_price", "quantity"],
+        },
       ],
-      raw: true,
+      attributes: ["transaction_type", "date"],
     });
 
-    const dailyRevenue = dailySales[0]?.dailyRevenue
-      ? parseFloat(dailySales[0].dailyRevenue).toFixed(2)
-      : "0.00";
+    dailySales.forEach((sale) => {
+      const isReturn = sale.transaction_type === "return";
+
+      if (Array.isArray(sale.details)) {
+        sale.details.forEach((detail) => {
+          const revenue = Number(detail.sell_price) * Number(detail.quantity);
+          const profit =
+            (Number(detail.sell_price) - Number(detail.buy_price)) *
+            Number(detail.quantity);
+
+          if (isReturn) {
+            totalRevenue -= revenue;
+            totalProfit -= profit;
+          } else {
+            totalRevenue += revenue;
+            totalProfit += profit;
+          }
+        });
+      }
+    });
 
     res.json({
       transactions: formatted,
       todayIncome: `${todayIncome.toFixed(2)} ₼`,
       todayExpense: `- ${todayExpense.toFixed(2)} ₼`,
-      todayTotal: `${(
-        todayIncome -
-        todayExpense +
-        parseFloat(dailyRevenue)
-      ).toFixed(2)} ₼`,
-      dailyRevenue: `${dailyRevenue} ₼`,
+      todayTotal: `${(todayIncome - todayExpense + totalRevenue).toFixed(2)} ₼`,
+      totalRevenue: `${totalRevenue.toFixed(2)} ₼`,
+      totalProfit: `${totalProfit.toFixed(2)} ₼`,
     });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error("Hesaplama hatası:", error);
+    res.status(500).json({ error: "Sunucu hatası" });
   }
 });
 // Create
