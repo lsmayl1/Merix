@@ -126,7 +126,7 @@ export const StockMovements = () => {
         <div className="flex justify-end items-center w-full">
           <button
             onClick={() => setShowModal(true)}
-            className="border w-1/5 bg-white border-gray-200 rounded-xl text-nowrap px-4 cursor-pointer max-md:px-2 max-md:text-xs flex items-center gap-2 py-1 max-md:py-0"
+            className="border  bg-white border-gray-200 rounded-xl text-nowrap px-4 cursor-pointer max-md:px-2 max-md:text-xs flex items-center gap-2 py-1 max-md:py-0"
           >
             <Plus className="max-md:size-5" />
             {t("createTransaction")}

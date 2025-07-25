@@ -78,7 +78,9 @@
   "update":"Update",
   "create":"Create",
 
-  "stockMovements": "Stock Movements"
+  "stockMovements": "Stock Movements",
+
+  "supplier": "Supplier"
 
 
 

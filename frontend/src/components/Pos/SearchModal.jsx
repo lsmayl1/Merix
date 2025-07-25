@@ -30,7 +30,11 @@ export const SearchModal = ({
       } else if (key === "arrowup") {
         e.preventDefault();
         setFocusedIndex((prev) => (prev > 0 ? prev - 1 : prev));
-      } else if (key === "enter" && focusedIndex >= 0) {
+      } else if (
+        key === "enter" &&
+        focusedIndex >= 0 &&
+        query.trim().length > 0
+      ) {
         if (data[focusedIndex]) {
           handleAdd(data[focusedIndex].barcode, "increase");
         }

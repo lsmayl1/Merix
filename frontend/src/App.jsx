@@ -11,6 +11,8 @@ import { Pos } from "./pages/Pos";
 import { DailyCashMovements } from "./pages/Reports/DailyCashMovements";
 import { StockMovements } from "./pages/Stock/StockMovements";
 import { ProductDetails } from "./pages/Products/ProductDetails";
+import { Suppliers } from "./pages/Suppliers";
+import { SupplierDetails } from "./pages/Suppliers/SupplierDetails";
 export const App = () => {
   return (
     <Routes>
@@ -27,6 +29,8 @@ export const App = () => {
           <Route path="products" element={<ProductReports />} />
           <Route path="cash-movements" element={<DailyCashMovements />} />
         </Route>
+        <Route path="suppliers" element={<Suppliers />} />
+        <Route path="suppliers/:id" element={<SupplierDetails />} />
       </Route>
       <Route path="pos" element={<Pos />} />
     </Routes>

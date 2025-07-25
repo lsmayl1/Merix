@@ -9,6 +9,8 @@ const {
   ProductStock,
   StockTransactions,
   Op,
+  SupplierTransactions,
+  Suppliers,
 } = require("../models");
 
 router.post("/sale", async (req, res) => {
@@ -422,6 +424,34 @@ router.get("/revenue", async (req, res) => {
     });
   } catch (error) {
     console.error(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.get("/payments-total", async (req, res) => {
+  try {
+    const transactions = await SupplierTransactions.findAll();
+    const suppliers = await Suppliers.findAll();
+
+    if (transactions.length === 0) {
+      return res.json({ total: 0 });
+    }
+
+    let total = 0;
+
+    transactions.forEach((t) => {
+      if (t.type === "purchase") {
+        total += Number(t.amount); // borc artır
+      } else if (t.type === "payment") {
+        total -= Number(t.amount); // borc azalır
+      }
+    });
+
+    const supplierCount = suppliers.length;
+
+    res.json({ total: total.toFixed(2), supplierCount }); // bu, ümumi borc miqdarını verir
+  } catch (error) {
+    console.error("Error calculating total payments:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });

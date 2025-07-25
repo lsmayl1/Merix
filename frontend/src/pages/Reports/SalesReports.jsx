@@ -55,13 +55,9 @@ export const SalesReports = () => {
       header: t("paymentMethod"),
       headerClassName: "text-center bg-gray-100",
       cellClassName: "text-center",
+      cell: ({ getValue }) => (getValue() == "cash" ? t("cash") : t("card")),
     }),
-    columnHelper.accessor("profit", {
-      header: t("profit"),
-      headerClassName: "text-center bg-gray-100",
-      cellClassName: "text-center",
-      cell: ({ getValue }) => <span>{getValue().toFixed(2)} ₼</span>,
-    }),
+
     columnHelper.accessor("transaction_type", {
       header: t("Əməliyyat Növü"),
       headerClassName: "text-center bg-gray-100",
@@ -71,6 +67,12 @@ export const SalesReports = () => {
         if (getValue() === "return") return t("return");
         return getValue();
       },
+    }),
+    columnHelper.accessor("profit", {
+      header: t("profit"),
+      headerClassName: "text-center bg-gray-100",
+      cellClassName: "text-center",
+      cell: ({ getValue }) => <span>{getValue().toFixed(2)} ₼</span>,
     }),
     columnHelper.accessor("details", {
       header: t("details"),

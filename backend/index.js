@@ -10,6 +10,8 @@ const reportsRoute = require("./routes/reportsRoute");
 const metricRoute = require("./routes/MetricRoute");
 const cashTransactionsRoute = require("./routes/CashTransactionsRoute");
 const stockTransactionsRoute = require("./routes/StockTransactionsRoute");
+const SupplierRoute = require("./routes/Supplier/SupplierRoute");
+const SupplierTransactionsRoute = require("./routes/Supplier/SupplierTransactions");
 const app = express();
 const path = require("path");
 const bodyParser = require("body-parser");
@@ -64,6 +66,8 @@ if (isDbConfigured) {
   app.use("/api/reports", reportsRoute);
   app.use("/api/cash-transactions", cashTransactionsRoute);
   app.use("/api/stock-transactions", stockTransactionsRoute);
+  app.use("/api/suppliers", SupplierRoute);
+  app.use("/api/supplier-transactions", SupplierTransactionsRoute);
 
   // Tüm istekleri React dist klasörüne yönlendir
   app.get("*", (req, res) => {

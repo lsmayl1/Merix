@@ -8,6 +8,7 @@ import { CloseIcon } from "../../assets/Close";
 import { useTranslation } from "react-i18next";
 import Delivery from "../../assets/Navigation/Delivery";
 import StockBox from "../../assets/Navigation/StockBox";
+import { Supplier } from "../../assets/Navigation/Supplier";
 
 export const Sidebar = ({ className, handleClose }) => {
   const { t } = useTranslation();
@@ -38,6 +39,8 @@ export const Sidebar = ({ className, handleClose }) => {
         },
       ],
     },
+    { name: t("supplier"), blank: true, path: "suppliers", icon: <Supplier /> },
+
     { name: t("pos"), blank: true, path: "pos", icon: <Kart /> },
   ];
   return (
