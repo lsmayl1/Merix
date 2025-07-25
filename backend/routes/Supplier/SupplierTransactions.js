@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const { Suppliers, SupplierTransactions } = require("../../models/index");
-
+const formatDate = require("../../utils/dateUtils");
 router.get("/", async (req, res) => {
   try {
     const transactions = await SupplierTransactions.findAll({
@@ -43,20 +43,26 @@ router.get("/:id", async (req, res) => {
         .status(404)
         .json({ message: "No transactions found for this supplier" });
     }
-
     let totalAmount = 0;
-    transactions.forEach((transaction) => {
+    const formattedTransactions = transactions.map((transaction) => {
+      let amount = parseFloat(transaction.amount);
+
       if (transaction.type === "payment") {
-        transaction.amount = -transaction.amount; // Ödeme işlemleri için miktarı negatif yapıyoruz
-      } else if (transaction.type === "purchase") {
-        transaction.amount = transaction.amount; // Alım işlemleri için miktarı pozitif yapıyoruz
+        amount = -amount;
       }
-      totalAmount += parseFloat(transaction.amount);
+
+      totalAmount += amount;
+
+      return {
+        ...transaction.toJSON(), // Sequelize instance'dan plain objeye çeviriyoruz
+        date: formatDate(transaction.date), // Tarihi formatlıyoruz
+        amount, // Negatif/pozitif ayarlanmış değer
+      };
     });
 
     res.status(200).json({
-      transactions,
-      totalAmount: totalAmount.toFixed(2) + " ₼", // Toplam miktarı iki ondalık basamakla döndürüyoruz
+      transactions: formattedTransactions,
+      totalAmount: totalAmount.toFixed(2) + " ₼",
     });
   } catch (error) {
     console.error("Error fetching supplier transactions:", error);
@@ -66,17 +72,23 @@ router.get("/:id", async (req, res) => {
 
 router.post("/", async (req, res) => {
   const { supplier_id, amount, date, payment_method, type } = req.body;
+
   try {
     if (!supplier_id || !amount) {
       return res.status(400).json({ message: "Missing required fields" });
     }
+
+    const transactionDate =
+      date === null || date === undefined ? new Date() : date;
+
     const newTransaction = await SupplierTransactions.create({
       supplier_id,
       amount,
-      date,
+      date: transactionDate,
       payment_method,
       type,
     });
+
     res.status(201).json(newTransaction);
   } catch (error) {
     console.error("Error creating supplier transaction:", error);

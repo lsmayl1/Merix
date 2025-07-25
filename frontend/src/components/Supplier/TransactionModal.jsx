@@ -9,6 +9,7 @@ export const TransactionModal = ({ handleClose, onSubmit }) => {
   const { t } = useTranslation();
   const [transactionType, setTransactionType] = useState("purchase");
   const [paymentMethod, setPaymentMethod] = useState("cash");
+  const [date, setDate] = useState(null);
   const {
     handleSubmit,
     register,
@@ -32,6 +33,7 @@ export const TransactionModal = ({ handleClose, onSubmit }) => {
       ...data,
       type: transactionType,
       payment_method: paymentMethod,
+      date,
     });
   };
   return (
@@ -86,6 +88,15 @@ export const TransactionModal = ({ handleClose, onSubmit }) => {
             {errors?.amount?.message && (
               <p className="text-red-500">{errors.amount.message}</p>
             )}
+          </div>
+          <div className="flex flex-col gap-1 ">
+            <label>{t("Date")}</label>
+            <input
+              step={0.001}
+              onChange={(e) => setDate(e.target.value)}
+              type="date"
+              className="border p-2 border-mainBorder rounded-lg"
+            />
           </div>
 
           <div className="flex gap-2 items-center ">
