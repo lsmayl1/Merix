@@ -86,7 +86,6 @@ router.get("/products", async (req, res) => {
         "sellPrice",
         "buyPrice",
         "unit",
-        "category",
       ],
     });
 
@@ -417,6 +416,94 @@ router.get("/revenue", async (req, res) => {
     const totalRevenue = result.reduce((sum, item) => sum + item.revenue, 0);
     const average =
       result.length > 0 ? Number((totalRevenue / result.length).toFixed(2)) : 0;
+
+    res.json({
+      average: average + " ₼",
+      data: result,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+router.get("/profit", async (req, res) => {
+  try {
+    const { type = "daily" } = req.query;
+    const sales = await Sales.findAll({
+      include: [
+        {
+          model: SalesDetails,
+          as: "details",
+          attributes: ["sell_price", "buy_price", "quantity"],
+        },
+      ],
+    });
+
+    const profits = {};
+
+    sales.forEach((sale) => {
+      const dateObj = new Date(sale.date);
+      let key;
+
+      switch (type) {
+        case "hourly":
+          key = `${dateObj.getFullYear()}-${String(
+            dateObj.getMonth() + 1
+          ).padStart(2, "0")}-${String(dateObj.getDate()).padStart(
+            2,
+            "0"
+          )} ${String(dateObj.getHours()).padStart(2, "0")}:00`;
+          break;
+        case "daily":
+          key = `${dateObj.getFullYear()}-${String(
+            dateObj.getMonth() + 1
+          ).padStart(2, "0")}-${String(dateObj.getDate()).padStart(2, "0")}`;
+          break;
+        case "weekly":
+          const weekStart = new Date(dateObj);
+          weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+          key = `${weekStart.getFullYear()}-W${getWeekNumber(weekStart)}`;
+          break;
+        case "monthly":
+          key = `${dateObj.getFullYear()}-${String(
+            dateObj.getMonth() + 1
+          ).padStart(2, "0")}`;
+          break;
+        default:
+          return res.status(400).json({ error: "Invalid type parameter" });
+      }
+
+      let totalProfit = 0;
+
+      if (Array.isArray(sale.details)) {
+        sale.details.forEach((detail) => {
+          const sellPrice = Number(detail.sell_price) || 0;
+          const buyPrice = Number(detail.buy_price) || 0;
+          const quantity = Number(detail.quantity) || 0;
+
+          if (buyPrice !== 0) {
+            const profit = (sellPrice - buyPrice) * quantity;
+
+            if (sale.transaction_type === "return") {
+              totalProfit -= profit;
+            } else {
+              totalProfit += profit;
+            }
+          }
+        });
+      }
+
+      profits[key] = (profits[key] || 0) + totalProfit;
+    });
+
+    const result = Object.entries(profits).map(([date, profit]) => ({
+      date,
+      profit: Number(profit.toFixed(2)),
+    }));
+
+    const totalProfit = result.reduce((sum, item) => sum + item.profit, 0);
+    const average =
+      result.length > 0 ? Number((totalProfit / result.length).toFixed(2)) : 0;
 
     res.json({
       average: average + " ₼",

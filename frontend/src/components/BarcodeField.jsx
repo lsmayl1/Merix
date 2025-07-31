@@ -52,7 +52,7 @@ export const BarcodeField = forwardRef(
         ref={inputRef}
         type="number"
         onChange={(e) => setBarcode(e.target.value)}
-        className="focus:bg-red-500 size-2 rounded-full left-0"
+        className="focus:bg-green-500 text-green-500 size-2 rounded-full left-0"
         onKeyDown={handleKey}
       />
     );

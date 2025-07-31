@@ -5,11 +5,10 @@ import { createColumnHelper } from "@tanstack/react-table";
 import { useTranslation } from "react-i18next";
 import { DateRange } from "../components/Date/DateRange.jsx";
 import {
+  useGetDailyProfitQuery,
   useGetDailyRevenueQuery,
   useGetDashboardMetricsMutation,
-  useGetHourlyRevenueQuery,
 } from "../redux/slices/ApiSlice.jsx";
-import { Line } from "react-chartjs-2";
 import { LineChart } from "../components/Charts/LineChart.jsx";
 import { StockOverview } from "../components/Products/StockOverview.jsx";
 
@@ -26,52 +25,16 @@ export const Dashboard = () => {
   const { data: Revenue } = useGetDailyRevenueQuery(timeframe, {
     skip: !timeframe,
   });
+  const { data: Profit } = useGetDailyProfitQuery(timeframe, {
+    skip: !timeframe,
+  });
   const [getMetrics] = useGetDashboardMetricsMutation();
   const [metricData, setMetricData] = useState({});
   const [range, setRange] = useState({
     from: "",
     to: "",
   });
-  const columnHelper = createColumnHelper();
-  const ProductsColumn = [
-    columnHelper.accessor("product", {
-      header: "Product",
-      cell: (info) => info.getValue(),
-      headerClassName: "text-start bg-gray-100 rounded-s-lg",
-      cellClassName: "text-start ",
-    }),
 
-    columnHelper.accessor("barcode", {
-      header: "Barcode",
-      cell: (info) => info.getValue(),
-      headerClassName: "text-start bg-gray-100",
-      cellClassName: "text-start",
-    }),
-    columnHelper.accessor("sold", {
-      header: "Sold",
-      cell: (info) => info.getValue(),
-      headerClassName: "text-center bg-gray-100",
-      cellClassName: "text-center",
-    }),
-    columnHelper.accessor("revenue", {
-      header: "Revenue",
-      cell: (info) => info.getValue(),
-      headerClassName: "text-start bg-gray-100",
-      cellClassName: "text-start",
-    }),
-    columnHelper.accessor("profit", {
-      header: "profit",
-      cell: (info) => info.getValue(),
-      headerClassName: "text-start bg-gray-100",
-      cellClassName: "text-start",
-    }),
-    columnHelper.accessor("profitMargin", {
-      header: "Profit Margin",
-      cell: (info) => info.getValue(),
-      headerClassName: "text-center bg-gray-100 rounded-e-lg",
-      cellClassName: "text-center",
-    }),
-  ];
   const getDashboardMetrics = async () => {
     try {
       const res = await getMetrics(range).unwrap();
@@ -137,6 +100,34 @@ export const Dashboard = () => {
           </div>
         </div>
         <LineChart data={Revenue?.data} />
+      </div>
+      <div className="flex flex-col bg-white w-full justify-end  p-4 h-full  rounded-lg  ">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex  items-center   gap-4">
+            <h1 className=" font-medium text-xl text-mainText">
+              Ortalama Qazanc
+            </h1>
+            <span className="text-3xl text-end font-semibold ">
+              {Profit?.average}
+            </span>
+          </div>
+          <div className="flex justify-end gap-6  items-center ">
+            {timeframeVariable.map((item) => (
+              <button
+                key={item.value}
+                onClick={() => setTimeframe(item.value)}
+                className={`${
+                  timeframe === item.value
+                    ? "bg-blue-700 text-white"
+                    : "bg-white"
+                } border border-mainBorder px-4 py-1 rounded-lg`}
+              >
+                {t(item.value)}
+              </button>
+            ))}
+          </div>
+        </div>
+        <LineChart valueKey={"profit"} data={Profit?.data} />
       </div>
 
       <div className="w-full flex flex-col gap-4 rounded-lg p-4 bg-white h-1/2">

@@ -5,12 +5,15 @@ import { t } from "i18next";
 import { useParams } from "react-router-dom";
 import {
   useCreateSupplierTransactionMutation,
+  useDeleteSupplierTransactionMutation,
   useGetSupplierByIdQuery,
   useGetSupplierTransactionsByIdQuery,
 } from "../../redux/slices/SupplierSlice";
 import { TransactionModal } from "../../components/Supplier/TransactionModal";
 import { KPI } from "../../components/Metric/KPI";
 import { Plus } from "../../assets/Plus";
+import TrashBin from "../../assets/TrashBin";
+import { DebtModal } from "../../components/Supplier/DebtModal";
 
 export const SupplierDetails = () => {
   const { id } = useParams();
@@ -18,6 +21,7 @@ export const SupplierDetails = () => {
   const { data: transactions, refetch } =
     useGetSupplierTransactionsByIdQuery(id);
   const [createTransaction] = useCreateSupplierTransactionMutation();
+  const [deleteTransaction] = useDeleteSupplierTransactionMutation();
   const columnHelper = createColumnHelper();
   const columns = [
     columnHelper.accessor("id", {
@@ -43,8 +47,26 @@ export const SupplierDetails = () => {
       cellClassName: "text-center",
       cell: ({ getValue }) => (getValue() == "cash" ? t("cash") : t("card")),
     }),
+    columnHelper.accessor("action", {
+      header: t("editDelete"),
+      headerClassName: "text-center rounded-e-lg bg-gray-100",
+      cellClassName: "text-center",
+      cell: ({ row }) => (
+        <div className="flex justify-center  gap-4">
+          <button
+            className="cursor-pointer"
+            onClick={() => handleDeleteTransaction(row.original.id)}
+          >
+            <TrashBin className="size-5" />
+          </button>
+        </div>
+      ),
+      enableSorting: false, // Action sütunu için sıralamayı devre dışı bırak
+      enableColumnFilter: false, // Action sütunu için filtrelemeyi devre dışı bırak
+    }),
   ];
   const [showModal, setShowModal] = useState(false);
+  const [showDebtModal, setShowDebtModal] = useState(false);
 
   const handleTransactionSubmit = async (data) => {
     try {
@@ -59,6 +81,18 @@ export const SupplierDetails = () => {
       refetch();
     } catch (error) {
       console.error("Error creating transaction:", error);
+    }
+  };
+
+  const handleDeleteTransaction = async (id) => {
+    if (!window.confirm("Silinsin")) {
+      return;
+    }
+    try {
+      await deleteTransaction(id);
+      refetch();
+    } catch (error) {
+      console.log(error);
     }
   };
   return (
@@ -81,7 +115,20 @@ export const SupplierDetails = () => {
             onSubmit={handleTransactionSubmit}
           />
         )}
+        {showDebtModal && (
+          <DebtModal
+            handleClose={() => setShowDebtModal(false)}
+            onSubmit={handleTransactionSubmit}
+          />
+        )}
         <div className="py-2 px-4 flex justify-end items-center">
+          <button
+            onClick={() => setShowDebtModal(true)}
+            className="border bg-white border-gray-200 rounded-xl text-nowrap px-4 cursor-pointer max-md:px-2 max-md:text-xs flex items-center gap-2 py-1 max-md:py-0"
+          >
+            <Plus className="max-md:size-5" />
+            {t("Borc Əməliyyatı")}
+          </button>
           <button
             onClick={() => setShowModal(true)}
             className="border bg-white border-gray-200 rounded-xl text-nowrap px-4 cursor-pointer max-md:px-2 max-md:text-xs flex items-center gap-2 py-1 max-md:py-0"

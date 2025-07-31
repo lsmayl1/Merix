@@ -14,21 +14,46 @@ router.get("/", async (req, res) => {
         },
       ],
     });
+
     if (!transactions || transactions.length === 0) {
       return res.status(404).json({ message: "No transactions found" });
     }
-    res.status(200).json(transactions);
+
+    // Her bir transaction'ın tarihini sadece YYYY-MM-DD formatında string yap
+    const formattedTransactions = transactions.map((t) => {
+      const dateOnly =
+        t.date instanceof Date ? t.date.toISOString().split("T")[0] : t.date;
+
+      return {
+        ...t.toJSON(), // Sequelize instance'ı düz objeye çevir
+        date: dateOnly, // Tarihi formatla
+      };
+    });
+
+    res.status(200).json(formattedTransactions);
   } catch (error) {
     console.error("Error fetching supplier transactions:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
+function dateFormatting(date) {
+  if (!(date instanceof Date)) {
+    date = new Date(date);
+  }
+
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0"); // 0-indexed
+  const year = date.getFullYear();
+
+  return `${day}-${month}-${year}`; // "26-07-2025"
+}
 
 router.get("/:id", async (req, res) => {
   const { id } = req.params;
+
   try {
     const transactions = await SupplierTransactions.findAll({
-      where: { supplier_id: id }, // burada supplier_id ile filtreleniyor
+      where: { supplier_id: id },
       include: [
         {
           model: Suppliers,
@@ -43,7 +68,9 @@ router.get("/:id", async (req, res) => {
         .status(404)
         .json({ message: "No transactions found for this supplier" });
     }
+
     let totalAmount = 0;
+
     const formattedTransactions = transactions.map((transaction) => {
       let amount = parseFloat(transaction.amount);
 
@@ -54,9 +81,9 @@ router.get("/:id", async (req, res) => {
       totalAmount += amount;
 
       return {
-        ...transaction.toJSON(), // Sequelize instance'dan plain objeye çeviriyoruz
-        date: formatDate(transaction.date), // Tarihi formatlıyoruz
-        amount, // Negatif/pozitif ayarlanmış değer
+        ...transaction.toJSON(),
+        date: dateFormatting(transaction.date), // Saat olmadan formatlıyoruz
+        amount,
       };
     });
 
@@ -70,6 +97,13 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+function parseDateString(dateStr) {
+  const [day, month, year] = dateStr.split(".");
+  if (!day || !month || !year) return null;
+
+  return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+}
+
 router.post("/", async (req, res) => {
   const { supplier_id, amount, date, payment_method, type } = req.body;
 
@@ -78,13 +112,30 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
-    const transactionDate =
-      date === null || date === undefined ? new Date() : date;
+    let finalDate;
+
+    if (!date) {
+      finalDate = new Date(); // Şu anki tarih + saat
+    } else {
+      const formattedDateStr = parseDateString(date);
+      if (!formattedDateStr) {
+        return res
+          .status(400)
+          .json({ message: "Invalid date format. Use dd.mm.yyyy" });
+      }
+
+      finalDate = new Date(formattedDateStr); // ISO formatlı string -> Date
+      if (isNaN(finalDate.getTime())) {
+        return res
+          .status(400)
+          .json({ message: "Invalid date value after parsing" });
+      }
+    }
 
     const newTransaction = await SupplierTransactions.create({
       supplier_id,
       amount,
-      date: transactionDate,
+      date: finalDate, // Artık bu Date objesi, Sequelize ve DB için uygundur
       payment_method,
       type,
     });
@@ -93,6 +144,32 @@ router.post("/", async (req, res) => {
   } catch (error) {
     console.error("Error creating supplier transaction:", error);
     res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
+router.delete("/:id", async (req, res) => {
+  const { id } = req.params;
+
+  if (!id) {
+    return res.status(401).json({ message: "Id not found" });
+  }
+
+  try {
+    // Silinecek kaydı bul (isteğe bağlı ama kullanıcıya bilgi vermek için faydalı)
+    const transaction = await SupplierTransactions.findByPk(id);
+
+    if (!transaction) {
+      return res.status(404).json({ message: "Transaction not found" });
+    }
+
+    // Silme işlemi
+    await transaction.destroy();
+
+    res.status(200).json({ message: "Transaction deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting transaction:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 

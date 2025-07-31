@@ -22,10 +22,10 @@ ChartJS.register(
   Legend
 );
 
-export const LineChart = ({data}) => {
+export const LineChart = ({data,valueKey = "revenue"}) => {
   // Eğer veri yoksa boş array ata
   const labels = data ? data.map(item => item.date) : [];
-  const dataPoints = data ? data.map(item => item.revenue) : [];
+   const dataPoints = data ? data.map(item => item[valueKey]) : [];
 
   const chartData = {
     labels: labels,

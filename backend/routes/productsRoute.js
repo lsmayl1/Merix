@@ -64,7 +64,6 @@ router.post("/", async (req, res) => {
       buyPrice: buyPrice ? parseFloat(buyPrice) : null,
       stock: stock || 0,
       unit,
-      category: "Mehsul",
     };
 
     const product = await Products.create(productData);
@@ -106,7 +105,6 @@ router.get("/", async (req, res) => {
         "sellPrice",
         "buyPrice",
         "unit",
-        "category",
       ],
     });
 
@@ -159,7 +157,7 @@ router.get("/search", async (req, res) => {
       limit: 50, // En fazla 20 ürün getir
     });
 
- // 2. Ürün ID'lerini al
+    // 2. Ürün ID'lerini al
     const productIds = products.map((p) => p.product_id);
 
     // 3. Stokları al
@@ -339,14 +337,7 @@ router.put("/:id", async (req, res) => {
     }
 
     // Fields that can be updated directly
-    const fields = [
-      "name",
-      "category",
-      "buyPrice",
-      "sellPrice",
-      "unit",
-      "barcode",
-    ];
+    const fields = ["name", "buyPrice", "sellPrice", "unit", "barcode"];
 
     const updateData = {};
     fields.forEach((field) => {
