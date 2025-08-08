@@ -9,6 +9,8 @@ const StockTransactions = require("./stockTransactions");
 const ProductStock = require("./productStock");
 const Suppliers = require("./Supplier/Suppliers");
 const SupplierTransactions = require("./Supplier/SupplierTransaction");
+const SupplierTransactionDetails = require("./Supplier/SupplierTransactionDetails");
+const Category = require("./category");
 // 🔹 İlişkileri Tanımla
 Sales.hasMany(SalesDetails, { foreignKey: "sale_id", as: "details" });
 SalesDetails.belongsTo(Sales, { foreignKey: "sale_id", as: "sale" });
@@ -16,6 +18,10 @@ SalesDetails.belongsTo(Sales, { foreignKey: "sale_id", as: "sale" });
 StockTransactions.belongsTo(Products, {
   foreignKey: "product_id",
   as: "product",
+});
+Products.hasOne(ProductStock, {
+  foreignKey: "product_id",
+  as: "stock",
 });
 
 ProductStock.belongsTo(Products, {
@@ -40,6 +46,42 @@ Suppliers.hasMany(SupplierTransactions, {
   as: "transactions",
 });
 
+// 2) SupplierTransactions → SupplierTransactionDetails
+SupplierTransactions.hasMany(SupplierTransactionDetails, {
+  foreignKey: "transaction_id", // Detay tablosundaki foreign key
+  as: "details",
+});
+
+SupplierTransactionDetails.belongsTo(SupplierTransactions, {
+  foreignKey: "transaction_id",
+  as: "transaction",
+});
+
+// 3) Products → SupplierTransactionDetails
+Products.hasMany(SupplierTransactionDetails, {
+  foreignKey: "product_id",
+  as: "transactionDetails",
+});
+SupplierTransactionDetails.belongsTo(Products, {
+  foreignKey: "product_id",
+  as: "product",
+});
+
+Category.hasMany(Category, {
+  as: "subcategories",
+  foreignKey: "parent_id",
+});
+
+Category.belongsTo(Category, {
+  as: "parent",
+  foreignKey: "parent_id",
+});
+
+Category.hasMany(Products, {
+  foreignKey: "category_id",
+  as: "products",
+});
+
 module.exports = {
   sequelize,
   Sequelize,
@@ -53,4 +95,6 @@ module.exports = {
   ProductStock,
   Suppliers,
   SupplierTransactions,
+  SupplierTransactionDetails,
+  Category,
 };

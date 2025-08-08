@@ -2,7 +2,9 @@ import React from "react";
 
 export const KPI = ({ data }) => {
   return (
-    <div className="grid grid-cols-4 max-md:grid-cols-2  gap-2 w-full">
+    <div
+      className={`grid grid-cols-${data.length} max-md:grid-cols-2  gap-2 w-full`}
+    >
       {data.map((item, index) => (
         <div
           key={index}

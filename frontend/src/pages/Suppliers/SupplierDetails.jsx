@@ -4,16 +4,19 @@ import { createColumnHelper } from "@tanstack/react-table";
 import { t } from "i18next";
 import { useParams } from "react-router-dom";
 import {
+  useCreateSupplierInvoiceMutation,
   useCreateSupplierTransactionMutation,
   useDeleteSupplierTransactionMutation,
   useGetSupplierByIdQuery,
   useGetSupplierTransactionsByIdQuery,
 } from "../../redux/slices/SupplierSlice";
-import { TransactionModal } from "../../components/Supplier/TransactionModal";
+import { SupplierInvoiceModal } from "../../components/Supplier/TransactionModal";
 import { KPI } from "../../components/Metric/KPI";
 import { Plus } from "../../assets/Plus";
 import TrashBin from "../../assets/TrashBin";
 import { DebtModal } from "../../components/Supplier/DebtModal";
+import { Invoice } from "../../assets/Navigation/Invoice";
+import { InvoiceView } from "../../components/Supplier/InvoiceView";
 
 export const SupplierDetails = () => {
   const { id } = useParams();
@@ -22,6 +25,7 @@ export const SupplierDetails = () => {
     useGetSupplierTransactionsByIdQuery(id);
   const [createTransaction] = useCreateSupplierTransactionMutation();
   const [deleteTransaction] = useDeleteSupplierTransactionMutation();
+  const [createSupplierInvoice] = useCreateSupplierInvoiceMutation();
   const columnHelper = createColumnHelper();
   const columns = [
     columnHelper.accessor("id", {
@@ -41,11 +45,26 @@ export const SupplierDetails = () => {
       header: t("type"),
       cellClassName: "text-center",
     }),
-
     columnHelper.accessor("payment_method", {
       header: t("paymentMethod"),
       cellClassName: "text-center",
       cell: ({ getValue }) => (getValue() == "cash" ? t("cash") : t("card")),
+    }),
+    columnHelper.accessor("invoice", {
+      header: t("Invoice"),
+      cellClassName: "text-center",
+      cell: ({ row }) => (
+        <div className="flex justify-center  gap-4">
+          <button
+            className="cursor-pointer"
+            // onClick={() => handleDeleteTransaction(row.original.id)}
+          >
+            <Invoice className="size-5" />
+          </button>
+        </div>
+      ),
+      enableSorting: false, // Action sütunu için sıralamayı devre dışı bırak
+      enableColumnFilter: false, // Action sütunu için filtrelemeyi devre dışı bırak
     }),
     columnHelper.accessor("action", {
       header: t("editDelete"),
@@ -95,6 +114,17 @@ export const SupplierDetails = () => {
       console.log(error);
     }
   };
+
+  const handleCreateSupplierInvoice = async (data) => {
+    try {
+      await createSupplierInvoice({ ...data, supplier_id: id });
+      setShowModal(false);
+      await refetch();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   return (
     <div className="p-4 flex flex-col gap-4 w-full h-full">
       <div className="items-center flex gap-12  w-full  justify-between ">
@@ -109,10 +139,11 @@ export const SupplierDetails = () => {
         </div>
       </div>
       <div className="flex flex-col bg-white w-full h-full  rounded-lg  relative">
+        <InvoiceView />
         {showModal && (
-          <TransactionModal
+          <SupplierInvoiceModal
             handleClose={() => setShowModal(false)}
-            onSubmit={handleTransactionSubmit}
+            onSubmit={handleCreateSupplierInvoice}
           />
         )}
         {showDebtModal && (

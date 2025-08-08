@@ -44,6 +44,13 @@ export const SupplierSlice = createApi({
         method: "DELETE",
       }),
     }),
+    createSupplierInvoice: build.mutation({
+      query: (data) => ({
+        url: `supplier-transactions/v2/`,
+        method: "POST",
+        body: data,
+      }),
+    }),
   }),
 });
 
@@ -57,5 +64,6 @@ export const {
 
   useGetTotalPaymentsMetricQuery,
 
-  useDeleteSupplierTransactionMutation
+  useCreateSupplierInvoiceMutation,
+  useDeleteSupplierTransactionMutation,
 } = SupplierSlice;

@@ -1,17 +1,20 @@
 const express = require("express");
 const router = express.Router();
+const { Products, Sequelize, Op, ProductStock } = require("../models");
 const {
-  Products,
-  Sequelize,
-  sequelize,
-  Op,
-  ProductStock,
-} = require("../models");
+  CreateProduct,
+  GetAllProducts,
+  GetProductByIdOrBarcode,
+  DeleteProduct,
+  UpdateProduct,
+  GenerateBarcode,
+} = require("../services/ProductService");
+const { getCategoryById } = require("../services/CategoryService");
 
 // Create a product
 router.post("/", async (req, res) => {
   try {
-    const { name, barcode, sellPrice, buyPrice, unit, stock } = req.body;
+    const { name, barcode, sellPrice, buyPrice, unit, category_id } = req.body;
 
     if (!barcode) {
       return res.status(400).json({ error: "Barkod yoxdur !" });
@@ -30,6 +33,11 @@ router.post("/", async (req, res) => {
     // Unit’in geçerli bir ENUM değeri olduğundan emin ol
     if (!["piece", "kg"].includes(unit)) {
       return res.status(400).json({ error: 'Unit "piece" veya "kg" olmalı' });
+    }
+
+    const category = await getCategoryById(category_id);
+    if (!category) {
+      return res.status(404).json({ error: "Category Not Valid" });
     }
 
     // Barkodun uzunluğunu kontrol et (isteğe bağlı, 13 hane istiyorsanız)
@@ -62,8 +70,8 @@ router.post("/", async (req, res) => {
       barcode: barcode || null,
       sellPrice: sellPrice ? parseFloat(sellPrice) : null,
       buyPrice: buyPrice ? parseFloat(buyPrice) : null,
-      stock: stock || 0,
       unit,
+      category_id,
     };
 
     const product = await Products.create(productData);
@@ -79,6 +87,16 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ message: "Bu barkod zaten kullanılıyor" });
     }
     res.status(400).json({ error: error.message });
+  }
+});
+router.post("/v2/", async (req, res, next) => {
+  try {
+    const product = await CreateProduct(req.body);
+    if (product) {
+      return res.json(product);
+    }
+  } catch (error) {
+    next(error);
   }
 });
 
@@ -135,6 +153,22 @@ router.get("/", async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+});
+router.get("/v2/", async (req, res, next) => {
+  try {
+    const products = await GetAllProducts(req.query);
+    if (products) {
+      return res.json(products);
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/v2/", async (req, res) => {
+  try {
+    const products = await GetAllProducts(req.query);
+  } catch (error) {}
 });
 
 router.get("/search", async (req, res) => {
@@ -263,6 +297,18 @@ router.get("/:id", async (req, res) => {
   } catch (error) {
     console.error("Product get error:", error.message);
     res.status(500).json({ error: error.message });
+  }
+});
+
+router.get("/v2/:id", async (req, res, next) => {
+  try {
+    const product = await GetProductByIdOrBarcode(
+      req.params.id,
+      req.query.fields
+    );
+    res.json(product);
+  } catch (error) {
+    next(error);
   }
 });
 
@@ -395,6 +441,15 @@ router.put("/:id", async (req, res) => {
     });
   }
 });
+
+router.put("/v2/:id", async (req, res, next) => {
+  try {
+    const message = await UpdateProduct(req.params.id, req.body);
+    return res.json(message);
+  } catch (error) {
+    next(error);
+  }
+});
 // Delete a product
 router.delete(
   "/:id",
@@ -428,6 +483,15 @@ router.delete(
     }
   }
 );
+
+router.delete("/v2/:id", async (req, res, next) => {
+  try {
+    const message = await DeleteProduct(req.params.id);
+    return res.json(message);
+  } catch (error) {
+    next(error);
+  }
+});
 
 router.post("/generate-barcode", async (req, res) => {
   try {
@@ -536,76 +600,12 @@ router.post("/generate-barcode", async (req, res) => {
   }
 });
 
-router.post("/stock-refresh", async (req, res) => {
+router.post("/v2/generate-barcode", async (req, res, next) => {
   try {
-    // Transaction başlat (veri tutarlılığı için)
-    const result = await sequelize.transaction(async (t) => {
-      // Tüm ürünlerin stoklarını 0 yap
-      const [affectedCount] = await Products.update(
-        { stock: 0 },
-        { where: {}, transaction: t }
-      );
-
-      return affectedCount;
-    });
-
-    res.json({
-      success: true,
-      message: `Tüm ürün stokları sıfırlandı. ${result} ürün güncellendi.`,
-    });
+    const barcode = await GenerateBarcode(req.body.unit);
+    return res.json(barcode);
   } catch (error) {
-    console.error("Stok sıfırlama hatası:", error);
-    res.status(500).json({
-      success: false,
-      message: "Stoklar sıfırlanırken bir hata oluştu",
-      error: error.message,
-    });
-  }
-});
-
-router.get("/stocks/data", async (req, res) => {
-  try {
-    const products = await Products.findAll({
-      where: {
-        stock: {
-          [Op.lt]: 10, // Stok miktarı 10'dan az olan ürünleri getir
-        },
-      },
-      order: [["stock", "ASC"]], // Stok miktarına göre sıralama
-      attributes: ["name", "stock"],
-      limit: 20,
-    });
-    const transformedProducts = products.map((product) => ({
-      ...product.get({ plain: true }),
-    }));
-    res.json(transformedProducts);
-  } catch (error) {
-    console.log(error);
-  }
-});
-
-router.get("/plu/update-units", async (req, res) => {
-  try {
-    // Doğrudan SQL gibi toplu update yapalım
-    await Products.update(
-      { unit: "kg" }, // Değişiklik
-      {
-        where: {
-          [Op.and]: [
-            { barcode: { [Op.like]: "22%" } },
-            sequelize.where(
-              sequelize.fn("length", sequelize.col("barcode")),
-              13
-            ),
-          ],
-        },
-      }
-    );
-
-    res.json({ message: "Products updated successfully" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "An error occurred" });
+    next(error);
   }
 });
 

@@ -13,6 +13,8 @@ import { StockMovements } from "./pages/Stock/StockMovements";
 import { ProductDetails } from "./pages/Products/ProductDetails";
 import { Suppliers } from "./pages/Suppliers";
 import { SupplierDetails } from "./pages/Suppliers/SupplierDetails";
+import { Category } from "./pages/Category/Category";
+import { CategoryDetails } from "./pages/Category/CategoryDetails";
 export const App = () => {
   return (
     <Routes>
@@ -20,6 +22,8 @@ export const App = () => {
         <Route index element={<Dashboard />} />
         <Route path="products" element={<Products />} />
         <Route path="products/:id" element={<ProductDetails />} />
+        <Route path="category" element={<Category />} />
+        <Route path="category/:id" element={<CategoryDetails />} />
 
         <Route path="stock-movements" element={<StockMovements />} />
 

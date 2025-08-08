@@ -3,6 +3,10 @@ const router = express.Router();
 
 const { Suppliers, SupplierTransactions } = require("../../models/index");
 const formatDate = require("../../utils/dateUtils");
+const {
+  CreateTransaction,
+  GetSupplierTransactionsWithDetails,
+} = require("../../services/SupplierService");
 router.get("/", async (req, res) => {
   try {
     const transactions = await SupplierTransactions.findAll({
@@ -147,7 +151,6 @@ router.post("/", async (req, res) => {
   }
 });
 
-
 router.delete("/:id", async (req, res) => {
   const { id } = req.params;
 
@@ -170,6 +173,26 @@ router.delete("/:id", async (req, res) => {
   } catch (error) {
     console.error("Error deleting transaction:", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+router.post("/v2/", async (req, res, next) => {
+  try {
+    const transaction = await CreateTransaction(req.body);
+    return res.json(transaction);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/v2/:id", async (req, res, next) => {
+  try {
+    const transactions = await GetSupplierTransactionsWithDetails(
+      req.params.id
+    );
+    return res.json(transactions);
+  } catch (error) {
+    next(error);
   }
 });
 

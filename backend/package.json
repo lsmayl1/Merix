@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon index.js"
+    "dev": "cross-env NODE_ENV=development nodemon index.js",
+    "start": "cross-env NODE_ENV=production node index.js"
   },
   "keywords": [],
   "author": "",
@@ -16,12 +17,14 @@
     "bwip-js": "^3.0.5",
     "canvas": "^3.1.2",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
+    "cross-env": "^10.0.0",
+    "dotenv": "^16.6.1",
     "escpos": "^3.0.0-alpha.6",
     "escpos-usb": "^3.0.0-alpha.4",
     "express": "^4.21.2",
     "express-validator": "^7.2.1",
     "jsbarcode": "^3.12.1",
+    "moment": "^2.30.1",
     "node-thermal-printer": "^4.5.0",
     "node-windows": "^1.0.0-beta.8",
     "pdfkit": "^0.17.1",

@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 import Delivery from "../../assets/Navigation/Delivery";
 import StockBox from "../../assets/Navigation/StockBox";
 import { Supplier } from "../../assets/Navigation/Supplier";
+import Category from "../../assets/Navigation/Category";
 
 export const Sidebar = ({ className, handleClose }) => {
   const { t } = useTranslation();
@@ -20,6 +21,12 @@ export const Sidebar = ({ className, handleClose }) => {
       blank: false,
       path: "stock-movements",
       icon: <StockBox />,
+    },
+    {
+      name: t("Kateqoriyalar"),
+      blank: false,
+      path: "category",
+      icon: <Category />,
     },
 
     {
