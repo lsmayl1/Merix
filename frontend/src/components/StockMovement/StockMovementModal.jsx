@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { CreditCard } from "../../assets/CreditCard";
 import { Cash } from "../../assets/Cash";
 import CloseSquare from "../../assets/Navigation/CloseSquare";
@@ -21,14 +21,20 @@ export const StockMovementModal = ({ handleClose, onSubmit }) => {
     register,
     formState: { errors },
     setError,
+    setValue,
   } = useForm({
     defaultValues: {
-      unit_price: null,
+      unit_price: selectedProduct?.buyPrice || 0,
       quantity: null,
       description: "",
       product_id: null,
     },
   });
+  useEffect(() => {
+    if (selectedProduct) {
+      setValue("unit_price", selectedProduct.buyPrice);
+    }
+  }, [selectedProduct]);
   const handleTransactionTypeChange = (method) => {
     setTransactionType(method);
   };

@@ -76,7 +76,10 @@ Category.belongsTo(Category, {
   as: "parent",
   foreignKey: "parent_id",
 });
-
+Products.belongsTo(Category, {
+  foreignKey: "category_id",
+  as: "category",
+});
 Category.hasMany(Products, {
   foreignKey: "category_id",
   as: "products",

@@ -6,6 +6,7 @@ const formatDate = require("../../utils/dateUtils");
 const {
   CreateTransaction,
   GetSupplierTransactionsWithDetails,
+  GetSupplierInvoice,
 } = require("../../services/SupplierService");
 router.get("/", async (req, res) => {
   try {
@@ -191,6 +192,18 @@ router.get("/v2/:id", async (req, res, next) => {
       req.params.id
     );
     return res.json(transactions);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/v2/:supplier_id/:transaction_id", async (req, res, next) => {
+  try {
+    const transactionDetails = await GetSupplierInvoice(
+      req.params.supplier_id,
+      req.params.transaction_id
+    );
+    return res.json(transactionDetails);
   } catch (error) {
     next(error);
   }

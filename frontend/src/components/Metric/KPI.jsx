@@ -3,7 +3,10 @@ import React from "react";
 export const KPI = ({ data }) => {
   return (
     <div
-      className={`grid grid-cols-${data.length} max-md:grid-cols-2  gap-2 w-full`}
+      className={`grid  max-md:grid-cols-2  gap-2 w-full`}
+      style={{
+        gridTemplateColumns: `repeat(${data?.length || 1}, minmax(0, 1fr))`,
+      }}
     >
       {data.map((item, index) => (
         <div

@@ -7,6 +7,7 @@ import {
   useGetProductsQuery,
   useLazyGetProductByIdQuery,
   usePostProductMutation,
+  usePrintProductLabelMutation,
   usePutProductByIdMutation,
 } from "../../redux/slices/ApiSlice";
 import Edit from "../../assets/Edit";
@@ -24,6 +25,8 @@ import { createColumnHelper } from "@tanstack/react-table";
 import { NavLink, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Details } from "../../assets/Details";
+import { PrintComponent } from "../../components/PrintComponent";
+import { toast, ToastContainer } from "react-toastify";
 
 export const Products = () => {
   const { t } = useTranslation();
@@ -69,7 +72,7 @@ export const Products = () => {
       header: t("sellPrice"),
       cell: (info) => (
         <div className="flex items-center justify-center gap-2">
-          <span>{info.getValue().toFixed(2)}</span>₼
+          <span>{parseFloat(info.getValue())?.toFixed(2)}</span>₼
         </div>
       ),
       headerClassName: "text-center bg-gray-100",
@@ -104,6 +107,12 @@ export const Products = () => {
           >
             <Details className="size-5" />
           </NavLink>
+          <button
+            onClick={() => handlePrintProductLabel(row.original.product_id)}
+            className="cursor-pointer text-black"
+          >
+            Print
+          </button>
           <button
             className="cursor-pointer"
             onClick={() => handleDeleteProduct(row.original.product_id)}
@@ -144,6 +153,8 @@ export const Products = () => {
   const [putProduct] = usePutProductByIdMutation();
   const [postProduct, { isLoading: postLoading, isError: postError }] =
     usePostProductMutation();
+
+  const [printProductLabel] = usePrintProductLabelMutation();
 
   const handleClosePopUp = () => {
     setEditForm(null);
@@ -215,6 +226,7 @@ export const Products = () => {
 
   const handleUpdateProduct = async (data) => {
     try {
+      console.log(data);
       await putProduct(data).unwrap();
       setShowProductModal(false);
       setEditId(null);
@@ -235,8 +247,20 @@ export const Products = () => {
     }
   };
 
+  const handlePrintProductLabel = async (product) => {
+    try {
+      const response = await printProductLabel(product).unwrap();
+      if (response) {
+        toast.success("Yazdırma işlemi başarılı!");
+      }
+    } catch (error) {
+      console.error("Yazdırma hatası:", error);
+    }
+  };
+
   return (
     <div className="w-full h-full flex flex-col gap-2 min-h-0 ">
+      <ToastContainer />
       <div className="max-md:hidden"></div>
       <KPI
         data={[

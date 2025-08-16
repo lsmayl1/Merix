@@ -38,6 +38,13 @@ export const ApiSlice = createApi({
         body: unit,
       }),
     }),
+    printProductLabel: build.mutation({
+      query: (product) => ({
+        url: "//print-label",
+        method: "POST",
+        body: product,
+      }),
+    }),
     getProductsByQuery: build.query({
       query: (query) => ({
         url: `/products/search/?query=${query}`,
@@ -132,6 +139,13 @@ export const ApiSlice = createApi({
     getBestSellers: build.query({
       query: () => `metrics/bestSellers`,
     }),
+    printSaleReceipt: build.query({
+      query: (id) => ({
+        url: `/printer/sale-receipt/${id}`,
+        method: "GET",
+      }),
+      keepUnusedDataFor: 0,
+    }),
   }),
 });
 
@@ -162,4 +176,7 @@ export const {
   useGetDailyRevenueQuery,
   useGetDailyProfitQuery,
   useGetHourlyRevenueQuery,
+  usePrintProductLabelMutation,
+
+  useLazyPrintSaleReceiptQuery,
 } = ApiSlice;

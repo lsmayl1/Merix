@@ -5,7 +5,7 @@ const { sequelize } = require("./models");
 const productsRoute = require("./routes/productsRoute");
 const salesRoutes = require("./routes/salesRoute");
 const pluRoute = require("./routes/pluRoute");
-const labelPrinterRoute = require("./routes/labelPrinterRoute");
+const printerRoute = require("./routes/PrinterRoute");
 const reportsRoute = require("./routes/reportsRoute");
 const metricRoute = require("./routes/MetricRoute");
 const cashTransactionsRoute = require("./routes/CashTransactionsRoute");
@@ -68,7 +68,7 @@ if (isDbConfigured) {
   app.use("/api/sales", salesRoutes);
   app.use("/api/metrics", metricRoute);
   app.use("/api/plu", pluRoute);
-  app.use("/api/printer", labelPrinterRoute);
+  app.use("/api/printer", printerRoute);
   app.use("/api/reports", reportsRoute);
   app.use("/api/cash-transactions", cashTransactionsRoute);
   app.use("/api/stock-transactions", stockTransactionsRoute);

@@ -1,6 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const { Products, Sequelize, Op, ProductStock } = require("../models");
+const {
+  Products,
+  Sequelize,
+  Op,
+  ProductStock,
+  Category,
+} = require("../models");
 const {
   CreateProduct,
   GetAllProducts,
@@ -34,10 +40,12 @@ router.post("/", async (req, res) => {
     if (!["piece", "kg"].includes(unit)) {
       return res.status(400).json({ error: 'Unit "piece" veya "kg" olmalı' });
     }
+    if (category_id) {
+      const category = await getCategoryById(category_id);
 
-    const category = await getCategoryById(category_id);
-    if (!category) {
-      return res.status(404).json({ error: "Category Not Valid" });
+      if (!category) {
+        return res.status(404).json({ error: "Category Not Valid" });
+      }
     }
 
     // Barkodun uzunluğunu kontrol et (isteğe bağlı, 13 hane istiyorsanız)
@@ -260,9 +268,17 @@ router.get("/:id", async (req, res) => {
 
     // Normal barkod
     if (!product) {
-      product = await Products.findOne({ where: { barcode: param } });
+      product = await Products.findOne({
+        where: { barcode: param },
+        include: {
+          model: Category,
+          as: "category",
+        },
+      });
       if (product) productBarcode = product.barcode;
     }
+
+    const category = await Category.findByPk(product.category_id);
 
     if (product) {
       const productData = product.get({ plain: true });
@@ -278,6 +294,7 @@ router.get("/:id", async (req, res) => {
           quantity,
           unit,
           stock: productData.stock,
+          category: category || 0,
         });
       } else {
         // kg ise hem okutulan barkod hem veritabanı barkodu dön
@@ -289,6 +306,7 @@ router.get("/:id", async (req, res) => {
           productBarcode: productBarcode, // veritabanındaki gerçek barkod
           quantity,
           unit,
+          category: productData.category || 0,
         });
       }
     } else {
@@ -383,7 +401,14 @@ router.put("/:id", async (req, res) => {
     }
 
     // Fields that can be updated directly
-    const fields = ["name", "buyPrice", "sellPrice", "unit", "barcode"];
+    const fields = [
+      "name",
+      "buyPrice",
+      "sellPrice",
+      "unit",
+      "barcode",
+      "category_id",
+    ];
 
     const updateData = {};
     fields.forEach((field) => {
@@ -391,15 +416,6 @@ router.put("/:id", async (req, res) => {
         updateData[field] = req.body[field];
       }
     });
-
-    // Handle stock update if newStock is provided
-    if (req.body.newStock !== undefined) {
-      const newStockValue = Number(req.body.newStock);
-      if (isNaN(newStockValue)) {
-        return res.status(400).json({ error: "newStock must be a number" });
-      }
-      updateData.stock = parseFloat(product.stock) + newStockValue;
-    }
 
     // Barcode uniqueness check (only if changing)
     if (updateData.barcode && updateData.barcode !== product.barcode) {
@@ -423,13 +439,6 @@ router.put("/:id", async (req, res) => {
 
     // Return the updated product with stock change information
     const response = product.toJSON();
-    if (req.body.newStock !== undefined) {
-      response.stockChange = {
-        previousStock: product.stock - Number(req.body.newStock),
-        newStock: product.stock,
-        added: Number(req.body.newStock),
-      };
-    }
 
     return res.json(response);
   } catch (error) {

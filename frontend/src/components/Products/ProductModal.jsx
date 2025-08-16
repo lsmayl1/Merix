@@ -5,6 +5,8 @@ import { useForm } from "react-hook-form";
 import { useGetBarcodeMutation } from "../../redux/slices/ApiSlice";
 import Generate from "../../assets/Generate";
 import { useTranslation } from "react-i18next";
+import { RightArrow } from "../../assets/Arrows";
+import { useGetCategoriesQuery } from "../../redux/slices/CategorySlice";
 export const ProductModal = ({
   handleClose,
   isEditMode,
@@ -15,7 +17,12 @@ export const ProductModal = ({
 }) => {
   const { t } = useTranslation();
   const isMobile = useMediaQuery({ maxWidth: 768 });
-
+  const [showCategoryDropDown, setShowCategoryDropDown] = useState(false);
+  const { data } = useGetCategoriesQuery();
+  console.log(editForm);
+  const [selectedCategory, setSelectedCategory] = useState(
+    editForm?.category ? editForm?.category : null
+  );
   const [getBarcode, { isLoading: barcodeLoading, isError: barcodeError }] =
     useGetBarcodeMutation();
   const {
@@ -33,15 +40,25 @@ export const ProductModal = ({
       barcode: editForm?.barcode || null,
       buyPrice: editForm?.buyPrice || 0.0,
       sellPrice: editForm?.sellPrice || 0.0,
-      category: "Product",
     },
   });
   const nameInputRef = useRef(null);
   const handleProductCrud = async (data) => {
     if (isEditMode) {
-      handleUpdateProduct(data);
+      console.log(data);
+      handleUpdateProduct({
+        ...data,
+        category_id: selectedCategory?.category_id
+          ? selectedCategory?.category_id
+          : null,
+      });
     } else {
-      handleAddProduct(data);
+      handleAddProduct({
+        ...data,
+        category_id: selectedCategory?.category_id
+          ? selectedCategory?.category_id
+          : null,
+      });
     }
   };
   const handleBarcode = async () => {
@@ -60,6 +77,7 @@ export const ProductModal = ({
       setValue("barcode", editForm.barcode);
       setValue("buyPrice", editForm.buyPrice);
       setValue("sellPrice", editForm.sellPrice);
+      setSelectedCategory(editForm.category);
     }
   }, [editForm]);
 
@@ -68,6 +86,11 @@ export const ProductModal = ({
       reset(editForm);
     }
   }, [editForm, reset]);
+
+  const handleCategoryChange = (category) => {
+    setSelectedCategory(category);
+    setShowCategoryDropDown(false);
+  };
 
   return (
     <div className="absolute inset-0 z-50 flex max-md:-top-54  h-screen w-full drop-shadow-lg">
@@ -212,6 +235,45 @@ export const ProductModal = ({
                 <p className="text-red-500 text-xs">
                   {errors?.sellPrice?.message}
                 </p>
+              </div>
+            </div>
+            <div className="flex flex-col">
+              <label className="text-md max-lg:text-md">{t("Category")}</label>
+              <div className="relative">
+                <div className="w-full border-mainBorder border p-2 items-center rounded-lg flex justify-between">
+                  <span>{selectedCategory?.name || "Select Category"}</span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowCategoryDropDown(!showCategoryDropDown)
+                    }
+                    className="cursor-pointer"
+                  >
+                    <RightArrow
+                      className={`${
+                        showCategoryDropDown ? "rotate-90" : "rotate-270"
+                      }  size-8`}
+                    />
+                  </button>
+                </div>
+                {showCategoryDropDown && (
+                  <div className="w-full h-24 border border-mainBorder rounded-lg overflow-auto absolute z-50 bg-white   text-xl">
+                    {data?.map((dt) => (
+                      <div
+                        onClick={() => handleCategoryChange(dt)}
+                        className="hover:bg-gray-200 cursor-pointer p-3"
+                      >
+                        {dt.name}{" "}
+                      </div>
+                    ))}
+                    <div
+                      onClick={() => handleCategoryChange(null)}
+                      className="p-3 cursor-pointer hover:bg-gray-200"
+                    >
+                      Bos
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

@@ -25,6 +25,11 @@ export const SupplierSlice = createApi({
     getSupplierById: build.query({
       query: (id) => `/suppliers/${id}`,
     }),
+    getSupplierByQuery: build.query({
+      query: (query) => ({
+        url: `/suppliers/query?query=${query}`,
+      }),
+    }),
     getSupplierTransactionsById: build.query({
       query: (supplierId) => `/supplier-transactions/${supplierId}`,
     }),
@@ -51,6 +56,10 @@ export const SupplierSlice = createApi({
         body: data,
       }),
     }),
+    getSupplierInvoice: build.query({
+      query: ({ supplier_id, transaction_id }) =>
+        `/supplier-transactions/v2/${supplier_id}/${transaction_id}`,
+    }),
   }),
 });
 
@@ -66,4 +75,7 @@ export const {
 
   useCreateSupplierInvoiceMutation,
   useDeleteSupplierTransactionMutation,
+
+  useGetSupplierInvoiceQuery,
+  useGetSupplierByQueryQuery,
 } = SupplierSlice;

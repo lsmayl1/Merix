@@ -19,15 +19,25 @@ export const CategoryDetails = () => {
     columnHelper.accessor("stock", {
       header: "Stock Count",
       cellClassName: "text-center",
-      cell: ({ row }) => <span>{row.original.stock?.current_stock || 0} </span>,
+      cell: ({ row }) => (
+        <span>
+          {parseFloat(row.original.stock?.current_stock).toFixed(2) || 0}{" "}
+        </span>
+      ),
     }),
     columnHelper.accessor("soldCount", {
       header: "sold Count",
       cellClassName: "text-center",
     }),
+    columnHelper.accessor("sellPrice", {
+      header: "Price",
+      cellClassName: "text-center",
+      cell: ({ row }) => <span>{row.original.sellPrice + " ₼"}</span>,
+    }),
     columnHelper.accessor("amount", {
       header: "Amount",
       cellClassName: "text-center",
+      cell: ({ row }) => <span>{row.original.amount + " ₼"}</span>,
     }),
   ];
   return (
@@ -41,7 +51,7 @@ export const CategoryDetails = () => {
           { label: "Profit", value: data?.totalProfit },
         ]}
       />
-      <div className=" bg-white h-full p-4 rounded-lg">
+      <div className=" bg-white h-full p-4 rounded-lg overflow-auto">
         <Table columns={columns} data={data?.products} />
       </div>
     </div>

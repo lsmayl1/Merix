@@ -7,10 +7,12 @@ import { SearchIcon } from "../../assets/SearchIcon";
 import { Table } from "../../components/Table";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Details } from "../../assets/Details";
+import axios from "axios";
 import {
   useDeleteSaleMutation,
   useGetAllSalesMutation,
   useGetSaleMetricsMutation,
+  useLazyPrintSaleReceiptQuery,
 } from "../../redux/slices/ApiSlice";
 import { SaleDetailsModal } from "../../components/Reports/SaleDetailsModal";
 import { DateRange } from "../../components/Date/DateRange";
@@ -18,6 +20,7 @@ import { useTranslation } from "react-i18next";
 import TrashBin from "../../assets/TrashBin";
 import { Cash } from "../../assets/Cash";
 import { CreditCard } from "../../assets/CreditCard";
+import { PrintIcon } from "../../assets/PrintIcon";
 
 export const SalesReports = () => {
   const { t } = useTranslation();
@@ -88,19 +91,41 @@ export const SalesReports = () => {
       cellClassName: "text-center",
     }),
     columnHelper.accessor("delete", {
-      header: t("delete"),
+      header: t("Print / Delete"),
       headerClassName: "text-center bg-gray-100 rounded-e-lg",
       cell: ({ row }) => (
-        <button
-          onClick={() => handleDeleteSale(row?.original?.sale_id)}
-          className="text-mainText hover:underline"
-        >
-          <TrashBin />
-        </button>
+        <div cname="flex gap-2 justify-center w-full items-center gap-4">
+          <button
+            onClick={() => handlePrintReceipt(row?.original?.sale_id)}
+            className="text-mainText hover:underline mr-4"
+          >
+            <PrintIcon className={"text-black size-6"} />
+          </button>
+          <button
+            onClick={() => handleDeleteSale(row?.original?.sale_id)}
+            className="text-mainText hover:underline"
+          >
+            <TrashBin className={"size-6"} />
+          </button>
+        </div>
       ),
+
       cellClassName: "text-center",
     }),
   ];
+
+  const [triggerPrintReceipt] = useLazyPrintSaleReceiptQuery();
+
+  const handlePrintReceipt = async (id) => {
+    try {
+      if (!window.confirm("Çap etmək istədiyinizə əminsiniz?")) return;
+      await triggerPrintReceipt(id).unwrap();
+    } catch (error) {
+      console.error("Failed to print receipt:", error);
+      alert("Failed to print receipt. Please try again.");
+    }
+  };
+
   const handleDetails = (id) => {
     if (!id) return;
     setSelectedSale(id);

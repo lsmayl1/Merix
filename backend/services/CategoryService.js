@@ -84,11 +84,6 @@ const getCategoryById = async (id) => {
         {
           model: Sales,
           as: "sale",
-          where: {
-            date: {
-              [Op.between]: [startOfToday, endOfToday],
-            },
-          },
         },
       ],
     });

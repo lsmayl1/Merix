@@ -2,11 +2,13 @@ const express = require("express");
 const router = express.Router();
 
 const { Suppliers, SupplierTransactions } = require("../../models/index");
+const { GetSupplierByQuery } = require("../../services/SupplierService");
 
 // Get all suppliers
 router.get("/", async (req, res) => {
   try {
     const suppliers = await Suppliers.findAll({
+      order: [["name", "ASC"]],
       include: {
         model: SupplierTransactions,
         as: "transactions",
@@ -37,7 +39,7 @@ router.get("/", async (req, res) => {
 
       return {
         ...supplierData,
-        totalDebt,
+        totalDebt: totalDebt > 0 ? totalDebt.toFixed(2) : "",
       };
     });
 
@@ -84,6 +86,17 @@ router.get("/", async (req, res) => {
     });
 
     res.status(200).json(suppliersWithDebt);
+  } catch (error) {
+    console.error("Error fetching suppliers:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+router.get("/query", async (req, res) => {
+  const { query } = req.query;
+  try {
+    const suppliers = await GetSupplierByQuery(query);
+
+    res.status(200).json(suppliers);
   } catch (error) {
     console.error("Error fetching suppliers:", error);
     res.status(500).json({ error: "Internal server error" });

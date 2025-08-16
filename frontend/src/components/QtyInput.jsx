@@ -11,10 +11,15 @@ export const QtyInput = ({ barcode, handleQty, qty, className, allign }) => {
       setNewQty(parseFloat(qty).toFixed(2) || 0);
     }
   }, [qty]);
+
+  const handleChangeQty = (e, barcode, action) => {
+    e.stopPropagation();
+    handleQty(barcode, action);
+  };
   return (
     <div className={`flex items-center ${allign} `}>
       <button
-        onClick={() => handleQty(barcode, "deacrese")}
+        onClick={(e) => handleChangeQty(e, barcode, "deacrese")}
         className="bg-white border border-mainBorder rounded-lg p-0.5"
       >
         <Minus className="size-4 text-black" />
@@ -34,7 +39,7 @@ export const QtyInput = ({ barcode, handleQty, qty, className, allign }) => {
       />
 
       <button
-        onClick={() => handleQty(barcode, "increase")}
+        onClick={(e) => handleChangeQty(e, barcode, "increase")}
         className="bg-white border border-mainBorder rounded-lg p-0.5"
       >
         <Plus className="size-4 text-black" />

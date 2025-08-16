@@ -1,17 +1,25 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { KPI } from "../../components/Metric/KPI";
 import { t } from "i18next";
 import { NavLink } from "react-router-dom";
 import {
   useCreateSupplierMutation,
+  useGetSupplierByQueryQuery,
   useGetSuppliersQuery,
   useGetTotalPaymentsMetricQuery,
 } from "../../redux/slices/SupplierSlice";
 import { Modal } from "../../components/Supplier/Modal";
 import { Plus } from "../../assets/Plus";
+import { SearchIcon } from "../../assets/SearchIcon";
 
 export const Suppliers = () => {
-  const { data, refetch } = useGetSuppliersQuery();
+  const { data: AllSuppliers, refetch } = useGetSuppliersQuery();
+  const [searchQuery, setSearchQuery] = useState("");
+  const { data: suppliersData, refetch: suppliersRefetch } =
+    useGetSupplierByQueryQuery(searchQuery, {
+      skip: !searchQuery,
+    });
+  const [data, setData] = useState(AllSuppliers);
   const [showModal, setShowModal] = useState(false);
   const [createSupplier] = useCreateSupplierMutation();
   const { data: metric } = useGetTotalPaymentsMetricQuery();
@@ -25,6 +33,15 @@ export const Suppliers = () => {
       console.error("Failed to create supplier:", error);
     }
   };
+
+  useEffect(() => {
+    if (searchQuery) {
+      suppliersRefetch();
+      setData(suppliersData || []);
+    } else {
+      setData(AllSuppliers || []);
+    }
+  }, [searchQuery, suppliersRefetch, AllSuppliers, suppliersData]);
   return (
     <div className="w-full flex flex-col gap-2 h-full py-2 ">
       <div className="flex items-center gap-2 w-full">
@@ -46,9 +63,16 @@ export const Suppliers = () => {
           <Modal onSubmit={onSubmit} handleClose={() => setShowModal(false)} />
         )}
         <div className="flex items-center justify-between ">
-          <h1 className="text-2xl font-semibold text-gray-800">
-            {t("supplier")}
-          </h1>
+          <div className="flex  items-center  w-full max-w-md">
+            <SearchIcon className={"size-6"} />
+            <input
+              type="text"
+              placeholder="Search Supplier By Name"
+              className="p-2 w-full  rounded-lg text-lg"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
 
           <button
             onClick={() => setShowModal(true)}

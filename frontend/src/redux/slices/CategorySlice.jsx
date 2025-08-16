@@ -6,10 +6,13 @@ export const CategorySlice = createApi({
   reducerPath: "category",
   baseQuery,
   endpoints: (build) => ({
+    getCategories: build.query({
+      query: () => "/category",
+    }),
     getCategoryById: build.query({
       query: (id) => `/category/${id}`,
     }),
   }),
 });
 
-export const { useGetCategoryByIdQuery } = CategorySlice;
+export const { useGetCategoryByIdQuery, useGetCategoriesQuery } = CategorySlice;

@@ -105,8 +105,6 @@ export const ProductShortcuts = ({
     }
   };
 
-
-
   return (
     <div className="flex-1 min-h-0 overflow-auto relative">
       {showAddModal && (
@@ -120,11 +118,11 @@ export const ProductShortcuts = ({
                 className="border border-mainBorder rounded-lg py-2 px-10 w-full"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={(e) => {
-                  if ((e.key = "Enter")) {
-                    setQuery(e.target.value);
-                  }
-                }}
+                // onKeyDown={(e) => {
+                //   if (e.key === "Enter") {
+                //     setQuery(e.target.value);
+                //   }
+                // }}
               />
               <SearchIcon className="absolute left-2" />
               <button
@@ -152,6 +150,9 @@ export const ProductShortcuts = ({
         {shortCuts?.map((item, index) => (
           <li
             key={index}
+            onClick={(e) => (
+              e.stopPropagation(), handleChangeQty(item.barcode, "increase")
+            )}
             onContextMenu={(e) => {
               e.preventDefault();
               if (openContext == item.barcode) {
@@ -160,7 +161,7 @@ export const ProductShortcuts = ({
                 setOpenContext(item.barcode);
               }
             }}
-            className={`flex flex-col relative px-4 py-2 justify-between  rounded-lg  border border-mainBorder ${
+            className={`flex cursor-pointer  flex-col relative px-4 py-2 justify-between  rounded-lg  border border-mainBorder ${
               data?.find((x) => x.barcode == item.barcode)
                 ? "bg-blue-600 text-white"
                 : "bg-white"

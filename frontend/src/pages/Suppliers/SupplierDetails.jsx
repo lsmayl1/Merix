@@ -8,6 +8,7 @@ import {
   useCreateSupplierTransactionMutation,
   useDeleteSupplierTransactionMutation,
   useGetSupplierByIdQuery,
+  useGetSupplierInvoiceQuery,
   useGetSupplierTransactionsByIdQuery,
 } from "../../redux/slices/SupplierSlice";
 import { SupplierInvoiceModal } from "../../components/Supplier/TransactionModal";
@@ -20,7 +21,17 @@ import { InvoiceView } from "../../components/Supplier/InvoiceView";
 
 export const SupplierDetails = () => {
   const { id } = useParams();
+  const [transactionId, setTransactionId] = useState(null);
   const { data } = useGetSupplierByIdQuery(id);
+  const { data: supplierInvoiceData } = useGetSupplierInvoiceQuery(
+    {
+      supplier_id: id,
+      transaction_id: transactionId,
+    },
+    {
+      skip: !id || !transactionId, // ID'lerden biri yoksa request atma
+    }
+  );
   const { data: transactions, refetch } =
     useGetSupplierTransactionsByIdQuery(id);
   const [createTransaction] = useCreateSupplierTransactionMutation();
@@ -57,7 +68,7 @@ export const SupplierDetails = () => {
         <div className="flex justify-center  gap-4">
           <button
             className="cursor-pointer"
-            // onClick={() => handleDeleteTransaction(row.original.id)}
+            onClick={() => handleShowInvoice(row.original.id)}
           >
             <Invoice className="size-5" />
           </button>
@@ -86,6 +97,7 @@ export const SupplierDetails = () => {
   ];
   const [showModal, setShowModal] = useState(false);
   const [showDebtModal, setShowDebtModal] = useState(false);
+  const [showInvoice, setShowInvoice] = useState(false);
 
   const handleTransactionSubmit = async (data) => {
     try {
@@ -125,6 +137,12 @@ export const SupplierDetails = () => {
     }
   };
 
+  const handleShowInvoice = async (id) => {
+    if (!id) return;
+    setTransactionId(id);
+    setShowInvoice(true);
+  };
+
   return (
     <div className="p-4 flex flex-col gap-4 w-full h-full">
       <div className="items-center flex gap-12  w-full  justify-between ">
@@ -139,7 +157,15 @@ export const SupplierDetails = () => {
         </div>
       </div>
       <div className="flex flex-col bg-white w-full h-full  rounded-lg  relative">
-        <InvoiceView />
+        {showInvoice && (
+          <InvoiceView
+            handleClose={() => {
+              setShowInvoice(false);
+              setTransactionId(false);
+            }}
+            data={supplierInvoiceData}
+          />
+        )}
         {showModal && (
           <SupplierInvoiceModal
             handleClose={() => setShowModal(false)}
