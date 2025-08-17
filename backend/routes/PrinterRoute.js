@@ -39,28 +39,57 @@ router.post("/label-print", async (req, res) => {
 
     doc.registerFont("Inter", "./utils/fonts/Inter.ttf");
 
+    // ...existing code...
     const productName = product.name || "Ürün Adı";
     const priceText = `${product.sellPrice} ₼` || "Fiyat Bilgisi";
-    const nameFontSize = 18;
+    const nameFontSize = 14;
     const priceFontSize = 24;
+    const maxCharsPerLine = 18;
 
-    // Add content
+    // Word wrap: kelime bölmeden satırları oluştur
+    function wrapWords(str, maxLen) {
+      const words = str.split(" ");
+      const lines = [];
+      let line = "";
+      words.forEach((word) => {
+        if ((line + (line ? " " : "") + word).length <= maxLen) {
+          line += (line ? " " : "") + word;
+        } else {
+          if (line) lines.push(line);
+          line = word;
+        }
+      });
+      if (line) lines.push(line);
+      return lines;
+    }
+
+    const nameLines = wrapWords(productName, maxCharsPerLine);
+
+    // Calculate total height for all name lines and price
     doc.font("Inter").fontSize(nameFontSize);
-    const nameWidth = doc.widthOfString(productName);
-    const nameHeight = doc.currentLineHeight();
+    const nameLineHeight = doc.currentLineHeight();
+    const totalNameHeight = nameLineHeight * nameLines.length;
 
     doc.font("Inter").fontSize(priceFontSize);
-    const priceWidth = doc.widthOfString(priceText);
     const priceHeight = doc.currentLineHeight();
 
-    const totalHeight = nameHeight + priceHeight + 2;
+    const totalHeight = totalNameHeight + priceHeight + 2;
     const startY = (height - totalHeight) / 2;
 
+    // Write product name lines, centered
     doc.font("Inter").fontSize(nameFontSize);
-    doc.text(productName, (width - nameWidth) / 2, startY);
+    let y = startY;
+    nameLines.forEach((line) => {
+      const lineWidth = doc.widthOfString(line);
+      doc.text(line, (width - lineWidth) / 2, y);
+      y += nameLineHeight;
+    });
 
+    // Write price, centered
     doc.font("Inter").fontSize(priceFontSize);
-    doc.text(priceText, (width - priceWidth) / 2, startY + nameHeight + 4);
+    const priceWidth = doc.widthOfString(priceText);
+    doc.text(priceText, (width - priceWidth) / 2, y + 4);
+    // ...existing code...
 
     // Save PDF to file
     const stream = fs.createWriteStream(tempPath);

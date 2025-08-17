@@ -27,6 +27,7 @@ import { useTranslation } from "react-i18next";
 import { Details } from "../../assets/Details";
 import { PrintComponent } from "../../components/PrintComponent";
 import { toast, ToastContainer } from "react-toastify";
+import { PrintIcon } from "../../assets/PrintIcon";
 
 export const Products = () => {
   const { t } = useTranslation();
@@ -93,7 +94,7 @@ export const Products = () => {
       headerClassName: "text-center rounded-e-lg bg-gray-100",
       cellClassName: "text-center",
       cell: ({ row }) => (
-        <div className="flex justify-center  gap-4">
+        <div className="flex justify-center  gap-6">
           <button
             className="cursor-pointer"
             onClick={() => handleEditProduct(row.original.product_id)}
@@ -108,10 +109,10 @@ export const Products = () => {
             <Details className="size-5" />
           </NavLink>
           <button
-            onClick={() => handlePrintProductLabel(row.original.product_id)}
+            onClick={() => handlePrintProductLabel(row.original.barcode)}
             className="cursor-pointer text-black"
           >
-            Print
+            <PrintIcon className={"size-6"} />
           </button>
           <button
             className="cursor-pointer"
@@ -249,7 +250,7 @@ export const Products = () => {
 
   const handlePrintProductLabel = async (product) => {
     try {
-      const response = await printProductLabel(product).unwrap();
+      const response = await printProductLabel({ barcode: product }).unwrap();
       if (response) {
         toast.success("Yazdırma işlemi başarılı!");
       }

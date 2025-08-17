@@ -40,7 +40,7 @@ export const ApiSlice = createApi({
     }),
     printProductLabel: build.mutation({
       query: (product) => ({
-        url: "//print-label",
+        url: "printer/label-print",
         method: "POST",
         body: product,
       }),

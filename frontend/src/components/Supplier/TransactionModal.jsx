@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import TrashBin from "../../assets/TrashBin";
 import { BarcodeField } from "../BarcodeField";
 import {
+  useGetBarcodeMutation,
   useGetProductByIdQuery,
   useGetProductsByQueryQuery,
   useLazyGetProductByIdQuery,
@@ -16,6 +17,7 @@ import { Plus } from "../../assets/Plus";
 
 export const SupplierInvoiceModal = ({ handleClose, onSubmit }) => {
   const { t } = useTranslation();
+  const [generateBarcode] = useGetBarcodeMutation();
   const [transactionType, setTransactionType] = useState("purchase");
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [date, setDate] = useState(null);
@@ -115,7 +117,7 @@ export const SupplierInvoiceModal = ({ handleClose, onSubmit }) => {
 
   const AddProductFromSearch = async (barcode) => {
     console.log(barcode);
-    
+
     // Önce mevcut listeyi kontrol et
     if (!barcode) {
       return;
@@ -153,8 +155,27 @@ export const SupplierInvoiceModal = ({ handleClose, onSubmit }) => {
   const addProduct = () => {
     setProductList([
       ...productList,
-      { name: "", barcode: "", buyPrice: 0, quantity: 0, amount: 0 },
+      {
+        name: "",
+        barcode: "",
+        unit: "piece",
+        buyPrice: 0,
+        quantity: 0,
+        amount: 0,
+      },
     ]);
+  };
+
+  const generateNewBarcode = async (unit, index) => {
+    try {
+      const newBarcode = await generateBarcode({ unit: unit }).unwrap();
+      const updated = [...productList];
+      updated[index].barcode = newBarcode.barcode;
+      setProductList(updated);
+      console.log("Yeni barkod oluşturuldu:", newBarcode);
+    } catch (error) {
+      console.error("Barcode oluşturulurken hata:", error);
+    }
   };
 
   const removeProduct = (index) => {
@@ -162,19 +183,22 @@ export const SupplierInvoiceModal = ({ handleClose, onSubmit }) => {
     setProductList(updated);
   };
   return (
-    <div className="absolute right-0 top-0 w-full flex-col gap-4 h-full flex  ">
-      <div className="absolute right-0 top-0"></div>
-      <div className="flex gap-4 overflow-auto flex-col  bg-white  w-full h-full border border-mainBorder  rounded-lg  p-4">
-        <div className="flex justify-between items-center">
-          <SearchModal
-            query={query}
-            setQuery={setQuery}
-            data={data}
-            handleAdd={AddProductFromSearch}
-          />
-          {/* Toplam */}
+    <div className="absolute right-0 top-0 w-full flex-col gap-4 h-full flex bg-white border border-mainBorder rounded-lg p-4">
+      <div className="w-full flex gap-4 items-center justify-between">
+        <div className="flex flex-col gap-4 w-1/6">
           <div className="flex gap-4 items-center">
-            <div className="flex">
+            <h1>Tarix: </h1>
+            <input
+              type="date"
+              className="border border-mainBorder rounded-lg px-4 py-2 w-full"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+            />
+          </div>
+          <div className="flex justify-between items-center">
+            <h1 className="w-full">Əməliyyat :</h1>
+
+            <div className="flex items-center">
               <button
                 onClick={() => handleTransactionTypeChange("purchase")}
                 className={`border bg-white ${
@@ -183,7 +207,7 @@ export const SupplierInvoiceModal = ({ handleClose, onSubmit }) => {
                     : "border-mainBorder"
                 } rounded-l-lg text-nowrap px-4 cursor-pointer max-md:px-2 max-md:text-xs flex items-center  gap-2 py-1 max-md:py-0`}
               >
-                {t("Giris")}
+                {t("Alim")}
               </button>
               <button
                 onClick={() => handleTransactionTypeChange("return")}
@@ -193,29 +217,67 @@ export const SupplierInvoiceModal = ({ handleClose, onSubmit }) => {
                     : "border-mainBorder"
                 }  rounded-e-lg text-nowrap px-4 cursor-pointer max-md:px-2 max-md:text-xs flex items-center gap-2 py-1 max-md:py-0`}
               >
-                {t("Cixis")}
+                {t("Qaytarma")}
               </button>
             </div>
+          </div>
+          <div className="flex justify-between items-center">
+            <h1>Odenis Novu :</h1>
 
-            <BarcodeField handleBarcode={handleBarcode} />
+            <div className="flex items-center">
+              <button
+                onClick={() => handleTransactionTypeChange("purchase")}
+                className={`border bg-white ${
+                  transactionType === "purchase"
+                    ? "border-green-500 text-green-500"
+                    : "border-mainBorder"
+                } rounded-l-lg text-nowrap px-4 cursor-pointer max-md:px-2 max-md:text-xs flex items-center  gap-2 py-1 max-md:py-0`}
+              >
+                {t("Nagd")}
+              </button>
+              <button
+                onClick={() => handleTransactionTypeChange("return")}
+                className={`border ${
+                  transactionType === "return"
+                    ? "border-red-500 text-red-500"
+                    : "border-mainBorder"
+                }  rounded-e-lg text-nowrap px-4 cursor-pointer max-md:px-2 max-md:text-xs flex items-center gap-2 py-1 max-md:py-0`}
+              >
+                {t("Nisiye")}
+              </button>
+            </div>
           </div>
-          <div className=" flex gap-2 items-center text-mainText font-semibold">
-            Toplam:{" "}
-            <span className="text-black text-xl">
-              {productList
-                ?.reduce(
-                  (total, p) => total + (p.buyPrice || 0) * (p.quantity || 0),
-                  0
-                )
-                .toFixed(2)}
-            </span>
-          </div>
+        </div>
+        <div className="flex justify-end gap-2 h-fit">
+          <button
+            onClick={handleClose}
+            className="border bg-white border-red-500 rounded-xl text-nowrap px-4 cursor-pointer max-md:px-2 max-md:text-xs flex items-center text-red-500 gap-2 py-1 max-md:py-0"
+          >
+            {t("cancel")}
+          </button>
+          <button
+            onClick={handleSubmitInvoice}
+            className="border bg-white border-blue-500 text-blue-500 rounded-xl text-nowrap px-4 cursor-pointer max-md:px-2 max-md:text-xs flex items-center gap-2 py-1 max-md:py-0"
+          >
+            {t("create")}
+          </button>
+        </div>
+      </div>
+      <div className="flex gap-4 overflow-auto flex-col  bg-white  w-full h-full ">
+        <div className="flex justify-between items-center">
+          <SearchModal
+            query={query}
+            setQuery={setQuery}
+            data={data}
+            handleAdd={AddProductFromSearch}
+          />
+          <BarcodeField handleBarcode={handleBarcode} />
         </div>{" "}
         <div className="w-full h-full">
           {/* Tablo Başlıkları */}
           <div className="grid grid-cols-7 font-bold text-sm bg-gray-100 ">
             {columns.map((col, idx) => (
-              <div key={idx} className="p-2">
+              <div key={idx} className="p-2 text-lg font-light">
                 {col.label}
               </div>
             ))}
@@ -230,20 +292,40 @@ export const SupplierInvoiceModal = ({ handleClose, onSubmit }) => {
                 value={product.name}
                 onChange={(e) => updateProduct(index, "name", e.target.value)}
               />
-              <input
-                className="p-2 border border-mainBorder"
-                placeholder="Barcode"
-                value={product.barcode}
-                onChange={(e) =>
-                  updateProduct(index, "barcode", e.target.value)
-                }
-              />
-              <input
-                className="p-2 border border-mainBorder"
-                placeholder="Unit"
-                value={product.unit}
-                onChange={(e) => updateProduct(index, "unit", e.target.value)}
-              />
+              <div className="flex gap-2 items-center h-full w-full  border-mainBorder border pr-2">
+                <input
+                  className="p-2  w-full h-full"
+                  placeholder="Barcode"
+                  value={product.barcode}
+                  onChange={(e) =>
+                    updateProduct(index, "barcode", e.target.value)
+                  }
+                />
+                <button
+                  className="p-2 border border-mainBorder text-blue-500 rounded-lg"
+                  onClick={() => generateNewBarcode(product.unit, index)}
+                >
+                  <Plus />
+                </button>
+              </div>
+              <div className="flex gap-2 border border-mainBorder items-center p-1">
+                <button
+                  onClick={() => updateProduct(index, "unit", "piece")}
+                  className={`p-2 border border-mainBorder rounded-lg ${
+                    product.unit === "piece" ? "bg-blue-500 text-white" : ""
+                  }`}
+                >
+                  Piece
+                </button>
+                <button
+                  onClick={() => updateProduct(index, "unit", "kg")}
+                  className={`p-2 border border-mainBorder rounded-lg ${
+                    product.unit === "kg" ? "bg-blue-500 text-white" : ""
+                  }`}
+                >
+                  KG
+                </button>
+              </div>
               <input
                 type="number"
                 step="0.01"
@@ -305,19 +387,16 @@ export const SupplierInvoiceModal = ({ handleClose, onSubmit }) => {
             </button>
           </div>
         </div>
-        <div className="flex justify-end gap-2">
-          <button
-            onClick={handleClose}
-            className="border bg-white border-red-500 rounded-xl text-nowrap px-4 cursor-pointer max-md:px-2 max-md:text-xs flex items-center text-red-500 gap-2 py-1 max-md:py-0"
-          >
-            {t("cancel")}
-          </button>
-          <button
-            onClick={handleSubmitInvoice}
-            className="border bg-white border-blue-500 text-blue-500 rounded-xl text-nowrap px-4 cursor-pointer max-md:px-2 max-md:text-xs flex items-center gap-2 py-1 max-md:py-0"
-          >
-            {t("create")}
-          </button>
+        <div className=" flex gap-2 justify-end items-center text-mainText font-semibold">
+          Toplam:{" "}
+          <span className="text-black text-xl">
+            {productList
+              ?.reduce(
+                (total, p) => total + (p.buyPrice || 0) * (p.quantity || 0),
+                0
+              )
+              .toFixed(2)}
+          </span>
         </div>
       </div>
     </div>

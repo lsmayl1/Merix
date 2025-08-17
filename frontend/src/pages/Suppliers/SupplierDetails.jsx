@@ -18,6 +18,7 @@ import TrashBin from "../../assets/TrashBin";
 import { DebtModal } from "../../components/Supplier/DebtModal";
 import { Invoice } from "../../assets/Navigation/Invoice";
 import { InvoiceView } from "../../components/Supplier/InvoiceView";
+import Receipt from "../../assets/Navigation/Receipt";
 
 export const SupplierDetails = () => {
   const { id } = useParams();
@@ -178,7 +179,7 @@ export const SupplierDetails = () => {
             onSubmit={handleTransactionSubmit}
           />
         )}
-        <div className="py-2 px-4 flex justify-end items-center">
+        <div className="py-2 px-4 flex justify-end items-center gap-4">
           <button
             onClick={() => setShowDebtModal(true)}
             className="border bg-white border-gray-200 rounded-xl text-nowrap px-4 cursor-pointer max-md:px-2 max-md:text-xs flex items-center gap-2 py-1 max-md:py-0"
@@ -190,8 +191,8 @@ export const SupplierDetails = () => {
             onClick={() => setShowModal(true)}
             className="border bg-white border-gray-200 rounded-xl text-nowrap px-4 cursor-pointer max-md:px-2 max-md:text-xs flex items-center gap-2 py-1 max-md:py-0"
           >
-            <Plus className="max-md:size-5" />
-            {t("createTransaction")}
+            <Receipt className="max-md:size-5 size-6" />
+            {t("Faktura Əlavə Et")}
           </button>
         </div>
         <div className="flex flex-col gap-4 px-4">
