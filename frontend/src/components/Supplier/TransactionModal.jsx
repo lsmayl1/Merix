@@ -1,14 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { CreditCard } from "../../assets/CreditCard";
-import { Cash } from "../../assets/Cash";
-import CloseSquare from "../../assets/Navigation/CloseSquare";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import TrashBin from "../../assets/TrashBin";
 import { BarcodeField } from "../BarcodeField";
 import {
   useGetBarcodeMutation,
-  useGetProductByIdQuery,
   useGetProductsByQueryQuery,
   useLazyGetProductByIdQuery,
 } from "../../redux/slices/ApiSlice";
@@ -318,11 +314,7 @@ export const SupplierInvoiceModal = ({ handleClose, onSubmit }) => {
                   }
                 />
                 <button
-<<<<<<< HEAD
                   className="p-1 border border-mainBorder text-blue-500 rounded-lg"
-=======
-                  className="p-2 border border-mainBorder text-blue-500 rounded-lg"
->>>>>>> afd882e496a2c8dc597ef6f10fa022864d2b9bbe
                   onClick={() => generateNewBarcode(product.unit, index)}
                 >
                   <Plus />
