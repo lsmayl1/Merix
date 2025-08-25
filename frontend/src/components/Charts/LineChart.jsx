@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -10,8 +10,6 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import axios from "axios";
-import { useGetDailyRevenueQuery } from "../../redux/slices/ApiSlice";
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -22,10 +20,10 @@ ChartJS.register(
   Legend
 );
 
-export const LineChart = ({data,valueKey = "revenue"}) => {
+export const LineChart = ({ data, valueKey = "revenue" }) => {
   // Eğer veri yoksa boş array ata
-  const labels = data ? data.map(item => item.date) : [];
-   const dataPoints = data ? data.map(item => item[valueKey]) : [];
+  const labels = data ? data.map((item) => item.date) : [];
+  const dataPoints = data ? data.map((item) => item[valueKey]) : [];
 
   const chartData = {
     labels: labels,
@@ -87,15 +85,9 @@ export const LineChart = ({data,valueKey = "revenue"}) => {
       },
     },
   };
-  const handleOption = (name) => {
-    setSelectedOption(name);
-    setShowDateOptions(false);
-  };
 
   return (
-    <div
-      className=" h-128 w-full "
-    >
+    <div className=" h-128 w-full ">
       <Line
         data={chartData}
         style={{

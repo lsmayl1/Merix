@@ -2,21 +2,6 @@ import React from "react";
 export const StockList = () => {
   const [data, setData] = React.useState([]);
 
-  const { API } = useApi();
-
-  const fetchData = async () => {
-    try {
-      const res = await fetch(`${API}/products/stocks/data`);
-      const json = await res.json();
-      setData(json);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  React.useEffect(() => {
-    fetchData();
-  }, [API]);
   return (
     <div className="h-full w-5/12  border border-newborder rounded-lg  overflow-auto flex flex-col max-md:order-1 max-md:h-1/2 max-md:w-full">
       <div className="p-4">

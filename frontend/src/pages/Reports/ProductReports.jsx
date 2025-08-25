@@ -1,15 +1,11 @@
 import React, { useEffect, useState } from "react";
-import Calendar from "../../assets/Calendar";
 import { KPI } from "../../components/Metric/KPI";
 import { Filters } from "../../assets/Filters";
 import { FiltersModal } from "../../components/Filters/FiltersModal";
-import { SearchIcon } from "../../assets/SearchIcon";
 import { Table } from "../../components/Table";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Details } from "../../assets/Details";
 import { DateRange } from "../../components/Date/DateRange";
 import {
-  useGetProductsMetricsQuery,
   useGetProductSoldMetricsMutation,
   useGetProductsReportMutation,
 } from "../../redux/slices/ApiSlice";
@@ -21,7 +17,6 @@ export const ProductReports = () => {
   const [metricData, setMetricData] = useState({});
   const [data, setData] = useState([]);
   const [showFiltersModal, setShowFiltersModal] = useState(false);
-  const [inputValue, setInputValue] = useState("");
   const columnHelper = createColumnHelper();
   const [range, setRange] = useState({
     from: "",
@@ -45,9 +40,7 @@ export const ProductReports = () => {
       headerClassName: "text-center bg-gray-100",
       cellClassName: "text-center",
       cell: (info) => (
-        <span>
-          {info.getValue() === "pcs" ? t("piece") : info.getValue()}
-        </span>
+        <span>{info.getValue() === "pcs" ? t("piece") : info.getValue()}</span>
       ),
     }),
     columnHelper.accessor("totalRevenue", {
@@ -60,7 +53,7 @@ export const ProductReports = () => {
       headerClassName: "text-center bg-gray-100",
       cellClassName: "text-center",
     }),
-     columnHelper.accessor("profitMargin", {
+    columnHelper.accessor("profitMargin", {
       header: t("profitMargin"),
       headerClassName: "text-center bg-gray-100",
       cellClassName: "text-center",

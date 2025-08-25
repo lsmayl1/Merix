@@ -1,11 +1,9 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useQuery } from "@tanstack/react-query";
 import { CloseIcon } from "../assets/Close";
 import { FormatDate } from "./utils/DateFunctions";
 
 export const PosReports = ({ handleClose }) => {
-  const { API } = useApi();
   const [data, setData] = useState({});
 
   function getTodayRangeUTC() {

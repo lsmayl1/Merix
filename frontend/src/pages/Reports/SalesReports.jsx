@@ -1,13 +1,10 @@
 import React, { useEffect, useState } from "react";
-import Calendar from "../../assets/Calendar";
 import { KPI } from "../../components/Metric/KPI";
 import { Filters } from "../../assets/Filters";
 import { FiltersModal } from "../../components/Filters/FiltersModal";
-import { SearchIcon } from "../../assets/SearchIcon";
 import { Table } from "../../components/Table";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Details } from "../../assets/Details";
-import axios from "axios";
 import {
   useDeleteSaleMutation,
   useGetAllSalesMutation,

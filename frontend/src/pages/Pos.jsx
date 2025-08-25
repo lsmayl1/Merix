@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Plus } from "../assets/Plus";
-import { SearchIcon } from "../assets/SearchIcon";
 import { Logout } from "../assets/Logout";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Table } from "../components/Table";
