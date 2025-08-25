@@ -1,49 +1,9 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import { CloseIcon } from "../assets/Close";
 import { FormatDate } from "./utils/DateFunctions";
 
 export const PosReports = ({ handleClose }) => {
   const [data, setData] = useState({});
-
-  function getTodayRangeUTC() {
-    const now = new Date();
-    const start = new Date(
-      Date.UTC(
-        now.getUTCFullYear(),
-        now.getUTCMonth(),
-        now.getUTCDate(),
-        0,
-        0,
-        0,
-        0
-      )
-    );
-    const end = new Date(
-      Date.UTC(
-        now.getUTCFullYear(),
-        now.getUTCMonth(),
-        now.getUTCDate(),
-        23,
-        59,
-        59,
-        999
-      )
-    );
-    return { from: start, to: end };
-  }
-
-  useEffect(() => {
-    const getReport = async () => {
-      try {
-        const res = await axios.post(`${API}/reports`, getTodayRangeUTC());
-        setData(res.data);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    getReport();
-  }, []);
 
   useEffect(() => {
     const closePage = (e) => {

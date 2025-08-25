@@ -232,15 +232,9 @@ export const SupplierInvoiceModal = ({ handleClose, onSubmit }) => {
 
             <div className="flex items-center">
               <button
-<<<<<<< HEAD
                 onClick={() => handlePaymentMethodChange("cash")}
                 className={`border bg-white ${
                   paymentMethod === "cash"
-=======
-                onClick={() => handleTransactionTypeChange("purchase")}
-                className={`border bg-white ${
-                  transactionType === "purchase"
->>>>>>> afd882e496a2c8dc597ef6f10fa022864d2b9bbe
                     ? "border-green-500 text-green-500"
                     : "border-mainBorder"
                 } rounded-l-lg text-nowrap px-4 cursor-pointer max-md:px-2 max-md:text-xs flex items-center  gap-2 py-1 max-md:py-0`}
@@ -248,7 +242,6 @@ export const SupplierInvoiceModal = ({ handleClose, onSubmit }) => {
                 {t("Nagd")}
               </button>
               <button
-<<<<<<< HEAD
                 onClick={() => handlePaymentMethodChange("card")}
                 className={`border ${
                   paymentMethod === "card"
@@ -262,11 +255,6 @@ export const SupplierInvoiceModal = ({ handleClose, onSubmit }) => {
                 onClick={() => handlePaymentMethodChange("credit")}
                 className={`border ${
                   paymentMethod === "credit"
-=======
-                onClick={() => handleTransactionTypeChange("return")}
-                className={`border ${
-                  transactionType === "return"
->>>>>>> afd882e496a2c8dc597ef6f10fa022864d2b9bbe
                     ? "border-red-500 text-red-500"
                     : "border-mainBorder"
                 }  rounded-e-lg text-nowrap px-4 cursor-pointer max-md:px-2 max-md:text-xs flex items-center gap-2 py-1 max-md:py-0`}
