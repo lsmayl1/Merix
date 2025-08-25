@@ -69,10 +69,13 @@
    "saleAmount": "Satış Məbləği",
   "paymentMethod": "Ödəmə üsulu",
   "details": "Ətraflı",
+  "purchase": "Alım",
+  "payment": "Ödəniş",
 
   
   "cash":"Nağd",
   "card":"Kart",
+  "credit":"Nisiyə",
   "receivedAmount": "Qəbul olunan məbləğ",
   "amountToReturn": "Qaytarılacaq məbləğ",
 

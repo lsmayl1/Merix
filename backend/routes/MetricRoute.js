@@ -12,6 +12,7 @@ const {
   SupplierTransactions,
   Suppliers,
 } = require("../models");
+const { GetSupplierDebt } = require("../services/SupplierService");
 
 router.post("/sale", async (req, res) => {
   const { from, to } = req.body;
@@ -517,26 +518,25 @@ router.get("/profit", async (req, res) => {
 
 router.get("/payments-total", async (req, res) => {
   try {
-    const transactions = await SupplierTransactions.findAll();
     const suppliers = await Suppliers.findAll();
 
-    if (transactions.length === 0) {
-      return res.json({ total: 0 });
+    if (!suppliers || suppliers.length === 0) {
+      return res.json({ total: 0, supplierCount: 0 });
     }
 
     let total = 0;
 
-    transactions.forEach((t) => {
-      if (t.type === "purchase") {
-        total += Number(t.amount); // borc artır
-      } else if (t.type === "payment") {
-        total -= Number(t.amount); // borc azalır
-      }
-    });
+    // bütün supplier-lərin borcunu hesabla
+    await Promise.all(
+      suppliers.map(async (supplier) => {
+        const supplierDebt = await GetSupplierDebt(supplier.id);
+        total += Number(supplierDebt || 0);
+      })
+    );
 
     const supplierCount = suppliers.length;
 
-    res.json({ total: total.toFixed(2), supplierCount }); // bu, ümumi borc miqdarını verir
+    res.json({ total: total.toFixed(2), supplierCount });
   } catch (error) {
     console.error("Error calculating total payments:", error);
     res.status(500).json({ error: "Internal server error" });

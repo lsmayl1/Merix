@@ -8,7 +8,7 @@ import {
   useCreateSupplierTransactionMutation,
   useDeleteSupplierTransactionMutation,
   useGetSupplierByIdQuery,
-  useGetSupplierInvoiceQuery,
+  useGetSupplierInvoiceMutation,
   useGetSupplierTransactionsByIdQuery,
 } from "../../redux/slices/SupplierSlice";
 import { SupplierInvoiceModal } from "../../components/Supplier/TransactionModal";
@@ -18,22 +18,15 @@ import TrashBin from "../../assets/TrashBin";
 import { DebtModal } from "../../components/Supplier/DebtModal";
 import { Invoice } from "../../assets/Navigation/Invoice";
 import { InvoiceView } from "../../components/Supplier/InvoiceView";
+import Receipt from "../../assets/Navigation/Receipt";
 
 export const SupplierDetails = () => {
   const { id } = useParams();
-  const [transactionId, setTransactionId] = useState(null);
   const { data } = useGetSupplierByIdQuery(id);
-  const { data: supplierInvoiceData } = useGetSupplierInvoiceQuery(
-    {
-      supplier_id: id,
-      transaction_id: transactionId,
-    },
-    {
-      skip: !id || !transactionId, // ID'lerden biri yoksa request atma
-    }
-  );
+  const [getSupplierInvociceData] = useGetSupplierInvoiceMutation();
   const { data: transactions, refetch } =
     useGetSupplierTransactionsByIdQuery(id);
+  const [supplierInvoiceData, setSupplierInvoiceData] = useState(null);
   const [createTransaction] = useCreateSupplierTransactionMutation();
   const [deleteTransaction] = useDeleteSupplierTransactionMutation();
   const [createSupplierInvoice] = useCreateSupplierInvoiceMutation();
@@ -55,11 +48,12 @@ export const SupplierDetails = () => {
     columnHelper.accessor("type", {
       header: t("type"),
       cellClassName: "text-center",
+      cell: ({ getValue }) => <span>{t(getValue())}</span>,
     }),
     columnHelper.accessor("payment_method", {
       header: t("paymentMethod"),
       cellClassName: "text-center",
-      cell: ({ getValue }) => (getValue() == "cash" ? t("cash") : t("card")),
+      cell: ({ getValue }) => <span>{t(getValue())}</span>,
     }),
     columnHelper.accessor("invoice", {
       header: t("Invoice"),
@@ -104,13 +98,19 @@ export const SupplierDetails = () => {
       if (!data.amount || data.amount <= 0) {
         throw new Error("Amount must be greater than 0");
       }
+
+      // ✅ unwrap kullanıyoruz ki RTK Query hata fırlatsın
       await createTransaction({
         ...data,
         supplier_id: id,
-      });
-      setShowModal(false);
+      }).unwrap();
+
+      // unwrap başarılıysa response = backend’den gelen data
+      setShowDebtModal(false);
       refetch();
     } catch (error) {
+      // unwrap error’da burası çalışır
+      setShowDebtModal(true);
       console.error("Error creating transaction:", error);
     }
   };
@@ -138,9 +138,23 @@ export const SupplierDetails = () => {
   };
 
   const handleShowInvoice = async (id) => {
-    if (!id) return;
-    setTransactionId(id);
-    setShowInvoice(true);
+    try {
+      if (!id) {
+        throw new Error("Transaction ID is required to fetch invoice data");
+      }
+      const supplierInvoiceData = await getSupplierInvociceData({
+        supplier_id: id,
+        transaction_id: id,
+      }).unwrap();
+
+      if (!supplierInvoiceData || !supplierInvoiceData.transaction) {
+        throw new Error("No invoice data found for this transaction");
+      }
+      setSupplierInvoiceData(supplierInvoiceData);
+      setShowInvoice(true);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
@@ -161,7 +175,6 @@ export const SupplierDetails = () => {
           <InvoiceView
             handleClose={() => {
               setShowInvoice(false);
-              setTransactionId(false);
             }}
             data={supplierInvoiceData}
           />
@@ -178,20 +191,20 @@ export const SupplierDetails = () => {
             onSubmit={handleTransactionSubmit}
           />
         )}
-        <div className="py-2 px-4 flex justify-end items-center">
+        <div className="py-2 px-4 flex justify-end items-center gap-4">
           <button
             onClick={() => setShowDebtModal(true)}
             className="border bg-white border-gray-200 rounded-xl text-nowrap px-4 cursor-pointer max-md:px-2 max-md:text-xs flex items-center gap-2 py-1 max-md:py-0"
           >
             <Plus className="max-md:size-5" />
-            {t("Borc Əməliyyatı")}
+            {t("Odenis et")}
           </button>
           <button
             onClick={() => setShowModal(true)}
             className="border bg-white border-gray-200 rounded-xl text-nowrap px-4 cursor-pointer max-md:px-2 max-md:text-xs flex items-center gap-2 py-1 max-md:py-0"
           >
-            <Plus className="max-md:size-5" />
-            {t("createTransaction")}
+            <Receipt className="max-md:size-5 size-6" />
+            {t("Faktura Əlavə Et")}
           </button>
         </div>
         <div className="flex flex-col gap-4 px-4">

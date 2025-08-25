@@ -472,14 +472,7 @@ export const Pos = () => {
                   </div>
                   <button
                     disabled={data.length == 0 || postLoading}
-                    onClick={() => {
-                      if (
-                        window.confirm(
-                          "Qaytarılma əməliyyatı etmək istədiyinizə əminsiniz?"
-                        )
-                      )
-                        handleSubmitSale("return");
-                    }}
+                    onClick={() => handleSubmitSale("return")}
                     className="flex justify-center  gap-2 items-center border border-mainBorder px-6 h-full rounded-lg w-full"
                   >
                     <Return className={"text-red-500"} />

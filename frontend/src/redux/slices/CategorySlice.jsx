@@ -12,7 +12,18 @@ export const CategorySlice = createApi({
     getCategoryById: build.query({
       query: (id) => `/category/${id}`,
     }),
+    createCategory: build.mutation({
+      query: (body) => ({
+        url: "/category",
+        method: "POST",
+        body,
+      }),
+    }),
   }),
 });
 
-export const { useGetCategoryByIdQuery, useGetCategoriesQuery } = CategorySlice;
+export const {
+  useGetCategoryByIdQuery,
+  useGetCategoriesQuery,
+  useCreateCategoryMutation,
+} = CategorySlice;

@@ -27,6 +27,9 @@ export const InvoiceView = ({ handleClose, data }) => {
       cellClassName: "text-center",
     }),
   ];
+  if (!data || !data.transaction || !data.details) {
+    return;
+  }
   return (
     <div className="flex absolute  w-full h-full   items-center justify-center z-50">
       <div className="flex bg-white min-w-1/2 h-full gap-4 rounded-lg shadow-lg flex-col  pt-4 pb-12 px-6">

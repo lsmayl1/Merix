@@ -20,7 +20,10 @@ const fs = require("fs");
 const AppError = require("./utils/AppError");
 
 dotenv.config({
-  path: process.env.NODE_ENV === "development" ? ".env.development" : ".env",
+  path: path.resolve(
+    __dirname,
+    process.env.NODE_ENV === "development" ? ".env.development" : ".env"
+  ),
 });
 
 app.use(express.json()); // For parsing JSON requests
@@ -78,7 +81,7 @@ if (isDbConfigured) {
 
   // Tüm istekleri React dist klasörüne yönlendir
   app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "../frontend/dist", "index.html"));
+    res.sendFile(path.join(__dirname, "dist", "index.html"));
   });
 
   // app.js ya da middlewares/errorHandler.js

@@ -37,9 +37,12 @@ const GetSupplierByQuery = async (query) => {
         const totalDebt = transactions.reduce((acc, transaction) => {
           const amount = Number(transaction.amount) || 0;
 
-          if (transaction.type === "purchase") {
+          if (transaction.type === "purchase" && payment_method === "credit") {
             return acc + amount;
-          } else if (transaction.type === "payment") {
+          } else if (
+            transaction.type === "payment" &&
+            payment_method === "credit"
+          ) {
             return acc - amount;
           }
           return acc;
@@ -63,11 +66,21 @@ const GetSupplierByQuery = async (query) => {
 };
 
 const CreateTransaction = async (data) => {
-  const { supplier_id, products, transaction_date, transaction_type } = data;
+  const {
+    date,
+    supplier_id,
+    products,
+    transaction_date,
+    transaction_type,
+    payment_method,
+  } = data;
 
   let t; // ← burada tanımlıyoruz
   try {
     // Transaction (veritabanı işlemi) başlatıyoruz
+    if (products.length === 0) {
+      throw new AppError("Products list cannot be empty", 400);
+    }
     t = await Products.sequelize.transaction();
 
     let totalAmount = 0;
@@ -96,7 +109,7 @@ const CreateTransaction = async (data) => {
             name: p.name,
             barcode: p.barcode,
             buyPrice: p.buyPrice,
-            sellPrice: p.sellPrice,
+            sellPrice: p.sellPrice || 0,
             unit: p.unit,
           },
           { transaction: t }
@@ -107,14 +120,19 @@ const CreateTransaction = async (data) => {
         where: { product_id: product.product_id },
         transaction: t,
       });
+
       let stockChange =
-        transaction_type === "purchase" ? p.quantity : -p.quantity;
+        transaction_type === "purchase"
+          ? Number(p.quantity)
+          : -Number(p.quantity);
 
       if (stockRecord) {
+        const prevStock = Number(stockRecord.current_stock) || 0;
+
         // Güncelle
         await stockRecord.update(
           {
-            current_stock: stockRecord.quantity + stockChange,
+            current_stock: prevStock + stockChange,
           },
           { transaction: t }
         );
@@ -123,7 +141,7 @@ const CreateTransaction = async (data) => {
         await ProductStock.create(
           {
             product_id: product.product_id,
-            current_stock: stockChange > 0 ? stockChange : 0, // negatif başlamasın
+            current_stock: stockChange > 0 ? stockChange : 0, // ilk kayıt için negatif olmasın
           },
           { transaction: t }
         );
@@ -141,10 +159,12 @@ const CreateTransaction = async (data) => {
     // 2) SupplierTransaction kaydını oluştur
     const supplierTransaction = await SupplierTransactions.create(
       {
+        date: date || new Date(),
         supplier_id,
         transaction_date: transaction_date || new Date(),
         amount: totalAmount,
         type: transaction_type,
+        payment_method: payment_method,
       },
       { transaction: t }
     );
@@ -248,9 +268,90 @@ const GetSupplierInvoice = async (supplier_id, transaction_id) => {
   }
 };
 
+const GetSupplierDebt = async (id) => {
+  try {
+    if (!id) {
+      throw new AppError("Supplier ID is required", 400);
+    }
+    const supplier = await Suppliers.findOne({
+      where: { id },
+      include: {
+        model: SupplierTransactions,
+        as: "transactions",
+        attributes: ["amount", "type", "payment_method"],
+      },
+    });
+    if (!supplier) {
+      throw new AppError("Supplier not found", 404);
+    }
+    const transactions = supplier.transactions || [];
+    const totalDebt = transactions.reduce((acc, transaction) => {
+      const amount = Number(transaction.amount) || 0;
+
+      if (
+        transaction.type === "purchase" &&
+        transaction.payment_method === "credit"
+      ) {
+        return acc + amount; // borca ekle
+      } else if (
+        transaction.type === "payment" ||
+        transaction.type === "return"
+      ) {
+        return acc - amount; // borçtan düş
+      }
+      return acc;
+    }, 0);
+
+    return totalDebt.toFixed(2);
+  } catch (error) {
+    throw new AppError(
+      "Error fetching supplier debt",
+      500,
+      error.message || "Internal server error"
+    );
+  }
+};
+
+const UpdateSupplierTransaction = async (id, data) => {
+  const {
+    date,
+    supplier_id,
+    transaction_date,
+    transaction_type,
+    payment_method,
+  } = data;
+  try {
+    if (!id) {
+      throw new AppError("Transaction ID is required", 400);
+    }
+    const transaction = await SupplierTransactions.findByPk(id);
+    if (!transaction) {
+      throw new AppError("Transaction not found", 404);
+    }
+    // 1) Transaction güncelle
+    await transaction.update({
+      date: date || transaction.date,
+      supplier_id: supplier_id || transaction.supplier_id,
+      transaction_date: transaction_date || transaction.transaction_date,
+      type: transaction_type || transaction.type,
+      payment_method: payment_method || transaction.payment_method,
+    });
+
+    return {
+      success: true,
+      message: "Transaction updated successfully",
+    };
+  } catch (error) {
+    throw new AppError(error, 500);
+  }
+};
+// 2) Transaction detaylarını sil
+
 module.exports = {
   CreateTransaction,
   GetSupplierTransactionsWithDetails,
   GetSupplierInvoice,
   GetSupplierByQuery,
+  GetSupplierDebt,
+  UpdateSupplierTransaction,
 };

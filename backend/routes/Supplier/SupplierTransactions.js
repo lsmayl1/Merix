@@ -7,6 +7,8 @@ const {
   CreateTransaction,
   GetSupplierTransactionsWithDetails,
   GetSupplierInvoice,
+  GetSupplierDebt,
+  UpdateSupplierTransaction,
 } = require("../../services/SupplierService");
 router.get("/", async (req, res) => {
   try {
@@ -52,6 +54,35 @@ function dateFormatting(date) {
 
   return `${day}-${month}-${year}`; // "26-07-2025"
 }
+router.get("/change-all-cashtocredit", async (_, res) => {
+  try {
+    const suppliers = await Suppliers.findAll({
+      include: {
+        model: SupplierTransactions,
+        as: "transactions",
+        where: { payment_method: "cash" },
+      },
+    });
+
+    if (!suppliers || suppliers.length === 0) {
+      return res.status(404).json({ message: "No suppliers found" });
+    }
+
+    for (const supplier of suppliers) {
+      for (const transaction of supplier.transactions) {
+        transaction.payment_method = "credit";
+        await transaction.save();
+      }
+    }
+
+    res
+      .status(200)
+      .json({ message: "All cash transactions updated to credit" });
+  } catch (error) {
+    console.error("Error updating transactions:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 router.get("/:id", async (req, res) => {
   const { id } = req.params;
@@ -73,28 +104,10 @@ router.get("/:id", async (req, res) => {
         .status(404)
         .json({ message: "No transactions found for this supplier" });
     }
-
-    let totalAmount = 0;
-
-    const formattedTransactions = transactions.map((transaction) => {
-      let amount = parseFloat(transaction.amount);
-
-      if (transaction.type === "payment") {
-        amount = -amount;
-      }
-
-      totalAmount += amount;
-
-      return {
-        ...transaction.toJSON(),
-        date: dateFormatting(transaction.date), // Saat olmadan formatlıyoruz
-        amount,
-      };
-    });
-
+    const totalDebt = await GetSupplierDebt(id);
     res.status(200).json({
-      transactions: formattedTransactions,
-      totalAmount: totalAmount.toFixed(2) + " ₼",
+      transactions,
+      totalAmount: totalDebt + " ₼",
     });
   } catch (error) {
     console.error("Error fetching supplier transactions:", error);
@@ -197,7 +210,7 @@ router.get("/v2/:id", async (req, res, next) => {
   }
 });
 
-router.get("/v2/:supplier_id/:transaction_id", async (req, res, next) => {
+router.post("/v2/:supplier_id/:transaction_id", async (req, res, next) => {
   try {
     const transactionDetails = await GetSupplierInvoice(
       req.params.supplier_id,
@@ -206,6 +219,19 @@ router.get("/v2/:supplier_id/:transaction_id", async (req, res, next) => {
     return res.json(transactionDetails);
   } catch (error) {
     next(error);
+  }
+});
+
+router.put("/:id", async (req, res) => {
+  const { id } = req.params;
+  const data = req.body;
+
+  try {
+    const updatedTransaction = await UpdateSupplierTransaction(id, data);
+    res.status(200).json(updatedTransaction);
+  } catch (error) {
+    console.error("Error updating transaction:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 

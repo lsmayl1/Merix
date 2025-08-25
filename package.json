@@ -1,12 +1,45 @@
 {
-  "name": "merix",
+  "name": "erp-electron",
   "version": "1.0.0",
-  "main": "index.js",
- "scripts": {
-  "start": "concurrently \"npm run frontend\" \"npm run backend\"",
-  "frontend": "npm run dev --prefix frontend",
-  "backend": "npm run dev --prefix backend"
-},
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+  "build": {
+    "appId": "com.ismayil.merix",
+    "productName": "Merix",
+ "files": [
+  ".env",
+  ".env.development",
+   "frontend/dist/",
+  "dist/",
+  "node_modules/",
+  "package.json",
+  "main.js",
+  "backend/",
+  "app.js",
+  "routes/",
+  "models/",
+  "utils/"
+],
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "asar": false,
+     "extraResources": [
+    {
+      "from": "backend/.env",
+      "to": ".env"
+    }
+  ]
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lsmayl1/Merix.git"
@@ -20,6 +53,11 @@
   "homepage": "https://github.com/lsmayl1/Merix#readme",
   "description": "",
   "devDependencies": {
-    "concurrently": "^9.2.0"
+    "concurrently": "^9.2.0",
+    "electron-builder": "^26.0.12",
+    "electron": "^37.3.1"
+
+  },
+  "dependencies": {
   }
 }

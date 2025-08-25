@@ -19,7 +19,6 @@ export const ProductModal = ({
   const isMobile = useMediaQuery({ maxWidth: 768 });
   const [showCategoryDropDown, setShowCategoryDropDown] = useState(false);
   const { data } = useGetCategoriesQuery();
-  console.log(editForm);
   const [selectedCategory, setSelectedCategory] = useState(
     editForm?.category ? editForm?.category : null
   );
@@ -45,7 +44,6 @@ export const ProductModal = ({
   const nameInputRef = useRef(null);
   const handleProductCrud = async (data) => {
     if (isEditMode) {
-      console.log(data);
       handleUpdateProduct({
         ...data,
         category_id: selectedCategory?.category_id

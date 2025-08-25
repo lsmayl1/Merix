@@ -22,7 +22,7 @@ const SupplierTransactions = sequelize.define(
       allowNull: false,
     },
     payment_method: {
-      type: DataTypes.ENUM("cash", "card"),
+      type: DataTypes.ENUM("cash", "card", "credit"),
       allowNull: true, // sadece `type: payment` için anlamlı
     },
     description: {

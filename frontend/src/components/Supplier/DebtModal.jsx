@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 
 export const DebtModal = ({ handleClose, onSubmit }) => {
   const { t } = useTranslation();
-  const [transactionType, setTransactionType] = useState("purchase");
+  const [transactionType, setTransactionType] = useState("payment");
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [date, setDate] = useState(null);
   const {
@@ -90,7 +90,7 @@ export const DebtModal = ({ handleClose, onSubmit }) => {
             )}
           </div>
           <div className="flex flex-col gap-1 ">
-            <label>{t("Date")}</label>
+            <label>{t("date")}</label>
             <input
               step={0.001}
               onChange={(e) => setDate(e.target.value)}
@@ -142,6 +142,28 @@ export const DebtModal = ({ handleClose, onSubmit }) => {
                 }`}
               >
                 {t("card")}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handlePaymentMethodChange("credit")}
+              className={`flex flex-col gap-1 items-center border py-4 ${
+                paymentMethod == "card"
+                  ? "border-blue-500 bg-blue-50"
+                  : " border-mainBorder"
+              }  px-6 py-1 rounded-lg w-full`}
+            >
+              {/* <CreditCard
+                className={`${
+                  paymentMethod == "credit" ? "text-blue-500" : "text-black"
+                }`}
+              /> */}
+              <span
+                className={`${
+                  paymentMethod == "credit" ? "text-blue-500" : "text-black"
+                }`}
+              >
+                {t("credit")}
               </span>
             </button>
           </div>

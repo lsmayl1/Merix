@@ -118,7 +118,6 @@ export const SalesReports = () => {
 
   const handlePrintReceipt = async (id) => {
     try {
-      if (!window.confirm("Çap etmək istədiyinizə əminsiniz?")) return;
       await triggerPrintReceipt(id).unwrap();
     } catch (error) {
       console.error("Failed to print receipt:", error);
@@ -162,13 +161,11 @@ export const SalesReports = () => {
   }, [range]);
 
   const handleDeleteSale = async (id) => {
-    if (window.confirm("Silinsin ?")) {
-      try {
-        await deleteSale(id).unwrap();
-        await refetch();
-      } catch (error) {
-        console.log(error);
-      }
+    try {
+      await deleteSale(id).unwrap();
+      await refetch();
+    } catch (error) {
+      console.log(error);
     }
   };
 

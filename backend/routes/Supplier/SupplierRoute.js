@@ -2,7 +2,10 @@ const express = require("express");
 const router = express.Router();
 
 const { Suppliers, SupplierTransactions } = require("../../models/index");
-const { GetSupplierByQuery } = require("../../services/SupplierService");
+const {
+  GetSupplierByQuery,
+  GetSupplierDebt,
+} = require("../../services/SupplierService");
 
 // Get all suppliers
 router.get("/", async (req, res) => {
@@ -12,36 +15,22 @@ router.get("/", async (req, res) => {
       include: {
         model: SupplierTransactions,
         as: "transactions",
-        attributes: ["amount", "type"],
+        attributes: ["amount", "type", "payment_method"],
       },
     });
 
     if (!suppliers || suppliers.length === 0) {
       return res.status(404).json({ message: "No suppliers found" });
     }
-
-    const suppliersWithDebt = suppliers.map((supplier) => {
-      const transactions = supplier.transactions || [];
-
-      const totalDebt = transactions.reduce((acc, transaction) => {
-        const amount = Number(transaction.amount) || 0;
-
-        if (transaction.type === "purchase") {
-          return acc + amount;
-        } else if (transaction.type === "payment") {
-          return acc - amount;
-        }
-        return acc;
-      }, 0);
-
-      // Explicitly exclude transactions from the supplier data
-      const { transactions: _, ...supplierData } = supplier.toJSON();
-
-      return {
-        ...supplierData,
-        totalDebt: totalDebt > 0 ? totalDebt.toFixed(2) : "",
-      };
-    });
+    const suppliersWithDebt = await Promise.all(
+      suppliers.map(async (supplier) => {
+        const totalDebt = await GetSupplierDebt(supplier.id);
+        return {
+          ...supplier.toJSON(),
+          totalDebt: totalDebt || 0,
+        };
+      })
+    );
 
     res.status(200).json(suppliersWithDebt);
   } catch (error) {
