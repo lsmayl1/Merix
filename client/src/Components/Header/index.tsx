@@ -21,10 +21,10 @@ export const Header = ({
       {collapsed && (
         <button
           onClick={setCollapsed}
-          className="p-2 rounded-lg cursor-pointer"
+          className="px-4 bg-white rounded-xl  cursor-pointer"
         >
           <Collapse
-            className={` text-white ${
+            className={` text-gray-500 ${
               collapsed ? "rotate-270 size-3" : "size-3 rotate-90"
             }`}
           />
@@ -67,7 +67,7 @@ export const Header = ({
           }`}
           onClick={() => setDarkMode(!darkMode)}
         >
-          <Sun className={`${!darkMode && "text-white"}`} />
+          <Sun className={` text-black ${darkMode && "text-white"}`} />
         </button>
       </div>
       <div className="bg-white rounded-lg flex items-center hover:shadow-md px-1   gap-2">

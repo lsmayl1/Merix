@@ -10,6 +10,7 @@ import Transactions from "../../assets/Sidebar/Transactions";
 import Employers from "../../assets/Sidebar/Employers";
 import Products from "../../assets/Sidebar/Products";
 import Suppliers from "../../assets/Sidebar/Suppliers";
+import LogoMain from "../../assets/Logo/LogoMain";
 
 export const Sidebar = ({
   collapsed,
@@ -56,11 +57,15 @@ export const Sidebar = ({
     },
   ];
   return (
-    <div className="flex flex-col ">
-      <div className="flex items-center gap-2">
+    <div className="flex flex-col bg-white p-2 py-4">
+      <div
+        className={`flex items-center gap-2 ${
+          collapsed ? "justify-center" : " justify-between"
+        } `}
+      >
         <div className="flex items-center gap-2">
-          <LogoFrame className="size-10" />
-          {!collapsed && <LogoName className="text-white w-14" />}
+          <LogoMain className="size-6" />
+          {!collapsed && <LogoName className="text-black w-14" />}
         </div>
         {!collapsed && (
           <button
@@ -68,7 +73,7 @@ export const Sidebar = ({
             className=" p-2 bg-border/10 rounded-lg cursor-pointer"
           >
             <Collapse
-              className={` text-white ${
+              className={` text-gray-500 ${
                 collapsed ? "rotate-270 size-2" : "size-3 rotate-90"
               }`}
             />
@@ -81,16 +86,18 @@ export const Sidebar = ({
             <NavLink
               to={item.link}
               className={({ isActive }) =>
-                `flex justify-between items-center ${
-                  isActive && "bg-border/10"
+                `flex justify-between items-center hover:bg-border/10 ${
+                  isActive && "bg-gray-300"
                 }	 rounded-lg p-2`
               }
             >
               <div
                 key={item.name}
-                className="flex items-center gap-4  text-white"
+                className="flex items-center gap-4  text-gray-500"
               >
-                {React.cloneElement(item.icon, { className: "size-6" })}
+                {React.cloneElement(item.icon, {
+                  className: "size-6 text-gray-500",
+                })}
                 {!collapsed && <span>{item.name}</span>}
               </div>
             </NavLink>
@@ -100,7 +107,7 @@ export const Sidebar = ({
                   <a
                     href={cat.link}
                     key={cat.name}
-                    className="flex items-center gap-4 text-white hover:bg-border/10 p-2 rounded-lg pl-10"
+                    className="flex items-center gap-4 text-gray-500 hover:bg-border/10 p-2 rounded-lg pl-10"
                   >
                     <span>{cat.name}</span>
                   </a>

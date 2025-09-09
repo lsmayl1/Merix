@@ -14,7 +14,8 @@ export const PieChart = ({ chartData, total }) => {
       {
         data: dataValues || 0,
         backgroundColor: chartData?.map((dt) => dt.color) || [],
-        borderWidth: 1,
+        borderWidth: 2,
+        borderRadius: 10,
       },
     ],
   };

@@ -6,12 +6,12 @@ import { Header } from "../Components/Header";
 export const MainLayout = () => {
   const [collapsed, setCollapsed] = React.useState(false);
   return (
-    <div className="bg-bg flex h-screen p-2 gap-2">
+    <div className="bg-bg flex h-screen  gap-2">
       <Sidebar
         collapsed={collapsed}
         setCollapsed={() => setCollapsed(!collapsed)}
       />
-      <div className="flex-1  gap-2 flex flex-col ">
+      <div className="flex-1  gap-2 flex flex-col p-2">
         <Header
           collapsed={collapsed}
           setCollapsed={() => setCollapsed(!collapsed)}

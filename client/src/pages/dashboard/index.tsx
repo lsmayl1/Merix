@@ -5,6 +5,7 @@ import { PieChartComponent } from "../../Components/Metrics/PieChart/PieChartCom
 import { Table } from "../../Components/Metrics/Table";
 import { createColumnHelper } from "@tanstack/react-table";
 import Navigate from "../../assets/Navigation/Navigate";
+import { DonutChartComponent } from "../../Components/Metrics/PieChart/DonutChartComponent";
 
 export const Dashboard = () => {
   const [chartData, setChartData] = useState("revenue");
@@ -22,10 +23,10 @@ export const Dashboard = () => {
       header: "Amount",
       cellClassName: "text-center",
     }),
-    columnHelper.accessor("PaymentMethod", {
-      header: "Payment Method",
-      cellClassName: "text-center",
-    }),
+    // columnHelper.accessor("PaymentMethod", {
+    //   header: "Payment Method",
+    //   cellClassName: "text-center",
+    // }),
     columnHelper.accessor("Date", {
       header: "Date",
       cellClassName: "text-center",
@@ -164,7 +165,7 @@ export const Dashboard = () => {
   ]);
 
   const supplierData = [
-    { name: "Tesla", value: 400 },
+    { name: "Tesla", value: 6000 },
     { name: "Apple", value: 800 },
     { name: "Micrasoft", value: 800 },
     { name: "Apple", value: 800 },
@@ -190,7 +191,7 @@ export const Dashboard = () => {
         ]}
       />
       <div className="flex gap-2">
-        <div className="flex flex-col    bg-white p-2 rounded-lg shadow-md   flex-3">
+        <div className="flex flex-col    bg-white p-2 rounded-lg    flex-3">
           <div className="flex flex-col gap-2">
             <div className="flex justify-between">
               <div className="flex items-center text-xs bg-[#D8E2EF] w-fit p-1  rounded-lg">
@@ -241,16 +242,16 @@ export const Dashboard = () => {
         />
       </div>
       <div className="flex gap-2">
-        <PieChartComponent
+        <DonutChartComponent
           title={"Suppliers Debt"}
           data={supplierData}
           total={{ value: 400, label: "Total Debt" }}
         />
-        <div className="flex-3 p-2 flex flex-col gap-2 bg-white rounded-lg">
+        <div className="flex-2 p-2 flex flex-col gap-2 bg-white rounded-lg">
           <h1 className="font-bold text-[#737373]">
             Last Supplier Transaction
           </h1>
-          <div className="overflow-auto min-h-0 max-h-[350px]">
+          <div className="overflow-auto overflow-x-hidden min-h-0 max-h-[400px]">
             <Table
               columns={LastSupplierTransactionsColumn}
               data={LastSupplierTransactions}
