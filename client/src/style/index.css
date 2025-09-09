@@ -2,6 +2,7 @@
 @import "tailwindcss";
 @theme {
   --color-border: #717171;
+  --color-bg: #212023;
 }
 body {
   font-family: "Inter", sans-serif;
@@ -15,4 +16,37 @@ textarea:focus {
   font-size: inherit;
   line-height: inherit;
   outline: none;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* Chrome, Safari, Edge, Opera için spin butonlarını kaldır */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Webkit browsers (Chrome, Safari, newer Edge) */
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #949596;
+  border-radius: 10px;
+  min-height: 40px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #e5e7eb;
+}
+
+::-webkit-scrollbar-button:vertical:start:decrement,
+::-webkit-scrollbar-button:vertical:end:increment,
+::-webkit-scrollbar-button:horizontal:start:decrement,
+::-webkit-scrollbar-button:horizontal:end:increment {
+  display: none;
 }

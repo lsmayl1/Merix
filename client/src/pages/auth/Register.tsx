@@ -4,13 +4,17 @@ import { AuthSchema } from "../../validations/Auth";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { NavLink } from "react-router-dom";
 
-const LoginSchema = AuthSchema.pick(["email", "password"]);
-export const Login = () => {
+const RegisterSchema = AuthSchema.pick([
+  "email",
+  "password",
+  "confirmPassword",
+]);
+export const Register = () => {
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm({ resolver: yupResolver(LoginSchema) });
+  } = useForm({ resolver: yupResolver(RegisterSchema) });
 
   return (
     <div className="flex flex-col gap-6 items-center w-full">
@@ -43,14 +47,27 @@ export const Login = () => {
             </p>
           )}
         </div>
-        <NavLink to="/dashboard" className="bg-black text-center cursor-pointer text-white p-2 rounded-lg">
-          Login
-        </NavLink>
+        <div className="flex flex-col gap-1">
+          <input
+            className="border border-border rounded-lg p-2"
+            {...register("confirmPassword")}
+            type="password"
+            placeholder="Confirm Password"
+          />
+          {errors.confirmPassword?.message && (
+            <p className="text-red-500 px-2 text-sm">
+              {errors.confirmPassword.message}
+            </p>
+          )}
+        </div>
+        <button className="bg-black cursor-pointer text-white p-2 rounded-lg">
+          Register
+        </button>
       </form>
       <h1>
         Don`t have an account?{" "}
-        <NavLink to="/register" className=" underline">
-          Register
+        <NavLink to="/" className=" underline">
+          Login
         </NavLink>
       </h1>
     </div>
