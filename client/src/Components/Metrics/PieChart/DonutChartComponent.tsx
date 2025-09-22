@@ -39,24 +39,25 @@ export const DonutChartComponent = ({
       <h1 className="font-bold text-[#737373]">{title || "Pie Chart"}</h1>
       <div className="flex w-full ">
         <div className="w-full flex flex-2 items-center justify-center">
-          <div className="w-9/12 flex items-center justify-center">
+          <div className="w-7/12 flex items-center justify-center">
             <PieChart chartData={chartData} total={total || 0} />
           </div>
         </div>
-        <div className="grid grid-cols-2 items-center flex-2 overflow-auto auto-rows-auto max-h-[450px]">
+        <div className="grid grid-cols-3 items-center flex-2 overflow-auto auto-rows-[80px] max-h-[600px]">
           {chartData?.map((dt, i) => (
             <div
               key={i}
-              className="flex justify-between hover:bg-gray-100 hover:cursor-pointer p-4 rounded-lg "
+              className="flex items-center gap-4 h-full hover:bg-gray-100 hover:cursor-pointer p-2 rounded-lg "
             >
-              <div className="flex gap-2 items-center">
-                <span
-                  className={` rounded-xs size-4`}
-                  style={{ backgroundColor: dt.color }}
-                ></span>
+              <span
+                className={` rounded-xs h-1/2 w-2 `}
+                style={{ backgroundColor: dt.color }}
+              ></span>
+              <div className="flex flex-col  ">
                 <span>{dt.name || "Value"}</span>
+
+                <span>{dt.value + " ₼" || 0}</span>
               </div>
-              <span>{dt.value + " ₼" || 0}</span>
             </div>
           ))}
         </div>

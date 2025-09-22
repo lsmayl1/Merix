@@ -25,10 +25,10 @@ export const Sidebar = ({
       name: "Store",
       link: "/store",
       icon: <Store />,
-      category: [
-        { name: "Store 1", link: "/store/1" },
-        { name: "Store 2", link: "/store/2" },
-      ],
+      // category: [
+      //   { name: "Store 1", link: "/store/1" },
+      //   { name: "Store 2", link: "/store/2" },
+      // ],
     },
     {
       name: "Sales",
@@ -57,7 +57,11 @@ export const Sidebar = ({
     },
   ];
   return (
-    <div className="flex flex-col bg-white p-2 py-4">
+    <div
+      className={`flex flex-col ${
+        collapsed ? "" : "flex-1"
+      }  bg-white p-2 py-4`}
+    >
       <div
         className={`flex items-center gap-2 ${
           collapsed ? "justify-center" : " justify-between"
@@ -87,19 +91,25 @@ export const Sidebar = ({
               to={item.link}
               className={({ isActive }) =>
                 `flex justify-between items-center hover:bg-border/10 ${
-                  isActive && "bg-gray-300"
+                  isActive && "bg-gray-300 text-white"
                 }	 rounded-lg p-2`
               }
             >
-              <div
-                key={item.name}
-                className="flex items-center gap-4  text-gray-500"
-              >
-                {React.cloneElement(item.icon, {
-                  className: "size-6 text-gray-500",
-                })}
-                {!collapsed && <span>{item.name}</span>}
-              </div>
+              {({ isActive }) => (
+                <div
+                  key={item.name}
+                  className={`flex items-center gap-4  ${
+                    isActive ? "text-gray-700" : "text-gray-500"
+                  } `}
+                >
+                  {React.cloneElement(item.icon, {
+                    className: `size-6  ${
+                      isActive ? "text-gray-700" : "text-gray-500"
+                    }`,
+                  })}
+                  {!collapsed && <span>{item.name}</span>}
+                </div>
+              )}
             </NavLink>
 
             {!collapsed

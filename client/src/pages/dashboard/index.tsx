@@ -241,13 +241,13 @@ export const Dashboard = () => {
           total={{ value: 7, label: "Net Profit" }}
         />
       </div>
-      <div className="flex gap-2">
+      <div className="flex flex-col gap-2">
         <DonutChartComponent
           title={"Suppliers Debt"}
           data={supplierData}
           total={{ value: 400, label: "Total Debt" }}
         />
-        <div className="flex-2 p-2 flex flex-col gap-2 bg-white rounded-lg">
+        <div className=" p-2 flex flex-col gap-2 bg-white rounded-lg">
           <h1 className="font-bold text-[#737373]">
             Last Supplier Transaction
           </h1>

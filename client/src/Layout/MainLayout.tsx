@@ -11,7 +11,7 @@ export const MainLayout = () => {
         collapsed={collapsed}
         setCollapsed={() => setCollapsed(!collapsed)}
       />
-      <div className="flex-1  gap-2 flex flex-col p-2">
+      <div className="flex-8  gap-2 flex flex-col p-2">
         <Header
           collapsed={collapsed}
           setCollapsed={() => setCollapsed(!collapsed)}
