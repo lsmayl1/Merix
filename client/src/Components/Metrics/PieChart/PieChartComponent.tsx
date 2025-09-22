@@ -35,7 +35,7 @@ export const PieChartComponent = ({
   }, [data]);
 
   return (
-    <div className="flex flex-col gap-4 h-full flex-1  bg-white rounded-lg p-2">
+    <div className="flex flex-col gap-4 h-full flex-1   bg-white rounded-lg p-2">
       <h1 className="font-bold text-[#737373]">{title || "Pie Chart"}</h1>
       <div className="w-full flex items-center justify-center">
         <div className="w-9/12 flex items-center justify-center">

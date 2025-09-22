@@ -19,6 +19,7 @@ router.post("/", async (req, res, next) => {
         amount: payload.totalAmount,
         paymentMethod: payload.payment_method,
         type: payload.type,
+        date: payload.date,
       });
     }
     res.status(200).json({ success: true, message: "Sync processed" });

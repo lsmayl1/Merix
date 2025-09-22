@@ -17,11 +17,11 @@ export const Header = ({
 }) => {
   const [darkMode, setDarkMode] = useState(false);
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-2 max-md:gap-1 max-md:justify-between">
       {collapsed && (
         <button
           onClick={setCollapsed}
-          className="px-4 bg-white rounded-xl  cursor-pointer"
+          className="px-4 bg-white rounded-xl  cursor-pointer max-md:hidden"
         >
           <Collapse
             className={` text-gray-500 ${
@@ -30,7 +30,7 @@ export const Header = ({
           />
         </button>
       )}
-      <div className="bg-white p-2 rounded-lg flex gap-2 items-center cursor-pointer hover:shadow-md">
+      <div className="bg-white p-2 max-md:hidden rounded-lg flex gap-2  items-center cursor-pointer hover:shadow-md">
         <Store />
         <span className="text-sm font-medium text-nowrap">Merix Store</span>
         <button>
@@ -38,13 +38,13 @@ export const Header = ({
         </button>
       </div>
       <div className="bg-white p-2 rounded-lg flex gap-2 items-center cursor-pointer hover:shadow-md">
-        <Calendar />
-        <span className="text-sm font-medium">Today</span>
+        <Calendar className={"max-md:size-4"} />
+        <span className="text-sm font-medium max-md:text-xs">Today</span>
         <button>
-          <Collapse className="text-black size-2" />
+          <Collapse className="text-black size-2 " />
         </button>
       </div>
-      <div className="bg-white rounded-lg flex items-center hover:shadow-md w-full p-2 gap-2">
+      <div className="bg-white max-md:hidden rounded-lg flex items-center hover:shadow-md w-full p-2 gap-2 ">
         <Search />
         <input
           type="text"
@@ -52,41 +52,45 @@ export const Header = ({
           className=" focus:outline-none w-full"
         />
       </div>
-      <div className="bg-white rounded-lg flex items-center hover:shadow-md px-1   gap-2">
+      <div className="bg-white rounded-lg flex items-center hover:shadow-md px-1   gap-2 max-md:gap-1 max-md:hidden">
         <button
-          className={` p-2 rounded-lg cursor-pointer ${
+          className={`max-md:p-1 p-2 rounded-lg cursor-pointer ${
             darkMode ? "bg-bg " : ""
           }`}
           onClick={() => setDarkMode(!darkMode)}
         >
-          <Moon className={`${darkMode && "text-white"}`} />
+          <Moon className={`max-md:size-4 ${darkMode && "text-white"}`} />
         </button>
         <button
-          className={` p-2 rounded-lg cursor-pointer ${
+          className={` max-md:p-1 p-2 rounded-lg cursor-pointer ${
             !darkMode ? "bg-bg " : ""
           }`}
           onClick={() => setDarkMode(!darkMode)}
         >
-          <Sun className={` text-black ${darkMode && "text-white"}`} />
+          <Sun
+            className={`max-md:size-4 text-black ${darkMode && "text-white"}`}
+          />
         </button>
       </div>
-      <div className="bg-white rounded-lg flex items-center hover:shadow-md px-1   gap-2">
+      <div className="bg-white rounded-lg flex items-center hover:shadow-md px-1   gap-2 max-md:hidden">
+        <button className={` p-2 rounded-lg cursor-pointer max-md:p-1`}>
+          <img src={UsaIcon} className="w-12 max-md:w-full" />
+        </button>
+      </div>
+      <div className="bg-white rounded-lg flex items-center hover:shadow-md px-1   gap-2  max-md:hidden">
         <button className={` p-2 rounded-lg cursor-pointer `}>
-          <img src={UsaIcon} className="w-12" />
+          <Settings className="max-md:size-4" />
         </button>
       </div>
-      <div className="bg-white rounded-lg flex items-center hover:shadow-md px-1   gap-2">
-        <button className={` p-2 rounded-lg cursor-pointer `}>
-          <Settings />
-        </button>
-      </div>
-      <div className="bg-white rounded-lg flex items-center hover:shadow-md px-1   gap-2">
-        <button className={` p-2 rounded-lg cursor-pointer `}>
-          <Bell />
-        </button>
-      </div>
-      <div className="bg-white rounded-lg flex items-center hover:shadow-md px-2   gap-2">
-        <button className={` p-2 rounded-lg cursor-pointer `}>II</button>
+      <div className="flex gap-2 max-md:gap-1">
+        <div className="bg-white rounded-lg flex items-center hover:shadow-md px-1 ">
+          <button className={` p-2 rounded-lg cursor-pointer `}>
+            <Bell className={"max-md:size-4"} />
+          </button>
+        </div>
+        <div className="bg-white rounded-lg flex items-center hover:shadow-md px-2   gap-2">
+          <button className={` p-2 rounded-lg cursor-pointer `}>II</button>
+        </div>
       </div>
     </div>
   );

@@ -4,8 +4,8 @@ type data = { label: string; value: string }[];
 export const KPI = ({ data }: { data: data }) => {
   return (
     <div
-      className={`grid  gap-2`}
-      style={{ gridTemplateColumns: `repeat(${data.length}, minmax(0, 1fr))` }}
+      className="grid gap-2 md:[grid-template-columns:repeat(var(--cols),minmax(0,1fr))] grid-cols-1"
+      style={{ ["--cols" as any]: data.length }}
     >
       {data.map((item, index) => (
         <div key={index} className="bg-white p-4 rounded-lg flex flex-col">

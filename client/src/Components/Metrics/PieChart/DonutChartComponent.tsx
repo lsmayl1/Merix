@@ -37,13 +37,13 @@ export const DonutChartComponent = ({
   return (
     <div className="flex flex-col  h-full flex-2  bg-white rounded-lg p-2">
       <h1 className="font-bold text-[#737373]">{title || "Pie Chart"}</h1>
-      <div className="flex w-full ">
+      <div className="flex w-full max-md:flex-col h-full gap-2">
         <div className="w-full flex flex-2 items-center justify-center">
-          <div className="w-7/12 flex items-center justify-center">
+          <div className="w-7/12 flex items-center justify-center max-md:w-full">
             <PieChart chartData={chartData} total={total || 0} />
           </div>
         </div>
-        <div className="grid grid-cols-3 items-center flex-2 overflow-auto auto-rows-[80px] max-h-[600px]">
+        <div className="grid grid-cols-3 items-center max-md:grid-cols-2 flex-2 overflow-auto auto-rows-[80px] max-h-[600px]">
           {chartData?.map((dt, i) => (
             <div
               key={i}

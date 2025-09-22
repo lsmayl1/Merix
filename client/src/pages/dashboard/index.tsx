@@ -190,7 +190,7 @@ export const Dashboard = () => {
           { label: "Total Expenses", value: "7,000 ₼" },
         ]}
       />
-      <div className="flex gap-2">
+      <div className="flex gap-2 max-md:flex-col">
         <div className="flex flex-col    bg-white p-2 rounded-lg    flex-3">
           <div className="flex flex-col gap-2">
             <div className="flex justify-between">
@@ -251,7 +251,7 @@ export const Dashboard = () => {
           <h1 className="font-bold text-[#737373]">
             Last Supplier Transaction
           </h1>
-          <div className="overflow-auto overflow-x-hidden min-h-0 max-h-[400px]">
+          <div className="overflow-auto overflow-x-hidden max-md:hidden min-h-0 max-h-[400px]">
             <Table
               columns={LastSupplierTransactionsColumn}
               data={LastSupplierTransactions}
