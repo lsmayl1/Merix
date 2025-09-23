@@ -16,7 +16,7 @@ export const Login = () => {
     <div className="flex flex-col gap-6 items-center w-full">
       <h1 className="font-extrabold text-2xl">Welcome Back</h1>
       <form
-        className="flex flex-col gap-4 w-1/4"
+        className="flex flex-col gap-4 w-1/4 max-md:w-3/4"
         onSubmit={handleSubmit((data) => console.log(data))}
       >
         <div className="flex flex-col gap-1">
