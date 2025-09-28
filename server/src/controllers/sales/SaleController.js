@@ -1,11 +1,12 @@
 import express from "express";
 import { CreateSale } from "../../services/sales/SaleService.js";
-import { AppError } from "../../utils/AppError.js";
 const router = express.Router();
 
 router.post("/", async (req, res, next) => {
   try {
-    const sale = await CreateSale(req.body);
+    const userId = req.user.id;
+    const sale = await CreateSale(req.body, userId);
+
     res.status(201).json({
       status: "success",
       data: sale,

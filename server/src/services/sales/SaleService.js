@@ -1,7 +1,7 @@
 import { Sale } from "../../models/index.js";
 import { AppError } from "../../utils/AppError.js";
 
-const CreateSale = async (saleData) => {
+const CreateSale = async (saleData, userId) => {
   try {
     const { id, amount, paymentMethod, type, date } = saleData;
     if (!amount || !paymentMethod || !type) {
@@ -13,6 +13,7 @@ const CreateSale = async (saleData) => {
       paymentMethod,
       type,
       createdAt: date || new Date(),
+      userId: userId,
     });
     return newSale;
   } catch (error) {
