@@ -1,10 +1,10 @@
 import "./style/index.css";
 import { Route, Routes } from "react-router-dom";
 import { Login } from "./pages/auth/Login";
-import { AuthLayout } from "./layout/AuthLayout";
+import { AuthLayout } from "./layout/AuthLayout.tsx";
 import { Register } from "./pages/auth/Register";
 import { Dashboard } from "./pages/dashboard";
-import { MainLayout } from "./layout/MainLayout";
+import { MainLayout } from "./layout/MainLayout.tsx";
 import { PrivateRoute } from "./routes/privateRoute";
 
 export const App = () => {
