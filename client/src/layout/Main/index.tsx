@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
-import { Sidebar } from "../../components/Sidebar/index.tsx";
+import { Sidebar } from "../../components/sidebar/index.tsx";
 import { Outlet } from "react-router-dom";
-import { Header } from "../../components/Header/index.tsx";
+import { Header } from "../../components/header/index.tsx";
 
 export const MainLayout = () => {
   const [collapsed, setCollapsed] = React.useState(false);

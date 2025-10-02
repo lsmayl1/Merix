@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import { KPI } from "../../components/Metrics/KPI/index.tsx";
-import { LineChart } from "../../components/Metrics/LineChart";
-import { PieChartComponent } from "../../components/Metrics/PieChart/PieChartComponent";
-import { Table } from "../../components/Metrics/Table";
+import { KPI } from "../../components/metrics/kpi/index.tsx";
+import { LineChart } from "../../components/metrics/lineChart/index.tsx";
+import { PieChartComponent } from "../../components/metrics/pieChart/PieChartComponent.tsx";
+import { Table } from "../../components/metrics/table/index.tsx";
 import { createColumnHelper } from "@tanstack/react-table";
 import Navigate from "../../assets/Navigation/Navigate";
-import { DonutChartComponent } from "../../components/Metrics/PieChart/DonutChartComponent";
+import { DonutChartComponent } from "../../components/metrics/pieChart/DonutChartComponent.tsx";
 
 export const Dashboard = () => {
   const [chartData, setChartData] = useState("revenue");
