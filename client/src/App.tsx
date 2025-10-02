@@ -4,8 +4,8 @@ import { Login } from "./pages/auth/Login";
 import { Register } from "./pages/auth/Register";
 import { Dashboard } from "./pages/dashboard";
 import { PrivateRoute } from "./routes/privateRoute";
-import { AuthLayout } from "./layout/AuthLayout";
-import { MainLayout } from "./layout/MainLayout";
+import { AuthLayout } from "./layout/Auth";
+import { MainLayout } from "./layout/Main";
 
 export const App = () => {
   return (

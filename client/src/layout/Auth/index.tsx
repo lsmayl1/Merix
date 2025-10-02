@@ -1,7 +1,7 @@
 import React from "react";
 import { Outlet } from "react-router-dom";
-import LogoName from "../assets/Logo/LogoName";
-import LogoMain from "../assets/Logo/LogoMain";
+import LogoName from "../../assets/Logo/LogoName";
+import LogoMain from "../../assets/Logo/LogoMain";
 
 export const AuthLayout = () => {
   return (
