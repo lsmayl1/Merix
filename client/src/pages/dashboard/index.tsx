@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { KPI } from "../../components/Metrics/KPI";
+import { KPI } from "../../components/Metrics/KPI/index.tsx";
 import { LineChart } from "../../components/Metrics/LineChart";
 import { PieChartComponent } from "../../components/Metrics/PieChart/PieChartComponent";
 import { Table } from "../../components/Metrics/Table";
