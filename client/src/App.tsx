@@ -3,9 +3,9 @@ import { Route, Routes } from "react-router-dom";
 import { Login } from "./pages/auth/Login";
 import { Register } from "./pages/auth/Register";
 import { Dashboard } from "./pages/dashboard";
-import { MainLayout } from "./layout/MainLayout.tsx";
 import { PrivateRoute } from "./routes/privateRoute";
 import { AuthLayout } from "./layout/AuthLayout.tsx";
+import { MainLayout } from "./layout/MainLayout.tsx";
 
 export const App = () => {
   return (
