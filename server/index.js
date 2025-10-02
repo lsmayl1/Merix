@@ -5,25 +5,19 @@ import { router as SaleController } from "./src/controllers/sales/SaleController
 import { router as SyncController } from "./src/controllers/sync/SyncController.js";
 import { router as AuthController } from "./src/controllers/auth/AuthController.js";
 import { authenticate } from "./src/middlewares/AuthMiddleware.js";
-const app = express();
+import ErrorHandler from "./src/middlewares/ErrorHandler.js";
+import cors from "cors";
 
+const app = express();
+cors();
+app.use(cors());
 dotenv.config();
 app.use(express.json());
 app.use("/sales", authenticate, SaleController);
 app.use("/sync", SyncController);
 app.use("/auth", AuthController);
-
+app.use(ErrorHandler);
 // Sequelize Sync ve Server Başlatma
-app.use((err, req, res, next) => {
-  let statusCode = err.statusCode || 500;
-  let message = err.isOperational ? err.message : "Somethings went wrong";
-  console.error(err);
-  res.status(statusCode).json({
-    statusCode,
-    success: false,
-    message: message || err, // sadece temiz mesaj döner
-  });
-});
 
 sequelize
   .sync()

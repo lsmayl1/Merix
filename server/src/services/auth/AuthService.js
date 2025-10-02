@@ -12,6 +12,7 @@ const registerSchema = joi.object({
     .pattern(/^\+?[1-9]\d{1,14}$/)
     .required(),
   password: joi.string().min(6).required(),
+  confirmPassword: joi.string().valid(joi.ref("password")).required(),
 });
 
 const LoginShcema = joi.object({
