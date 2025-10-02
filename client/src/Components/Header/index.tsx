@@ -8,6 +8,9 @@ import Sun from "../../assets/Header/Sun";
 import UsaIcon from "../../assets/Header/UsaIcon.png";
 import Settings from "../../assets/Header/Settings";
 import Bell from "../../assets/Header/Bell";
+import { logout } from "../../redux/services/authService";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 export const Header = ({
   collapsed,
   setCollapsed,
@@ -16,6 +19,8 @@ export const Header = ({
   setCollapsed: () => void;
 }) => {
   const [darkMode, setDarkMode] = useState(false);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   return (
     <div className="flex gap-2 max-md:gap-1 max-md:justify-between">
       {collapsed && (
@@ -89,7 +94,15 @@ export const Header = ({
           </button>
         </div>
         <div className="bg-white rounded-lg flex items-center hover:shadow-md px-2   gap-2">
-          <button className={` p-2 rounded-lg cursor-pointer `}>II</button>
+          <button
+            onClick={() => {
+              dispatch(logout());
+              navigate("/");
+            }}
+            className={` p-2 rounded-lg cursor-pointer `}
+          >
+            II
+          </button>
         </div>
       </div>
     </div>

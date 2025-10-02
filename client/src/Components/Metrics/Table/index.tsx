@@ -13,7 +13,7 @@ export const Table = ({
   path,
   pagination = true,
 }) => {
-  const { t } = useTranslation();
+  // const { t } = useTranslation();
   const navigate = useNavigate();
   const table = useReactTable({
     data,
@@ -71,7 +71,7 @@ export const Table = ({
               <tr>
                 <td colSpan={columns.length} className="text-center py-8">
                   <div className="flex justify-center items-center">
-                    {t("empty")}
+                    {/* {t("empty")} */}
                   </div>
                 </td>
               </tr>

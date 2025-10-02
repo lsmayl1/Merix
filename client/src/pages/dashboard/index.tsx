@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import { KPI } from "../../Components/Metrics/KPI";
-import { LineChart } from "../../Components/Metrics/LineChart";
-import { PieChartComponent } from "../../Components/Metrics/PieChart/PieChartComponent";
-import { Table } from "../../Components/Metrics/Table";
+import { KPI } from "../../components/Metrics/KPI";
+import { LineChart } from "../../components/Metrics/LineChart";
+import { PieChartComponent } from "../../components/Metrics/PieChart/PieChartComponent";
+import { Table } from "../../components/Metrics/Table";
 import { createColumnHelper } from "@tanstack/react-table";
 import Navigate from "../../assets/Navigation/Navigate";
-import { DonutChartComponent } from "../../Components/Metrics/PieChart/DonutChartComponent";
+import { DonutChartComponent } from "../../components/Metrics/PieChart/DonutChartComponent";
 
 export const Dashboard = () => {
   const [chartData, setChartData] = useState("revenue");
@@ -213,8 +213,9 @@ export const Dashboard = () => {
                 </button>
               </div>
               <div className="flex items-center text-xs bg-[#D8E2EF] w-fit p-1  rounded-lg">
-                {timeframes.map((tf) => (
+                {timeframes.map((tf, index) => (
                   <button
+                    key={index}
                     className={`  px-2 p-1 cursor-pointer ${
                       tf.key === selectedTimeFrame ? "bg-white  rounded-lg" : ""
                     }`}

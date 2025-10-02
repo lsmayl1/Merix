@@ -1,8 +1,9 @@
 import * as yup from "yup";
 export const AuthSchema = yup.object().shape({
-  fullName: yup.string().required("Full Name required!"),
+  firstName: yup.string().required("First name required!"),
+  lastName: yup.string().required("Last name required!"),
   email: yup.string().email("Enter existing email").required("Email required!"),
-  phone: yup.string().required("Number required!"),
+  phoneNumber: yup.string().required("Number required!"),
   password: yup.string().min(6, "Password need have min 6 symbols"),
   confirmPassword: yup
     .string()
