@@ -6,7 +6,7 @@ import { Table } from "../../components/metrics/table/index.tsx";
 import { createColumnHelper } from "@tanstack/react-table";
 import Navigate from "../../assets/Navigation/Navigate";
 import { DonutChartComponent } from "../../components/metrics/pieChart/DonutChartComponent.tsx";
-
+import "../../style/index.css";
 export const Dashboard = () => {
   const [chartData, setChartData] = useState("revenue");
   const columnHelper = createColumnHelper();
@@ -182,7 +182,7 @@ export const Dashboard = () => {
 
   const [selectedTimeFrame, setSelectedTimeFrame] = useState("hourly");
   return (
-    <div className="flex flex-col gap-2 h-full">
+    <div className="flex flex-col gap-2 h-full my-container">
       <KPI
         data={[
           { label: "Total Sales", value: "15,000 ₼" },

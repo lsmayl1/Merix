@@ -18,7 +18,7 @@ export const MainLayout = () => {
   }, []);
 
   return (
-    <div className="bg-bg flex h-screen  gap-2 max-md:gap-0">
+    <div className="bg-bg flex h-screen max-md:gap-0">
       <Sidebar
         collapsed={collapsed}
         setCollapsed={() => setCollapsed(!collapsed)}
@@ -28,7 +28,7 @@ export const MainLayout = () => {
           collapsed={collapsed}
           setCollapsed={() => setCollapsed(!collapsed)}
         />
-        <div className="overflow-auto pr-1">
+        <div className="overflow-auto pr-1 my-container">
           <Outlet />
         </div>
       </div>

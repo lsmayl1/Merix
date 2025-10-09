@@ -35,13 +35,13 @@ export const Header = ({
           />
         </button>
       )}
-      <div className="bg-white p-2 max-md:hidden rounded-lg flex gap-2  items-center cursor-pointer hover:shadow-md">
+      {/* <div className="bg-white p-2 max-md:hidden rounded-lg flex gap-2  items-center cursor-pointer hover:shadow-md">
         <Store />
         <span className="text-sm font-medium text-nowrap">Merix Store</span>
         <button>
           <Collapse className="text-black size-2" />
         </button>
-      </div>
+      </div> */}
       <div className="bg-white p-2 rounded-lg flex gap-2 items-center cursor-pointer hover:shadow-md">
         <Calendar className={"max-md:size-4"} />
         <span className="text-sm font-medium max-md:text-xs">Today</span>

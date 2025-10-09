@@ -2,7 +2,7 @@
 @import "tailwindcss";
 @theme {
   --color-border: #717171;
-  --color-bg: #f7f7f7;
+  --color-bg: #f0f1f3;
 }
 body {
   font-family: "Inter", sans-serif;
@@ -20,6 +20,15 @@ textarea:focus {
 
 input[type="number"] {
   -moz-appearance: textfield;
+}
+
+.my-container {
+  overflow: auto; /* container'ı kaydırılabilir yap */
+  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: none; /* Firefox */
+}
+.my-container::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, newer Edge */
 }
 
 /* Chrome, Safari, Edge, Opera için spin butonlarını kaldır */

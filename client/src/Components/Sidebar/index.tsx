@@ -21,15 +21,15 @@ export const Sidebar = ({
 }) => {
   const sidebar = [
     { name: "Dashboard", link: "/dashboard", icon: <Dashboard /> },
-    {
-      name: "Store",
-      link: "/store",
-      icon: <Store />,
-      // category: [
-      //   { name: "Store 1", link: "/store/1" },
-      //   { name: "Store 2", link: "/store/2" },
-      // ],
-    },
+      // {
+      //   name: "Store",
+      //   link: "/store",
+      //   icon: <Store />,
+      //   // category: [
+      //   //   { name: "Store 1", link: "/store/1" },
+      //   //   { name: "Store 2", link: "/store/2" },
+      //   // ],
+      // },
     {
       name: "Sales",
       link: "/sales",
