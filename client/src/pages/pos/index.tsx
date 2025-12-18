@@ -11,13 +11,14 @@ import { Table } from "../../components/table";
 import { ProductSide } from "../../components/pointOfSale/productsSide";
 import { toast, ToastContainer } from "react-toastify";
 import { useTranslation } from "react-i18next";
-import { PosHeader } from "../../components/pointOfSale/header";
 import { PaymentSide } from "../../components/pointOfSale/paymentSide";
 import { QtyInput } from "../../components/pointOfSale/qtyInput";
+import { Payment } from "../../assets/Icons/Payment";
 export const Pos = () => {
   const { t } = useTranslation();
   const columnHelper = createColumnHelper();
   const [inputData, setInputData] = useState([]);
+  const [paymentStage, setPaymentStage] = useState(false);
   const [data, setData] = useState([]);
   const [query, setQuery] = useState("");
   //   const [postPreview, { isLoading: previewLoading }] =
@@ -72,7 +73,6 @@ export const Pos = () => {
       ),
     }),
   ];
-  //   const [postSale, { isLoading: postLoading }] = usePostSaleMutation();
   const searchInput = useRef();
   const modalRef = useRef();
   const barcodeRef = useRef();
@@ -262,12 +262,33 @@ export const Pos = () => {
         // products={products}
         handleChangeQty={handleChangeQtyAndFocus}
       />
-
-      <div className="flex-1  px-4 gap-4  flex flex-col justify-between pb-2 h-full  ">
-        <Table columns={columns} data={data?.items} pagination={false} />
-
-        <PaymentSide />
-      </div>
+      {paymentStage ? (
+        <div className="flex-1 px-4">
+          <PaymentSide handleBack={() => setPaymentStage(false)} />
+        </div>
+      ) : (
+        <div className="flex-1  px-4 gap-4  flex flex-col justify-between pb-2 h-full  ">
+          <Table columns={columns} data={data?.items} pagination={false} />
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-end">
+              {/* <span className="text-2xl font-medium">{t("Total")}</span> */}
+              <span className="text-3xl font-medium">
+                {data?.total?.toFixed(2) || "0.00"} ₼
+              </span>
+            </div>
+            <div className="flex items-center gap-2 w-full h-full">
+              <button
+                // disabled={data.length == 0 || postLoading}
+                onClick={() => setPaymentStage(true)}
+                className="flex justify-center cursor-pointer text-2xl gap-2 items-center border border-gray-200 px-6 h-16 rounded-lg w-full"
+              >
+                <Payment className={"size-8 "} />
+                <span className=""> {t("Make Payment")}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
