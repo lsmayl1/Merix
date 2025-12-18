@@ -11,6 +11,7 @@ import Employers from "../../assets/Sidebar/Employers";
 import Products from "../../assets/Sidebar/Products";
 import Suppliers from "../../assets/Sidebar/Suppliers";
 import LogoMain from "../../assets/Logo/LogoMain";
+import { PointOfSale } from "../../assets/Icons/PointOfSale";
 
 export const Sidebar = ({
   collapsed,
@@ -21,15 +22,15 @@ export const Sidebar = ({
 }) => {
   const sidebar = [
     { name: "Dashboard", link: "/dashboard", icon: <Dashboard /> },
-      // {
-      //   name: "Store",
-      //   link: "/store",
-      //   icon: <Store />,
-      //   // category: [
-      //   //   { name: "Store 1", link: "/store/1" },
-      //   //   { name: "Store 2", link: "/store/2" },
-      //   // ],
-      // },
+    // {
+    //   name: "Store",
+    //   link: "/store",
+    //   icon: <Store />,
+    //   // category: [
+    //   //   { name: "Store 1", link: "/store/1" },
+    //   //   { name: "Store 2", link: "/store/2" },
+    //   // ],
+    // },
     {
       name: "Sales",
       link: "/sales",
@@ -55,11 +56,16 @@ export const Sidebar = ({
       link: "/suppliers",
       icon: <Suppliers />,
     },
+    {
+      name: "Point of Sale",
+      link: "/point-of-sale",
+      icon: <PointOfSale />,
+    },
   ];
   return (
     <div
-      className={`flex flex-col ${
-        collapsed ? "" : "flex-1"
+      className={`flex flex-col flex-none transition-width duration-200 ${
+        collapsed ? "w-16" : "w-48"
       }  bg-white p-2 py-4`}
     >
       <div

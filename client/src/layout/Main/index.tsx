@@ -21,14 +21,18 @@ export const MainLayout = () => {
     <div className="bg-bg flex h-screen max-md:gap-0">
       <Sidebar
         collapsed={collapsed}
-        setCollapsed={() => setCollapsed(!collapsed)}
+        setCollapsed={() => {
+          setCollapsed(!collapsed);
+
+          setTimeout(() => window.dispatchEvent(new Event("resize")), 50);
+        }}
       />
-      <div className="flex-8  gap-2 flex flex-col p-2">
+      <div className="flex-1 gap-2 flex flex-col p-2 min-w-0">
         <Header
           collapsed={collapsed}
           setCollapsed={() => setCollapsed(!collapsed)}
         />
-        <div className="overflow-auto pr-1 my-container">
+        <div className="overflow-auto pr-1 my-container flex-1 min-w-0">
           <Outlet />
         </div>
       </div>

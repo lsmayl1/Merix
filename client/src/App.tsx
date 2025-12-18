@@ -8,6 +8,7 @@ import { AuthLayout } from "./layout/auth/index.tsx";
 import { MainLayout } from "./layout/main/index.tsx";
 import { Sales } from "./pages/sales/index.tsx";
 import { Transactions } from "./pages/transactions/index.tsx";
+import { Pos } from "./pages/pos/index.tsx";
 
 export const App = () => {
   return (
@@ -24,6 +25,8 @@ export const App = () => {
           <Route path="/employees" element={<div>employees</div>} />
           <Route path="/products" element={<div>products</div>} />
           <Route path="/suppliers" element={<div>suppliers</div>} />
+          <Route path="/point-of-sale" element={<Pos />} />
+
           <Route path="*" element={<div>Not Found</div>} />
         </Route>
       </Route>

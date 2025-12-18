@@ -190,8 +190,8 @@ export const Dashboard = () => {
           { label: "Total Expenses", value: "7,000 ₼" },
         ]}
       />
-      <div className="flex gap-2 max-md:flex-col">
-        <div className="flex flex-col    bg-white p-2 rounded-lg    flex-3">
+      <div className="flex gap-2 min-w-0  max-md:flex-col">
+        <div className="flex flex-1 flex-col    bg-white p-2 rounded-lg transition-width duration-200 min-w-0">
           <div className="flex flex-col gap-2">
             <div className="flex justify-between">
               <div className="flex items-center text-xs bg-[#D8E2EF] w-fit p-1  rounded-lg">
@@ -228,19 +228,20 @@ export const Dashboard = () => {
             </div>
             <h1 className="text-xl font-bold">54,454 ₼</h1>
           </div>
-          <div className="w-full h-full  ">
+          <div className="w-full h-full min-w-0 transition-width duration-200  ">
             <LineChart />
           </div>
         </div>
-
-        <PieChartComponent
-          title={"Income & Expenses"}
-          data={[
-            { name: "Income", value: 19, color: "#14B8A6" },
-            { name: "Expenses", value: 12, color: "#F63B3E" },
-          ]}
-          total={{ value: 7, label: "Net Profit" }}
-        />
+        <div className="flex-none  min-w-0">
+          <PieChartComponent
+            title={"Income & Expenses"}
+            data={[
+              { name: "Income", value: 19, color: "#14B8A6" },
+              { name: "Expenses", value: 12, color: "#F63B3E" },
+            ]}
+            total={{ value: 7, label: "Net Profit" }}
+          />
+        </div>
       </div>
       <div className="flex flex-col gap-2">
         <DonutChartComponent
