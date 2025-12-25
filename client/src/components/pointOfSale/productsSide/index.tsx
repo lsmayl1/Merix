@@ -38,7 +38,7 @@ export const ProductSide = ({ products = [], data = [], handleChangeQty }) => {
       cell: ({ row }) => (
         <button
           onClick={() => handleIdentifiers(row.original.barcode)}
-          className=" p-1  bg-white border border-mainBorder rounded-lg"
+          className=" p-1  bg-white border border-gray-200 rounded-lg"
         >
           <Plus className="size-6" />
         </button>
@@ -60,7 +60,12 @@ export const ProductSide = ({ products = [], data = [], handleChangeQty }) => {
       return [];
     }
   });
-  const [shortCuts, setShortCuts] = useState([]);
+  const [shortCuts, setShortCuts] = useState([{
+	barcode: "1234567890123",
+	name: "Sample Product",
+	sellPrice: 9.99
+	
+  }]);
 
   useEffect(() => {
     const handleData = async () => {
@@ -104,17 +109,17 @@ export const ProductSide = ({ products = [], data = [], handleChangeQty }) => {
   };
 
   return (
-    <div className="flex-1 min-h-0 overflow-auto relative  flex flex-col gap-4">
+    <div className="flex-1 min-h-0 overflow-auto relative  flex flex-col p-4 gap-4">
       <PosHeader />
       {showAddModal && (
         <div className="w-full h-full absolute z-50  flex items-center justify-center ">
-          <div className="bg-white flex flex-col ounded-lg p-5 gap-2 w-9/12 h-2/3 min-h-0 shadow-2xl border border-mainBorder rounded-lg">
+          <div className="bg-white flex flex-col ounded-lg p-5 gap-2 w-9/12 h-2/3 min-h-0 shadow-2xl border border-gray-200 rounded-lg">
             <h1 className="text-xl font-semibold ">{t("addProduct")}</h1>
             <div className="flex items-center  relative w-full">
               <input
                 type="text"
                 placeholder={t("Searchbynameorbarcode")}
-                className="border border-mainBorder rounded-lg py-2 px-10 w-full"
+                className="border border-gray-200 rounded-lg py-2 px-10 w-full"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 // onKeyDown={(e) => {
@@ -144,8 +149,8 @@ export const ProductSide = ({ products = [], data = [], handleChangeQty }) => {
           </div>
         </div>
       )}
-      <div className="bg-gray-200 rounded-2xl h-full">
-        <ul className="grid grid-cols-4 gap-2 p-4 overflow-auto min-h-0 ">
+      <div className=" rounded-2xl h-full">
+        <ul className="grid grid-cols-4 gap-2  overflow-auto min-h-0 ">
           {shortCuts?.map((item, index) => (
             <li
               key={index}
@@ -160,7 +165,7 @@ export const ProductSide = ({ products = [], data = [], handleChangeQty }) => {
                   setOpenContext(item.barcode);
                 }
               }}
-              className={`flex cursor-pointer  flex-col relative px-4 py-2 justify-between  rounded-lg  border border-mainBorder ${
+              className={`flex cursor-pointer  flex-col relative px-4 py-2 justify-between  rounded-lg  border border-gray-200 ${
                 data?.find((x) => x.barcode == item.barcode)
                   ? "bg-blue-600 text-white"
                   : "bg-white"
@@ -193,13 +198,12 @@ export const ProductSide = ({ products = [], data = [], handleChangeQty }) => {
               )}
             </li>
           ))}
-          <li className=" px-6 py-8 max-h-24 border-dashed flex items-center justify-center  rounded-lg  border border-gray-500 bg-white">
+          <li className=" w-24 max-h-24 border-dashed flex items-center justify-center  rounded-lg  border border-gray-300 bg-white">
             <button
               onClick={() => setShowAddModal(true)}
               className="flex items-center gap-2 "
             >
               <Plus />
-              {t("addProduct")}
             </button>
           </li>
         </ul>

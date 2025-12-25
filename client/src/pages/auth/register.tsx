@@ -43,7 +43,7 @@ export const Register = () => {
         onSubmit={handleSubmit(handleRegister)}
       >
         <div className="flex gap-2  max-md:flex-col">
-          <div className="flex flex-col">
+          <div className="flex flex-col w-full">
             <input
               className="border border-border rounded-lg p-2 w-full"
               {...register("firstName")}
@@ -56,7 +56,7 @@ export const Register = () => {
               </p>
             )}
           </div>
-          <div className="flex flex-col ">
+          <div className="flex flex-col w-full ">
             <input
               className="border border-border rounded-lg p-2 w-full"
               {...register("lastName")}

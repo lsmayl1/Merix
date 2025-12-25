@@ -21,7 +21,7 @@ export const QtyInput = ({ barcode, handleQty, qty, className, allign }) => {
     <div className={`flex items-center ${allign} `}>
       <button
         onClick={(e) => handleChangeQty(e, barcode, "deacrese")}
-        className="bg-white border border-mainBorder rounded-lg p-0.5"
+        className="bg-white border border-gray-200 rounded-lg p-0.5"
       >
         <Minus className="size-4 text-black" />
       </button>
@@ -41,7 +41,7 @@ export const QtyInput = ({ barcode, handleQty, qty, className, allign }) => {
 
       <button
         onClick={(e) => handleChangeQty(e, barcode, "increase")}
-        className="bg-white border border-mainBorder rounded-lg p-0.5"
+        className="bg-white border border-gray-200 rounded-lg p-0.5"
       >
         <Plus className="size-4 text-black" />
       </button>

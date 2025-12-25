@@ -9,7 +9,7 @@ import { Table } from "../../components/table";
 //   usePostSalePreviewMutation,
 // } from "../redux/slices/ApiSlice";
 import { ProductSide } from "../../components/pointOfSale/productsSide";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import { PaymentSide } from "../../components/pointOfSale/paymentSide";
 import { QtyInput } from "../../components/pointOfSale/qtyInput";
@@ -19,7 +19,15 @@ export const Pos = () => {
   const columnHelper = createColumnHelper();
   const [inputData, setInputData] = useState([]);
   const [paymentStage, setPaymentStage] = useState(false);
-  const [data, setData] = useState([]);
+  const [data, setData] = useState([
+    {
+      barcode: "1234567890123",
+      name: "Sample Product 1",
+      sellPrice: 10.0,
+	  quantity: 2,
+	  subtotal: 20.0,
+    },
+  ]);
   const [query, setQuery] = useState("");
   //   const [postPreview, { isLoading: previewLoading }] =
   //     usePostSalePreviewMutation();
@@ -256,7 +264,7 @@ export const Pos = () => {
   };
 
   return (
-    <div className="flex   overflow-hidden  gap-2 w-full  h-full bg-white p-4 rounded-2xl">
+    <div className="flex   overflow-hidden  gap-2 w-full  h-full bg-gray-50  rounded-2xl">
       <ProductSide
         data={data?.items}
         // products={products}
@@ -267,8 +275,8 @@ export const Pos = () => {
           <PaymentSide handleBack={() => setPaymentStage(false)} />
         </div>
       ) : (
-        <div className="flex-1  px-4 gap-4  flex flex-col justify-between pb-2 h-full  ">
-          <Table columns={columns} data={data?.items} pagination={false} />
+        <div className="flex-1  px-4 gap-4  flex flex-col bg-white rounded-2xl  justify-between py-4 h-full  ">
+          <Table columns={columns} data={data} pagination={false} />
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-end">
               {/* <span className="text-2xl font-medium">{t("Total")}</span> */}
