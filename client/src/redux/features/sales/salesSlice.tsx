@@ -14,6 +14,9 @@ export const SalesApi = createApi({
     }),
     getSalesByUserId: builder.query({
       query: () => "/sale/user/sales",
+      // keepUnusedDataFor is seconds to keep cached data after there are no subscribers
+      // set to 0 to evict immediately when unused
+      keepUnusedDataFor: 0,
     }),
   }),
 });
