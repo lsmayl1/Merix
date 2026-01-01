@@ -5,7 +5,10 @@ import { Table } from "../../components/metrics/table";
 import { createColumnHelper } from "@tanstack/react-table";
 import { useGetSalesByUserIdQuery } from "../../redux/features/sales/salesHook";
 export const Sales = () => {
-  const { data } = useGetSalesByUserIdQuery();
+  const { data } = useGetSalesByUserIdQuery(undefined, {
+    refetchOnMountOrArg: true,
+    refetchOnFocus: true,
+  });
 
   const columnHelper = createColumnHelper();
   const columns = [
