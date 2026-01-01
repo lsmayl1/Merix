@@ -7,8 +7,7 @@ const router = express.Router();
 
 router.post("/", async (req, res, next) => {
   try {
-    const userId = req.user.id;
-    const sale = await CreateSale(req.body, userId);
+    const sale = await CreateSale(req.body, req.body.userId);
 
     res.status(201).json({
       status: "success",
@@ -25,7 +24,7 @@ router.get("/user/sales", async (req, res, next) => {
     const sales = await GetSalesByUserId(userId);
     res.status(200).json({
       status: "success",
-      data: sales,
+      ...sales,
     });
   } catch (error) {
     next(error);

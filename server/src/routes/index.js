@@ -6,4 +6,5 @@ import { authenticate } from "../middlewares/AuthMiddleware.js";
 export default (app) => {
   app.use("/api/auth", AuthController);
   app.use("/api/sale", authenticate, SaleController);
+  app.use("/api/sync", SyncController);
 };

@@ -1,19 +1,33 @@
 import { Sale } from "../../models/index.js";
 import { AppError } from "../../utils/AppError.js";
 import { DateFormat } from "../../utils/DateFormat.js";
+import { CalculateSale } from "../report/SaleReport.js";
 const CreateSale = async (saleData, userId) => {
   try {
-    const { id, amount, paymentMethod, type, date } = saleData;
-    if (!amount || !paymentMethod || !type) {
+    const {
+      id,
+      paymentMethod,
+      type,
+      date,
+      total_amount,
+      discount,
+      discounted_amount,
+      subtotal_amount,
+      userId,
+    } = saleData;
+    if (!total_amount || !paymentMethod || !type) {
       throw new AppError("All fields are required", 400);
     }
     const newSale = await Sale.create({
       id,
-      amount,
+      total_amount,
+      discount,
+      discounted_amount,
+      subtotal_amount,
       paymentMethod,
       type,
       createdAt: date || new Date(),
-      userId: userId,
+      userId,
     });
     return newSale;
   } catch (error) {
@@ -27,27 +41,14 @@ const GetSalesByUserId = async (useId) => {
     if (!sales) {
       throw new AppError("No sales found for this user", 404);
     }
-    let totalRevenue = 0;
-    let totalCard = 0;
-    let totalCash = 0;
+    const results = CalculateSale(sales);
 
-    sales.forEach((sale) => {
-      totalRevenue += Number(sale.amount);
-      if (sale.paymentMethod === "card") {
-        totalCard += sale.amount;
-      }
-      if (sale.paymentMethod === "cash") {
-        totalCash += Number(sale.amount);
-      }
-    });
     return {
       sales: sales.map((sale) => ({
         ...sale.toJSON(),
         date: DateFormat(sale.createdAt),
       })),
-      totalRevenue,
-      totalCard,
-      totalCash,
+      summary: results,
     };
   } catch (error) {
     throw error;

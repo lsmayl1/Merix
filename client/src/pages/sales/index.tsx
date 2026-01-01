@@ -14,13 +14,29 @@ export const Sales = () => {
       cellClassName: "text-center",
       headerClassName: "text-center",
     }),
-    columnHelper.accessor("userId", {
-      header: "Cashier Name",
+    // columnHelper.accessor("userId", {
+    //   header: "Cashier Name",
+    //   cellClassName: "text-center",
+    //   headerClassName: "text-center",
+    // }),
+    columnHelper.accessor("subtotal_amount", {
+      header: "Subtotal Amount",
       cellClassName: "text-center",
       headerClassName: "text-center",
     }),
-    columnHelper.accessor("amount", {
-      header: "Amount",
+    columnHelper.accessor("discounted_amount", {
+      header: "Discount Amount",
+      cellClassName: "text-center",
+      headerClassName: "text-center",
+    }),
+    columnHelper.accessor("total_amount", {
+      header: "Total Amount",
+      cellClassName: "text-center",
+      headerClassName: "text-center",
+    }),
+
+    columnHelper.accessor("type", {
+      header: "Type",
       cellClassName: "text-center",
       headerClassName: "text-center",
     }),
@@ -42,13 +58,14 @@ export const Sales = () => {
       <KPI
         className="border border-gray-200"
         data={[
-          { label: "Total Sales", value: data?.data.totalRevenue },
-          { label: "Card Sales", value: data?.data.totalCard },
-          { label: "Cash Sales", value: data?.data.totalCash },
+          { label: "Total Sales", value: data?.summary.totalSales },
+          { label: "Card Sales", value: data?.summary.totalCard },
+          { label: "Cash Sales", value: data?.summary.totalCash },
+          { label: "Revenue", value: data?.summary.totalRevenue },
         ]}
       />
       <div className="border-gray-200 border rounded-lg p-2 overflow-auto h-full">
-        <Table columns={columns} data={data?.data?.sales} />
+        <Table columns={columns} data={data?.sales} />
       </div>
     </div>
   );

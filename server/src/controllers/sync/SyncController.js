@@ -16,10 +16,14 @@ router.post("/", async (req, res, next) => {
     if (entity === "sale" && action === "create") {
       await CreateSale({
         id: record_id,
-        amount: payload.totalAmount,
+        total_amount: payload.totalAmount,
+        subtotal_amount: payload.subtotalAmount,
+        discount: payload.discount,
+        discounted_amount: payload.discountedAmount,
         paymentMethod: payload.payment_method,
         type: payload.type,
         date: payload.date,
+        userId: payload.userId,
       });
     }
     res.status(200).json({ success: true, message: "Sync processed" });

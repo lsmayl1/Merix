@@ -13,9 +13,22 @@ const Sale = sequelize.define(
       type: DataTypes.UUID,
       allowNull: false,
     },
-    amount: {
-      type: DataTypes.DECIMAL(10, 2),
+    subtotal_amount: {
+      type: DataTypes.DECIMAL(10, 2), // 10 hane, 2 ondalık
       allowNull: false,
+      defaultValue: 0.0,
+    },
+    total_amount: {
+      type: DataTypes.DECIMAL(10, 2), // 10 hane, 2 ondalık
+      allowNull: false,
+    },
+    discount: {
+      type: DataTypes.DECIMAL(5, 2), // İndirim yüzdesi
+      defaultValue: 0.0, // Varsayılan indirim %0
+    },
+    discounted_amount: {
+      type: DataTypes.DECIMAL(10, 2), // İndirimli tutar
+      defaultValue: 0.0,
     },
     paymentMethod: {
       type: DataTypes.ENUM("cash", "credit_card", "bank_transfer"),
