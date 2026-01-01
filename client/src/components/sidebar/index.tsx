@@ -96,7 +96,9 @@ export const Sidebar = ({
             <NavLink
               to={item.link}
               className={({ isActive }) =>
-                `flex justify-between items-center hover:bg-border/10 ${
+                `flex ${
+                  collapsed ? "justify-center" : "justify-between"
+                } items-center hover:bg-border/10 ${
                   isActive && "bg-gray-300 text-white"
                 }	 rounded-lg p-2`
               }
