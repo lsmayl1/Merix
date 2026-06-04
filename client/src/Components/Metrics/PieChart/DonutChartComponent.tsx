@@ -1,14 +1,10 @@
 import React, { useMemo } from "react";
 import { PieChart } from ".";
-type data = {
-  name: string;
-  color?: string;
-  value: string | number;
-}[];
-type total = {
-  label: string;
-  value: number;
-};
+
+type DataItem = { name: string; color?: string; value: string | number };
+type Total = { label: string; value: number };
+
+const PALETTE = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#a855f7", "#0ea5e9", "#14b8a6", "#f97316"];
 
 export const DonutChartComponent = ({
   title,
@@ -16,47 +12,32 @@ export const DonutChartComponent = ({
   total,
 }: {
   title: string;
-  data: data;
-  total: total;
+  data: DataItem[];
+  total: Total;
 }) => {
-  function getRandomColor() {
-    const letters = "0123456789ABCDEF";
-    let color = "#";
-    for (let i = 0; i < 6; i++) {
-      color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
-  }
-  const chartData = useMemo(() => {
-    return data.map((dt) => ({
+  const chartData = useMemo(() =>
+    data.map((dt, i) => ({
       ...dt,
-      color: dt.color ? dt.color : getRandomColor(),
-    }));
-  }, [data]);
+      value: Number(dt.value),
+      color: dt.color ?? PALETTE[i % PALETTE.length],
+    })), [data]);
 
   return (
-    <div className="flex flex-col  h-full flex-2  bg-white rounded-lg p-2">
-      <h1 className="font-bold text-[#737373]">{title || "Pie Chart"}</h1>
-      <div className="flex w-full max-md:flex-col h-full p-4 gap-2">
-        <div className="w-full flex flex-2 items-center justify-center">
-          <div className="w-1/2 flex items-center justify-center max-md:w-full">
-            <PieChart chartData={chartData} total={total || 0} />
-          </div>
+    <div className="bg-white border border-[#e2e8f0] rounded-xl p-4">
+      <span className="text-sm font-semibold text-[#64748b]">{title}</span>
+      <div className="flex w-full max-md:flex-col gap-4 mt-4">
+        {/* Donut */}
+        <div className="flex items-center justify-center shrink-0">
+          <PieChart chartData={chartData} total={total} />
         </div>
-        <div className="grid grid-cols-3 items-center max-md:grid-cols-2 flex-2 overflow-auto auto-rows-[80px] max-h-[600px]">
-          {chartData?.map((dt, i) => (
-            <div
-              key={i}
-              className="flex items-center gap-4 h-full hover:bg-gray-100 hover:cursor-pointer p-2 rounded-lg "
-            >
-              <span
-                className={` rounded-xs h-1/2 w-2 `}
-                style={{ backgroundColor: dt.color }}
-              ></span>
-              <div className="flex flex-col  ">
-                <span>{dt.name || "Value"}</span>
-
-                <span>{dt.value + " ₼" || 0}</span>
+        {/* Legend grid */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2 overflow-auto content-start">
+          {chartData.map((dt, i) => (
+            <div key={i} className="flex items-center gap-2 py-1 px-1 rounded-lg hover:bg-[#f8fafc] cursor-pointer">
+              <span className="w-1.5 h-8 rounded-full shrink-0" style={{ backgroundColor: dt.color }} />
+              <div className="flex flex-col min-w-0">
+                <span className="text-xs text-[#64748b] truncate">{dt.name}</span>
+                <span className="text-xs font-semibold text-[#0f172a] tabular-nums">{dt.value} ₼</span>
               </div>
             </div>
           ))}
