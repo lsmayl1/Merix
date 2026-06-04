@@ -1,264 +1,82 @@
-import React, { useState } from "react";
+import React from "react";
 import { KPI } from "../../components/metrics/kpi/index.tsx";
 import { LineChart } from "../../components/metrics/lineChart/index.tsx";
-import { PieChartComponent } from "../../components/metrics/pieChart/PieChartComponent.tsx";
-import { Table } from "../../components/metrics/table/index.tsx";
-import { createColumnHelper } from "@tanstack/react-table";
-import Navigate from "../../assets/Navigation/Navigate";
-import { DonutChartComponent } from "../../components/metrics/pieChart/DonutChartComponent.tsx";
-import "../../style/index.css";
+import { PieChartComponent } from "../../components/metrics/PieChart/PieChartComponent.tsx";
+import { useGetClientsQuery } from "../../redux/features/clients/clientsSlice.tsx";
+import { useGetSalesByUserIdQuery } from "../../redux/features/sales/salesHook.ts";
+
 export const Dashboard = () => {
-  const [chartData, setChartData] = useState("revenue");
-  const columnHelper = createColumnHelper();
-  const LastSupplierTransactionsColumn = [
-    columnHelper.accessor("SupplierName", {
-      header: "Supplier Name",
-      headerClassName: "text-start",
-    }),
-    columnHelper.accessor("TransactionType", {
-      header: "Transaction Type",
-      cellClassName: "text-center",
-    }),
-    columnHelper.accessor("Amount", {
-      header: "Amount",
-      cellClassName: "text-center",
-    }),
-    // columnHelper.accessor("PaymentMethod", {
-    //   header: "Payment Method",
-    //   cellClassName: "text-center",
-    // }),
-    columnHelper.accessor("Date", {
-      header: "Date",
-      cellClassName: "text-center",
-    }),
-    columnHelper.accessor("Details", {
-      header: "Details",
-      cellClassName: "text-center",
+  const { data: clients = [] } = useGetClientsQuery(undefined, { pollingInterval: 30000 });
+  const { data: salesData } = useGetSalesByUserIdQuery(undefined, {
+    refetchOnMountOrArgChange: true,
+    pollingInterval: 30000,
+  });
 
-      cell: () => (
-        <button>
-          <Navigate />
-        </button>
-      ),
-    }),
-  ];
-  const LastSupplierTransactions = [
-    {
-      SupplierName: "Tesla",
-      TransactionType: "Buy",
-      Amount: "450 ₼",
-      PaymentMethod: "Credit",
-      Date: "12-08-25",
-    },
-    {
-      SupplierName: "Tesla",
-      TransactionType: "Buy",
-      Amount: "450 ₼",
-      PaymentMethod: "Credit",
-      Date: "12-08-25",
-    },
-    {
-      SupplierName: "Tesla",
-      TransactionType: "Buy",
-      Amount: "450 ₼",
-      PaymentMethod: "Credit",
-      Date: "12-08-25",
-    },
-    {
-      SupplierName: "Tesla",
-      TransactionType: "Buy",
-      Amount: "450 ₼",
-      PaymentMethod: "Credit",
-      Date: "12-08-25",
-    },
-    {
-      SupplierName: "Tesla",
-      TransactionType: "Buy",
-      Amount: "450 ₼",
-      PaymentMethod: "Credit",
-      Date: "12-08-25",
-    },
-    {
-      SupplierName: "Tesla",
-      TransactionType: "Buy",
-      Amount: "450 ₼",
-      PaymentMethod: "Credit",
-      Date: "12-08-25",
-    },
-    {
-      SupplierName: "Tesla",
-      TransactionType: "Buy",
-      Amount: "450 ₼",
-      PaymentMethod: "Credit",
-      Date: "12-08-25",
-    },
-    {
-      SupplierName: "Tesla",
-      TransactionType: "Buy",
-      Amount: "450 ₼",
-      PaymentMethod: "Credit",
-      Date: "12-08-25",
-    },
-    {
-      SupplierName: "Tesla",
-      TransactionType: "Buy",
-      Amount: "450 ₼",
-      PaymentMethod: "Credit",
-      Date: "12-08-25",
-    },
-    {
-      SupplierName: "Tesla",
-      TransactionType: "Buy",
-      Amount: "450 ₼",
-      PaymentMethod: "Credit",
-      Date: "12-08-25",
-    },
-    {
-      SupplierName: "Tesla",
-      TransactionType: "Buy",
-      Amount: "450 ₼",
-      PaymentMethod: "Credit",
-      Date: "12-08-25",
-    },
-    {
-      SupplierName: "Tesla",
-      TransactionType: "Buy",
-      Amount: "450 ₼",
-      PaymentMethod: "Credit",
-      Date: "12-08-25",
-    },
-    {
-      SupplierName: "Tesla",
-      TransactionType: "Buy",
-      Amount: "450 ₼",
-      PaymentMethod: "Credit",
-      Date: "12-08-25",
-    },
-    {
-      SupplierName: "Tesla",
-      TransactionType: "Buy",
-      Amount: "450 ₼",
-      PaymentMethod: "Credit",
-      Date: "12-08-25",
-    },
-    {
-      SupplierName: "Tesla",
-      TransactionType: "Buy",
-      Amount: "450 ₼",
-      PaymentMethod: "Credit",
-      Date: "12-08-25",
-    },
-    {
-      SupplierName: "Tesla",
-      TransactionType: "Buy",
-      Amount: "450 ₼",
-      PaymentMethod: "Credit",
-      Date: "12-08-25",
-    },
-  ];
-  const [timeframes, setTimeFrames] = useState([
-    { tf: "H", key: "hourly" },
-    { tf: "D", key: "Daily" },
-    { tf: "W", key: "Weakly" },
-    { tf: "M", key: "Monthly" },
-    { tf: "Y", key: "Yearly" },
-  ]);
+  const totalRevenue = clients.reduce((s: number, c: any) => s + parseFloat(c.totalRevenue || 0), 0);
+  const totalSales   = clients.reduce((s: number, c: any) => s + (c.totalSales || 0), 0);
+  const activeClients = clients.filter((c: any) => c.status === "active").length;
 
-  const supplierData = [
-    { name: "Tesla", value: 6000 },
-    { name: "Apple", value: 800 },
-    { name: "Micrasoft", value: 800 },
-    { name: "Apple", value: 800 },
-    { name: "Apple", value: 800 },
-    { name: "Apple", value: 800 },
-    { name: "Micrasoft", value: 800 },
-    { name: "Apple", value: 800 },
-    { name: "Apple", value: 800 },
-    { name: "Apple", value: 800 },
-    { name: "Micrasoft", value: 800 },
-    { name: "Apple", value: 800 },
-    { name: "Apple", value: 800 },
-  ];
-
-  const [selectedTimeFrame, setSelectedTimeFrame] = useState("hourly");
   return (
-    <div className="flex flex-col gap-2 h-full my-container">
+    <div className="flex flex-col gap-4 h-full my-container">
+      {/* KPIs */}
       <KPI
         data={[
-          { label: "Total Sales", value: "15,000 ₼" },
-          { label: "Net Profit", value: "8,000 ₼" },
-          { label: "Total Expenses", value: "7,000 ₼" },
+          { label: "Total Revenue",   value: totalRevenue.toFixed(2) + " ₼", icon: "revenue" },
+          { label: "Total Sales",     value: totalSales,                      icon: "sale" },
+          { label: "Active Companies", value: activeClients,                   icon: "clients" },
+          { label: "Total Companies", value: clients.length,                  icon: "companies" },
         ]}
       />
-      <div className="flex gap-2 min-w-0  max-md:flex-col">
-        <div className="flex flex-1 flex-col    bg-white p-2 rounded-lg transition-width duration-200 min-w-0">
-          <div className="flex flex-col gap-2">
-            <div className="flex justify-between">
-              <div className="flex items-center text-xs bg-[#D8E2EF] w-fit p-1  rounded-lg">
-                <button
-                  className={` px-2 p-1 cursor-pointer ${
-                    chartData === "revenue" ? "bg-white  rounded-lg " : ""
-                  }`}
-                  onClick={() => setChartData("revenue")}
-                >
-                  Revenue
-                </button>
-                <button
-                  className={`  px-2 p-1 cursor-pointer ${
-                    chartData === "profit" ? "bg-white  rounded-lg" : ""
-                  }`}
-                  onClick={() => setChartData("profit")}
-                >
-                  Profit
-                </button>
-              </div>
-              <div className="flex items-center text-xs bg-[#D8E2EF] w-fit p-1  rounded-lg">
-                {timeframes.map((tf, index) => (
-                  <button
-                    key={index}
-                    className={`  px-2 p-1 cursor-pointer ${
-                      tf.key === selectedTimeFrame ? "bg-white  rounded-lg" : ""
-                    }`}
-                    onClick={() => setSelectedTimeFrame(tf.key)}
-                  >
-                    {tf.tf}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <h1 className="text-xl font-bold">54,454 ₼</h1>
+
+      {/* Charts row */}
+      <div className="flex gap-4 min-w-0 max-md:flex-col">
+        {/* Line chart */}
+        <div className="flex-1 bg-white border border-[#e2e8f0] rounded-xl p-4 flex flex-col gap-3 min-w-0 min-h-[280px]">
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="size-7 bg-[#f1f5f9] rounded-md flex items-center justify-center">
+              <svg className="size-3.5 text-[#64748b]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+              </svg>
+            </span>
+            <span className="text-sm font-semibold text-[#64748b]">Revenue</span>
           </div>
-          <div className="w-full h-full min-w-0 transition-width duration-200  ">
-            <LineChart />
+          <div className="flex-1 min-h-[200px]">
+            <LineChart data={salesData?.chartData} />
           </div>
         </div>
-        <div className="flex-none  min-w-0">
+
+        {/* Pie chart */}
+        <div className="flex-none w-64 max-md:w-full">
           <PieChartComponent
-            title={"Income & Expenses"}
+            title="Income & Expenses"
             data={[
-              { name: "Income", value: 19, color: "#14B8A6" },
-              { name: "Expenses", value: 12, color: "#F63B3E" },
+              { name: "Revenue", value: totalRevenue, color: "#10b981" },
+              { name: "Sales",   value: totalSales,   color: "#3b82f6" },
             ]}
-            total={{ value: 7, label: "Net Profit" }}
+            total={{ value: totalRevenue, label: "Revenue" }}
           />
         </div>
       </div>
-      <div className="flex flex-col gap-2">
-        <DonutChartComponent
-          title={"Suppliers Debt"}
-          data={supplierData}
-          total={{ value: 400, label: "Total Debt" }}
-        />
-        <div className=" p-2 flex flex-col gap-2 bg-white rounded-lg">
-          <h1 className="font-bold text-[#737373]">
-            Last Supplier Transaction
-          </h1>
-          <div className="overflow-auto overflow-x-hidden max-md:hidden min-h-0 max-h-[400px]">
-            <Table
-              columns={LastSupplierTransactionsColumn}
-              data={LastSupplierTransactions}
-            />
-          </div>
+
+      {/* Clients overview table */}
+      <div className="bg-white border border-[#e2e8f0] rounded-xl p-4">
+        <p className="text-sm font-semibold text-[#64748b] mb-3">Top Companies</p>
+        <div className="flex flex-col gap-1">
+          {(clients as any[]).slice(0, 8).map((c) => (
+            <div key={c.id} className="flex items-center justify-between py-2 px-2 rounded-lg hover:bg-[#f8fafc]">
+              <div className="flex items-center gap-2">
+                <span className={`size-2 rounded-full shrink-0 ${c.status === "active" ? "bg-emerald-500" : "bg-red-400"}`} />
+                <span className="text-sm text-[#0f172a] font-medium">{c.name}</span>
+              </div>
+              <div className="flex items-center gap-6">
+                <span className="text-xs text-[#64748b]">{c.totalSales} sales</span>
+                <span className="text-sm font-semibold text-[#0f172a] tabular-nums">{c.totalRevenue} ₼</span>
+              </div>
+            </div>
+          ))}
+          {clients.length === 0 && (
+            <p className="text-sm text-[#94a3b8] text-center py-6">No companies yet.</p>
+          )}
         </div>
       </div>
     </div>

@@ -1,16 +1,11 @@
-import React, { useState } from "react";
-import Store from "../../assets/Header/Store";
-import Collapse from "../../assets/Navigation/Collapse";
-import Calendar from "../../assets/Header/Calendar";
-import Search from "../../assets/Header/Search";
-import Moon from "../../assets/Header/Moon";
-import Sun from "../../assets/Header/Sun";
-import UsaIcon from "../../assets/Header/UsaIcon.png";
-import Settings from "../../assets/Header/Settings";
+import React from "react";
 import Bell from "../../assets/Header/Bell";
+import Settings from "../../assets/Header/Settings";
+import Search from "../../assets/Header/Search";
 import { logout } from "../../redux/services/authService";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
+
 export const Header = ({
   collapsed,
   setCollapsed,
@@ -18,92 +13,66 @@ export const Header = ({
   collapsed: boolean;
   setCollapsed: () => void;
 }) => {
-  const [darkMode, setDarkMode] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
   return (
-    <div className="flex gap-2 max-md:gap-1 max-md:justify-between">
+    <div className="flex items-center gap-2 h-12">
+      {/* Expand button (shown when sidebar is collapsed) */}
       {collapsed && (
         <button
           onClick={setCollapsed}
-          className="px-4 bg-white rounded-xl  cursor-pointer max-md:hidden"
+          className="h-full px-3 bg-white border border-[#e2e8f0] rounded-lg hover:bg-[#f1f5f9] text-[#64748b] transition-colors max-md:hidden"
         >
-          <Collapse
-            className={` text-gray-500 ${
-              collapsed ? "rotate-270 size-3" : "size-3 rotate-90"
-            }`}
-          />
+          <svg
+            className="size-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M9 18l6-6-6-6" />
+          </svg>
         </button>
       )}
-      {/* <div className="bg-white p-2 max-md:hidden rounded-lg flex gap-2  items-center cursor-pointer hover:shadow-md">
-        <Store />
-        <span className="text-sm font-medium text-nowrap">Merix Store</span>
-        <button>
-          <Collapse className="text-black size-2" />
-        </button>
-      </div> */}
-      <div className="bg-white p-2 rounded-lg flex gap-2 items-center cursor-pointer hover:shadow-md">
-        <Calendar className={"max-md:size-4"} />
-        <span className="text-sm font-medium max-md:text-xs">Today</span>
-        <button>
-          <Collapse className="text-black size-2 " />
-        </button>
-      </div>
-      <div className="bg-white max-md:hidden rounded-lg flex items-center hover:shadow-md w-full p-2 gap-2 ">
-        <Search />
+
+      {/* Search */}
+      <div className="flex-1 max-md:hidden bg-white border border-[#e2e8f0] rounded-lg flex items-center gap-2 px-3 h-full hover:border-[#94a3b8] transition-colors">
+        <Search className="size-4 text-[#94a3b8] shrink-0" />
         <input
           type="text"
-          placeholder="Search for anything..."
-          className=" focus:outline-none w-full"
+          placeholder="Search..."
+          className="w-full bg-transparent text-sm text-[#0f172a] placeholder:text-[#94a3b8] focus:outline-none"
         />
       </div>
-      <div className="bg-white rounded-lg flex items-center hover:shadow-md px-1   gap-2 max-md:gap-1 max-md:hidden">
+
+      {/* Right actions */}
+      <div className="flex items-center gap-2 ml-auto">
+        {/* Bell */}
+        <button className="size-10 flex items-center justify-center bg-white border border-[#e2e8f0] rounded-lg hover:bg-[#f1f5f9] text-[#64748b] transition-colors">
+          <Bell className="size-4" />
+        </button>
+
+        {/* Settings */}
+        <button className="size-10 flex items-center justify-center bg-white border border-[#e2e8f0] rounded-lg hover:bg-[#f1f5f9] text-[#64748b] transition-colors max-md:hidden">
+          <Settings className="size-4" />
+        </button>
+
+        {/* Avatar / Logout */}
         <button
-          className={`max-md:p-1 p-2 rounded-lg cursor-pointer ${
-            darkMode ? "bg-bg " : ""
-          }`}
-          onClick={() => setDarkMode(!darkMode)}
+          onClick={() => {
+            dispatch(logout());
+            navigate("/");
+          }}
+          className="h-10 px-3 flex items-center gap-2 bg-[#0f172a] hover:bg-[#1e293b] text-white text-sm font-medium rounded-lg transition-colors"
         >
-          <Moon className={`max-md:size-4 ${darkMode && "text-white"}`} />
+          <span className="size-6 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">
+            A
+          </span>
+          <span className="max-md:hidden">Admin</span>
         </button>
-        <button
-          className={` max-md:p-1 p-2 rounded-lg cursor-pointer ${
-            !darkMode ? "bg-bg " : ""
-          }`}
-          onClick={() => setDarkMode(!darkMode)}
-        >
-          <Sun
-            className={`max-md:size-4 text-black ${darkMode && "text-white"}`}
-          />
-        </button>
-      </div>
-      <div className="bg-white rounded-lg flex items-center hover:shadow-md px-1   gap-2 max-md:hidden">
-        <button className={` p-2 rounded-lg cursor-pointer max-md:p-1`}>
-          <img src={UsaIcon} className="w-12 max-md:w-full" />
-        </button>
-      </div>
-      <div className="bg-white rounded-lg flex items-center hover:shadow-md px-1   gap-2  max-md:hidden">
-        <button className={` p-2 rounded-lg cursor-pointer `}>
-          <Settings className="max-md:size-4" />
-        </button>
-      </div>
-      <div className="flex gap-2 max-md:gap-1">
-        <div className="bg-white rounded-lg flex items-center hover:shadow-md px-1 ">
-          <button className={` p-2 rounded-lg cursor-pointer `}>
-            <Bell className={"max-md:size-4"} />
-          </button>
-        </div>
-        <div className="bg-white rounded-lg flex items-center hover:shadow-md px-2   gap-2">
-          <button
-            onClick={() => {
-              dispatch(logout());
-              navigate("/");
-            }}
-            className={` p-2 rounded-lg cursor-pointer `}
-          >
-            II
-          </button>
-        </div>
       </div>
     </div>
   );

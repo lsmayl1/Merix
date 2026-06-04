@@ -11,7 +11,7 @@ const Sale = sequelize.define(
     },
     userId: {
       type: DataTypes.UUID,
-      allowNull: false,
+      allowNull: true,
     },
     subtotal_amount: {
       type: DataTypes.DECIMAL(10, 2), // 10 hane, 2 ondalık
@@ -31,12 +31,20 @@ const Sale = sequelize.define(
       defaultValue: 0.0,
     },
     paymentMethod: {
-      type: DataTypes.ENUM("cash", "credit_card", "bank_transfer"),
-      allowNull: false,
+      type: DataTypes.ENUM("cash", "credit_card", "bank_transfer", "card", "mixed"),
+      allowNull: true,
     },
     type: {
       type: DataTypes.ENUM("sale", "return"),
-      allowNull: false,
+      allowNull: true,
+    },
+    clientId: {
+      type: DataTypes.UUID,
+      allowNull: true,
+    },
+    date: {
+      type: DataTypes.DATE,
+      allowNull: true,
     },
   },
   {

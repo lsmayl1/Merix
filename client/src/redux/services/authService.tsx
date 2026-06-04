@@ -11,11 +11,13 @@ const authService = createSlice({
   reducers: {
     setCredentials: (state, action) => {
       const { token, refreshToken } = action.payload;
-      state.token = token;
-      state.refreshToken = refreshToken;
-      setCookie("token", token, 1);
-      setCookie("refreshToken", refreshToken, 7);
+      state.token           = token;
       state.isAuthenticated = true;
+      setCookie("token", token, 1);
+      if (refreshToken) {
+        state.refreshToken = refreshToken;
+        setCookie("refreshToken", refreshToken, 7);
+      }
     },
     logout: (state) => {
       state.token = null;

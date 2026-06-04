@@ -33,6 +33,22 @@ const User = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    clientId: {
+      type: DataTypes.UUID,
+      allowNull: true,
+    },
+    role: {
+      type: DataTypes.STRING(32),
+      defaultValue: "cashier",
+    },
+    status: {
+      type: DataTypes.ENUM("active", "inactive", "suspended"),
+      defaultValue: "active",
+    },
+    permissions: {
+      type: DataTypes.JSONB,
+      defaultValue: [],
+    },
   },
   {
     timestamps: true,

@@ -7,7 +7,12 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": " nodemon index.js",
     "start": "node index.js",
-    "reset": "node ./src/config/database/resetDatabase.js"
+    "reset": "node ./src/config/database/resetDatabase.js",
+    "db": "node ./scripts/db-console.js",
+    "seed": "node ./scripts/seed.js",
+    "seed:force": "node ./scripts/seed.js --force",
+    "seed:all": "node ./scripts/seed-all.js",
+    "seed:all:force": "node ./scripts/seed-all.js --force"
   },
   "keywords": [],
   "author": "",
