@@ -1,10 +1,14 @@
 import React, { useMemo } from "react";
 import { PieChart } from ".";
-
-type DataItem = { name: string; color?: string; value: string | number };
-type Total = { label: string; value: number };
-
-const PALETTE = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#a855f7", "#0ea5e9", "#14b8a6", "#f97316"];
+type data = {
+  name: string;
+  color?: string;
+  value: string | number;
+}[];
+type total = {
+  label: string;
+  value: number;
+};
 
 export const PieChartComponent = ({
   title,
@@ -12,30 +16,46 @@ export const PieChartComponent = ({
   total,
 }: {
   title: string;
-  data: DataItem[];
-  total: Total;
+  data: data;
+  total: total;
 }) => {
-  const chartData = useMemo(() =>
-    data.map((dt, i) => ({
+  function getRandomColor() {
+    const letters = "0123456789ABCDEF";
+    let color = "#";
+    for (let i = 0; i < 6; i++) {
+      color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+  }
+  const chartData = useMemo(() => {
+    return data.map((dt) => ({
       ...dt,
-      value: Number(dt.value),
-      color: dt.color ?? PALETTE[i % PALETTE.length],
-    })), [data]);
+      color: dt.color ? dt.color : getRandomColor(),
+    }));
+  }, [data]);
 
   return (
-    <div className="flex flex-col gap-3 h-full bg-white border border-[#e2e8f0] rounded-xl p-4">
-      <span className="text-sm font-semibold text-[#64748b]">{title}</span>
-      <div className="flex items-center justify-center">
-        <PieChart chartData={chartData} total={total} />
+    <div className="flex flex-col gap-4 h-full flex-1   bg-white rounded-lg p-2">
+      <h1 className="font-bold text-[#737373]">{title || "Pie Chart"}</h1>
+      <div className="w-full flex items-center justify-center p-4">
+        <div className=" flex items-center justify-center">
+          <PieChart chartData={chartData} total={total || 0} />
+        </div>
       </div>
-      <div className="flex flex-col gap-1.5 overflow-auto">
-        {chartData.map((dt, i) => (
-          <div key={i} className="flex items-center justify-between py-1 px-1 rounded-lg hover:bg-[#f8fafc]">
-            <div className="flex items-center gap-2">
-              <span className="size-2.5 rounded-full shrink-0" style={{ backgroundColor: dt.color }} />
-              <span className="text-xs text-[#64748b]">{dt.name}</span>
+      <div className="flex flex-col gap-2 p-2 overflow-auto max-h-[100px] min-h-0">
+        {chartData?.map((dt, i) => (
+          <div
+            key={i}
+            className="flex justify-between hover:bg-gray-100 hover:cursor-pointer"
+          >
+            <div className="flex gap-2 items-center">
+              <span
+                className={` rounded-full size-4`}
+                style={{ backgroundColor: dt.color }}
+              ></span>
+              <span>{dt.name || "Value"}</span>
             </div>
-            <span className="text-xs font-semibold text-[#0f172a] tabular-nums">{dt.value} ₼</span>
+            <span>{dt.value || 0}</span>
           </div>
         ))}
       </div>

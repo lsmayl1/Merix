@@ -18,7 +18,7 @@ export const MainLayout = () => {
   }, []);
 
   return (
-    <div className="bg-[#f4f6fa] flex h-screen max-md:gap-0">
+    <div className="bg-bg flex h-screen max-md:gap-0">
       <Sidebar
         collapsed={collapsed}
         setCollapsed={() => {

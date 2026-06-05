@@ -6,6 +6,10 @@ import {
   ErpTransaction, ErpStockMovement,
 } from "../../models/index.js";
 
+// ─── Pull endpoint — ERP fetches its own data back from the Admin server ──────
+
+
+
 const router = express.Router();
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -379,6 +383,24 @@ router.get("/records", async (req, res, next) => {
     });
 
     res.json({ data: rows, total: count, page: parseInt(page) });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/** Pull endpoint — ERP calls this to fetch its synced data back from Admin */
+router.get("/pull", async (req, res, next) => {
+  try {
+    const { tenantId } = req.syncContext;
+
+    const [products, categories, suppliers, customers] = await Promise.all([
+      ErpProduct.findAll({ where: { clientId: tenantId }, order: [["syncedAt", "DESC"]] }),
+      ErpCategory.findAll({ where: { clientId: tenantId } }),
+      ErpSupplier.findAll({ where: { clientId: tenantId } }),
+      ErpCustomer.findAll({ where: { clientId: tenantId } }),
+    ]);
+
+    res.json({ products, categories, suppliers, customers });
   } catch (err) {
     next(err);
   }
