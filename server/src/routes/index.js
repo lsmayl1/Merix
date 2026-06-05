@@ -37,7 +37,7 @@ setupRouter.post("/", async (req, res, next) => {
 
     const hash = await bcrypt.hash(password, 10);
     const user = await User.create(
-      { firstName, lastName, email, phoneNumber: phoneNumber || email, password: hash, clientId: client.id },
+      { firstName, lastName, email, phoneNumber: phoneNumber || email, password: hash, clientId: client.id, role: "admin" },
       { transaction: t }
     );
 

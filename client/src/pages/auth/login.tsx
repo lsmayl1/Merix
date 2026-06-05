@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { AuthSchema } from "../../validations/Auth";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { NavLink, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useLoginMutation } from "../../redux/features/auth/authHooks";
 import { setCredentials } from "../../redux/services/authService";
 import { useDispatch } from "react-redux";
@@ -105,12 +105,6 @@ export const Login = () => {
         </button>
       </form>
 
-      <p className="text-center text-sm text-[#64748b]">
-        Don't have an account?{" "}
-        <NavLink to="/register" className="text-[#0f172a] font-semibold hover:underline">
-          Register
-        </NavLink>
-      </p>
     </div>
   );
 };
