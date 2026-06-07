@@ -13,6 +13,8 @@ import {
   useGetClientStockMovementsQuery,
   useGetClientDevicesQuery,
   useGetClientLicensesQuery,
+  useIssueLicenseMutation,
+  useUpdateLicenseMutation,
 } from "../../redux/features/clients/clientsSlice.tsx";
 import { Table } from "../../components/metrics/table/index.tsx";
 import { SaleDetailsModal } from "./SaleDetailsModal.tsx";
@@ -161,14 +163,7 @@ const deviceCols = [
   col.accessor("registeredAt",       { header: "Registered",  headerClassName: "text-center", cellClassName: "text-center text-xs text-text-secondary", cell: ({ getValue }) => dateStr(getValue()) }),
 ];
 
-const licenseCols = [
-  col.accessor("licenseKey", { header: "Key",         cell: ({ getValue }) => <span className="font-mono text-sm text-text-primary">{getValue()}</span> }),
-  col.accessor("type",       { header: "Type",        headerClassName: "text-center", cellClassName: "text-center", cell: ({ getValue }) => roleBadge(getValue() || "—") }),
-  col.accessor("status",     { header: "Status",      headerClassName: "text-center", cellClassName: "text-center", cell: ({ getValue }) => statusBadge(getValue()) }),
-  col.accessor("maxDevices", { header: "Max Devices", headerClassName: "text-center", cellClassName: "text-center font-medium text-text-primary" }),
-  col.accessor("issuedAt",   { header: "Issued",      headerClassName: "text-center", cellClassName: "text-center text-xs text-text-secondary", cell: ({ getValue }) => dateStr(getValue()) }),
-  col.accessor("expiresAt",  { header: "Expires",     headerClassName: "text-center", cellClassName: "text-center text-xs text-text-secondary", cell: ({ getValue }) => dateStr(getValue()) }),
-];
+// licenseCols is defined inside the component to access updateLicense + id
 
 // ── Component ────────────────────────────────────────────────────────────────
 
@@ -189,6 +184,13 @@ export const ClientDetail = () => {
   const [editForm, setEditForm]   = useState({ firstName: "", lastName: "", email: "", phoneNumber: "", role: "", status: "", password: "" });
   const [editError, setEditError] = useState("");
   const [updateClientUser, { isLoading: updatingUser }] = useUpdateClientUserMutation();
+
+  // Issue license
+  const [showIssueLicense, setShowIssueLicense] = useState(false);
+  const [licenseForm, setLicenseForm] = useState({ type: "monthly", expiresAt: "", maxDevices: "1", gracePeriodDays: "7", notes: "" });
+  const [licenseError, setLicenseError] = useState("");
+  const [issueLicense, { isLoading: issuingLicense }] = useIssueLicenseMutation();
+  const [updateLicense] = useUpdateLicenseMutation();
 
   // Sale details modal
   const [selectedSaleId, setSelectedSaleId] = useState<string | null>(null);
@@ -287,11 +289,20 @@ export const ClientDetail = () => {
     }),
     col.accessor("type", {
       header: "Type", headerClassName: "text-center", cellClassName: "text-center",
-      cell: ({ getValue }) => (
-        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-          getValue() === "return" ? "bg-danger-bg text-danger-text" : "bg-success-bg text-success-text"
-        }`}>{getValue()}</span>
-      ),
+      cell: ({ getValue, row }) => {
+        const v = getValue();
+        const hasReturns = (row.original as any).hasReturns;
+        return (
+          <div className="flex flex-col items-center gap-0.5">
+            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+              v === "return" ? "bg-danger-bg text-danger-text" : "bg-success-bg text-success-text"
+            }`}>{v}</span>
+            {hasReturns && v !== "return" && (
+              <span className="px-1.5 py-px rounded-full text-[10px] font-medium bg-rose-100 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400">returned</span>
+            )}
+          </div>
+        );
+      },
     }),
     col.accessor("date", { header: "Date", headerClassName: "text-center", cellClassName: "text-center text-text-secondary text-xs" }),
     col.display({
@@ -321,6 +332,56 @@ export const ClientDetail = () => {
       ),
     }),
   ], []);
+
+  const licenseCols = useMemo(() => [
+    col.accessor("licenseKey", { header: "Key",         cell: ({ getValue }) => <span className="font-mono text-xs text-text-primary">{getValue()}</span> }),
+    col.accessor("type",       { header: "Type",        headerClassName: "text-center", cellClassName: "text-center", cell: ({ getValue }) => roleBadge(getValue() || "—") }),
+    col.accessor("status",     { header: "Status",      headerClassName: "text-center", cellClassName: "text-center", cell: ({ getValue, row }) => {
+      const v = getValue();
+      const expires = row.original.expiresAt ? new Date(row.original.expiresAt) : null;
+      const isExpired = expires && expires < new Date();
+      return (
+        <div className="flex flex-col items-center gap-0.5">
+          {statusBadge(v)}
+          {isExpired && v === "active" && <span className="text-[10px] text-danger-text">Expired</span>}
+        </div>
+      );
+    }}),
+    col.accessor("maxDevices", { header: "Devices",     headerClassName: "text-center", cellClassName: "text-center font-medium text-text-primary" }),
+    col.accessor("expiresAt",  { header: "Expires",     headerClassName: "text-center", cellClassName: "text-center text-xs", cell: ({ getValue }) => {
+      const d = getValue();
+      if (!d) return <span className="text-text-muted">—</span>;
+      const expired = new Date(d) < new Date();
+      return <span className={expired ? "text-danger-text font-medium" : "text-text-secondary"}>{dateStr(d)}</span>;
+    }}),
+    col.display({
+      id: "license-actions",
+      header: "",
+      cell: ({ row }) => {
+        const l = row.original as any;
+        const isActive = l.status === "active";
+        return (
+          <div className="flex items-center gap-1.5 justify-end">
+            {isActive ? (
+              <button
+                onClick={() => updateLicense({ clientId: id!, licenseId: l.id, status: "cancelled" })}
+                className="text-xs text-danger-text hover:underline"
+              >
+                Revoke
+              </button>
+            ) : (
+              <button
+                onClick={() => updateLicense({ clientId: id!, licenseId: l.id, status: "active" })}
+                className="text-xs text-success-text hover:underline"
+              >
+                Activate
+              </button>
+            )}
+          </div>
+        );
+      },
+    }),
+  ], [id, updateLicense]);
 
   if (clientLoading) return <div className="flex items-center justify-center h-full text-text-secondary">Loading…</div>;
   if (!client)       return <div className="flex items-center justify-center h-full text-text-secondary">Company not found.</div>;
@@ -544,9 +605,14 @@ export const ClientDetail = () => {
         {/* ── Licenses ── */}
         {tab === "licenses" && (
           <div className="bg-bg-surface border border-border rounded-lg p-4 flex-1 min-h-0 overflow-auto">
-            <h2 className="text-sm font-semibold text-text-primary mb-3">Licenses ({licenses.length})</h2>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-semibold text-text-primary">Licenses ({licenses.length})</h2>
+              <button onClick={() => { setShowIssueLicense(true); setLicenseError(""); setLicenseForm({ type: "monthly", expiresAt: "", maxDevices: "1", gracePeriodDays: "7", notes: "" }); }} className="px-3 py-1.5 bg-brand hover:bg-brand-hover text-white text-xs font-medium rounded-lg transition-colors">
+                + Issue License
+              </button>
+            </div>
             <div className="flex items-center gap-2 mb-3 flex-wrap">
-              <FilterSelect value={licenseStatus} onChange={setLicenseStatus} placeholder="All statuses" options={[{ value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }, { value: "suspended", label: "Suspended" }]} />
+              <FilterSelect value={licenseStatus} onChange={setLicenseStatus} placeholder="All statuses" options={[{ value: "active", label: "Active" }, { value: "expired", label: "Expired" }, { value: "suspended", label: "Suspended" }, { value: "cancelled", label: "Cancelled" }]} />
               {licenseStatus && <ClearBtn onClick={() => setLicenseStatus("")} />}
               <Count shown={filteredLicenses.length} total={licenses.length} />
             </div>
@@ -639,6 +705,65 @@ export const ClientDetail = () => {
           saleId={selectedSaleId}
           onClose={() => setSelectedSaleId(null)}
         />
+      )}
+
+      {/* ── Issue License Modal ── */}
+      {showIssueLicense && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-bg-surface rounded-xl shadow-modal border border-border p-6 w-full max-w-md">
+            <h3 className="text-base font-semibold text-text-primary mb-4">Issue License</h3>
+            <form
+              className="flex flex-col gap-3"
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setLicenseError("");
+                try {
+                  await issueLicense({
+                    clientId: id!,
+                    type: licenseForm.type,
+                    expiresAt: licenseForm.expiresAt,
+                    maxDevices: Number(licenseForm.maxDevices),
+                    gracePeriodDays: Number(licenseForm.gracePeriodDays),
+                    notes: licenseForm.notes || undefined,
+                  }).unwrap();
+                  setShowIssueLicense(false);
+                } catch (err: any) {
+                  setLicenseError(err?.data?.error || "Failed to issue license");
+                }
+              }}
+            >
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className={labelCls}>Type</label>
+                  <select value={licenseForm.type} onChange={(e) => setLicenseForm((p) => ({ ...p, type: e.target.value }))} className={inputCls}>
+                    {["trial", "monthly", "yearly", "lifetime"].map((t) => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className={labelCls}>Max Devices</label>
+                  <input type="number" min="1" value={licenseForm.maxDevices} onChange={(e) => setLicenseForm((p) => ({ ...p, maxDevices: e.target.value }))} className={inputCls} />
+                </div>
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className={labelCls}>Expires At *</label>
+                <input type="date" value={licenseForm.expiresAt} onChange={(e) => setLicenseForm((p) => ({ ...p, expiresAt: e.target.value }))} className={inputCls} required />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className={labelCls}>Grace Period (days)</label>
+                <input type="number" min="0" value={licenseForm.gracePeriodDays} onChange={(e) => setLicenseForm((p) => ({ ...p, gracePeriodDays: e.target.value }))} className={inputCls} />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className={labelCls}>Notes</label>
+                <input value={licenseForm.notes} onChange={(e) => setLicenseForm((p) => ({ ...p, notes: e.target.value }))} placeholder="Optional note…" className={inputCls} />
+              </div>
+              {licenseError && <p className="text-xs text-danger-text bg-danger-bg border border-danger rounded-lg px-3 py-2">{licenseError}</p>}
+              <div className="flex gap-2 mt-1">
+                <button type="button" onClick={() => setShowIssueLicense(false)} className="flex-1 py-2 border border-border rounded-lg text-sm text-text-secondary hover:bg-bg-muted">Cancel</button>
+                <button type="submit" disabled={issuingLicense} className="flex-1 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:bg-brand-hover disabled:opacity-60">{issuingLicense ? "Issuing…" : "Issue License"}</button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

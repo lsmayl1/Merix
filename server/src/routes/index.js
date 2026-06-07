@@ -7,6 +7,7 @@ import { router as ClientController }   from "../controllers/clients/ClientContr
 import { router as CompanyController }  from "../controllers/companies/CompanyController.js";
 import { router as DatabaseController } from "../controllers/database/DatabaseController.js";
 import { router as AccountController }  from "../controllers/account/AccountController.js";
+import { router as DemoRequestController } from "../controllers/demo/DemoRequestController.js";
 import { authenticate }                 from "../middlewares/AuthMiddleware.js";
 import express from "express";
 import bcrypt from "bcrypt";
@@ -63,4 +64,5 @@ export default (app) => {
   app.use("/api/companies",authenticate, CompanyController);
   app.use("/api/database", authenticate, DatabaseController);
   app.use("/api/account",  authenticate, AccountController);
+  app.use("/api/demo-requests", DemoRequestController);
 };

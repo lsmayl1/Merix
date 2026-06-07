@@ -8,8 +8,9 @@ import { MainLayout }   from "./layout/main/index.tsx";
 import { Clients as Companies }      from "./pages/clients/index.tsx";
 import { ClientDetail as CompanyDetail } from "./pages/clients/detail.tsx";
 import { Database }     from "./pages/database/index.tsx";
-import { Account }      from "./pages/account/index.tsx";
-import { LandingPage }  from "./pages/landing/index.tsx";
+import { Account }        from "./pages/account/index.tsx";
+import { LandingPage }    from "./pages/landing/index.tsx";
+import { DemoRequests }   from "./pages/demo-requests/index.tsx";
 
 export const App = () => (
   <Routes>
@@ -22,6 +23,7 @@ export const App = () => (
         <Route path="/dashboard"    element={<Dashboard />} />
         <Route path="/companies"     element={<Companies />} />
         <Route path="/companies/:id" element={<CompanyDetail />} />
+        <Route path="/demo-requests" element={<DemoRequests />} />
         <Route path="/database"     element={<Database />} />
         <Route path="/account"      element={<Account />} />
         <Route path="*"             element={<div className="flex items-center justify-center h-full text-[#94a3b8]">Page not found</div>} />

@@ -33,15 +33,28 @@ const PaymentBadge = ({ method }: { method: string }) => {
 
 // ── Return History ────────────────────────────────────────────────────────────
 
+function fmtDate(raw: any): string {
+  if (!raw) return "";
+  try {
+    return new Date(raw).toLocaleString("en-GB", {
+      day: "2-digit", month: "2-digit", year: "numeric",
+      hour: "2-digit", minute: "2-digit",
+    });
+  } catch {
+    return String(raw);
+  }
+}
+
 const ReturnHistoryBlock = ({ returns }: { returns: any[] }) => {
   const [open, setOpen] = useState(true);
   if (!returns || returns.length === 0) return null;
 
   return (
-    <div className="border border-rose-200 dark:border-rose-800 rounded-xl overflow-hidden">
+    <div className="rounded-xl border border-rose-200 dark:border-rose-800">
+      {/* header */}
       <button
         onClick={() => setOpen((p) => !p)}
-        className="w-full flex items-center justify-between px-4 py-2.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-950/60 transition-colors"
+        className="w-full flex items-center justify-between px-4 py-2.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-950/60 transition-colors rounded-t-xl"
       >
         <div className="flex items-center gap-2">
           <RotateCcw size={14} className="text-rose-500" />
@@ -55,39 +68,45 @@ const ReturnHistoryBlock = ({ returns }: { returns: any[] }) => {
       {open && (
         <div className="divide-y divide-rose-100 dark:divide-rose-900/40">
           {returns.map((ret: any, idx: number) => (
-            <div key={ret.return_id || idx} className="px-4 py-3 bg-bg-surface">
-              <div className="flex items-center justify-between mb-2.5">
-                <div className="flex items-center gap-2">
+            <div key={ret.return_id || idx} className="px-4 py-3 bg-bg-surface last:rounded-b-xl">
+              {/* return meta */}
+              <div className="flex items-start justify-between gap-3 mb-2.5">
+                <div className="flex flex-wrap items-center gap-2 min-w-0">
                   <Badge color="rose">Return #{idx + 1}</Badge>
                   {ret.date && (
-                    <span className="text-[11px] text-text-muted font-mono">{ret.date}</span>
+                    <span className="text-[11px] text-text-muted font-mono">{fmtDate(ret.date)}</span>
                   )}
                 </div>
-                <span className="text-sm font-bold text-rose-600 dark:text-rose-400 tabular-nums">
+                <span className="text-sm font-bold text-rose-600 dark:text-rose-400 tabular-nums shrink-0">
                   −₼{fmt(ret.total_refunded ?? ret.amount ?? 0)}
                 </span>
               </div>
+
               {ret.reason && (
-                <p className="text-xs text-text-secondary italic mb-2.5">"{ret.reason}"</p>
+                <p className="text-xs text-text-secondary italic mb-2.5 break-words">"{ret.reason}"</p>
               )}
+
+              {/* returned items */}
               {ret.items && ret.items.length > 0 && (
-                <div className="rounded-lg border border-rose-200 dark:border-rose-800 overflow-hidden">
-                  <table className="w-full text-xs">
+                <div className="rounded-lg border border-rose-200 dark:border-rose-800 overflow-x-auto">
+                  <table className="min-w-full text-xs">
                     <thead>
                       <tr className="bg-rose-50/70 dark:bg-rose-950/30 text-[10px] uppercase tracking-wide text-rose-400">
-                        <th className="text-left px-3 py-1.5 font-medium">Product</th>
-                        <th className="text-center px-3 py-1.5 font-medium">Qty</th>
-                        <th className="text-right px-3 py-1.5 font-medium">Amount</th>
+                        <th className="text-left px-3 py-1.5 font-medium whitespace-nowrap">Product</th>
+                        <th className="text-center px-3 py-1.5 font-medium whitespace-nowrap">Qty</th>
+                        <th className="text-right px-3 py-1.5 font-medium whitespace-nowrap">Amount</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-rose-100 dark:divide-rose-900/30">
                       {ret.items.map((item: any, i: number) => (
                         <tr key={i} className="text-text-secondary">
-                          <td className="px-3 py-2">{item.name || item.product_name || "—"}</td>
-                          <td className="px-3 py-2 text-center tabular-nums">
+                          <td className="px-3 py-2 break-words max-w-[160px]">
+                            {item.name || item.product_name || "—"}
+                          </td>
+                          <td className="px-3 py-2 text-center tabular-nums whitespace-nowrap">
                             {Number(item.returned_quantity ?? item.qty ?? item.quantity ?? 1).toFixed(3)}
                           </td>
-                          <td className="px-3 py-2 text-right tabular-nums font-medium text-rose-600 dark:text-rose-400">
+                          <td className="px-3 py-2 text-right tabular-nums font-medium text-rose-600 dark:text-rose-400 whitespace-nowrap">
                             −₼{fmt(item.refund_amount ?? item.amount ?? 0)}
                           </td>
                         </tr>
@@ -174,6 +193,19 @@ export const SaleDetailsModal = ({
   );
   const hasPartialReturn = totalReturned > 0;
   const shortId = "#" + saleId.slice(0, 8);
+
+  // Compute returned qty per item name from returns history (covers historical data
+  // where item.returned_quantity was not yet stored by the server)
+  const returnedByName = React.useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const ret of (data?.returns ?? [])) {
+      for (const ri of (ret.items ?? [])) {
+        const key = ri.name || "";
+        if (key) map[key] = (map[key] || 0) + Number(ri.returned_quantity ?? ri.qty ?? ri.quantity ?? 0);
+      }
+    }
+    return map;
+  }, [data?.returns]);
 
   // Escape key
   React.useEffect(() => {
@@ -275,7 +307,8 @@ export const SaleDetailsModal = ({
                           const qty      = Number(item.quantity  ?? item.qty   ?? 1);
                           const price    = Number(item.sell_price ?? item.price ?? 0);
                           const subtotal = Number(item.subtotal   ?? qty * price);
-                          const retQty   = Number(item.returned_quantity ?? 0);
+                          // Prefer stored returned_quantity; fall back to computing from returns history
+                          const retQty   = Number(item.returned_quantity ?? 0) || (returnedByName[item.name || ""] ?? 0);
                           const isFullReturn    = retQty > 0 && retQty >= qty;
                           const isPartialReturn = retQty > 0 && retQty < qty;
 
@@ -351,7 +384,8 @@ export const SaleDetailsModal = ({
               <div className="bg-bg-subtle rounded-xl p-4 flex flex-col gap-2 text-sm">
                 <div className="flex justify-between text-text-secondary">
                   <span>Subtotal</span>
-                  <span className="tabular-nums">₼{fmt(data.subtotal_amount)}</span>
+                  {/* Show original subtotal (before returns) */}
+                  <span className="tabular-nums">₼{fmt(Number(data.subtotal_amount) + totalReturned)}</span>
                 </div>
                 {Number(data.discounted_amount) > 0 && (
                   <div className="flex justify-between text-text-secondary">

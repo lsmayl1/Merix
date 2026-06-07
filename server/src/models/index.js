@@ -13,6 +13,7 @@ import ErpSupplier from "./erp/SupplierModel.js";
 import ErpCustomer from "./erp/CustomerModel.js";
 import ErpTransaction from "./erp/TransactionModel.js";
 import ErpStockMovement from "./erp/StockMovementModel.js";
+import DemoRequest from "./demo/DemoRequestModel.js";
 
 // Associations
 Client.hasMany(User, { foreignKey: "clientId", as: "users" });
@@ -38,4 +39,5 @@ export {
   Sequelize, Op, sequelize,
   Sale, User, Client, Company, SyncRecord, ClientDevice, License,
   ErpProduct, ErpCategory, ErpSupplier, ErpCustomer, ErpTransaction, ErpStockMovement,
+  DemoRequest,
 };

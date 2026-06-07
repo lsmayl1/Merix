@@ -231,8 +231,54 @@ async function handleSaleReturn(entityId, operation, data, tenantId, t) {
   if (idx >= 0) returns[idx] = newReturn;
   else returns.push(newReturn);
 
+  // Recalculate returned_quantity on each sale item by summing across all returns
+  const updatedItems = (existingData.items || []).map((item) => {
+    const totalReturned = returns.reduce((sum, ret) => {
+      const retItem = (ret.items || []).find(
+        (ri) =>
+          (ri.name && item.name && ri.name === item.name) ||
+          (ri.sale_detail_id != null && item.sale_detail_id != null &&
+            String(ri.sale_detail_id) === String(item.sale_detail_id))
+      );
+      return sum + Number(retItem ? (retItem.returned_quantity ?? retItem.qty ?? retItem.quantity ?? 0) : 0);
+    }, 0);
+    return { ...item, returned_quantity: totalReturned };
+  });
+
+  // Sum of all refunds across every return for this sale
+  const totalAllRefunded = returns.reduce((sum, r) => sum + Number(r.total_refunded ?? 0), 0);
+
+  // Update the Sale row's total_amount and subtotal_amount to net values (original − all returns).
+  // Base values are captured once on the first return so re-processing is idempotent.
+  const saleRow = await Sale.findOne({ where: { id: originalSaleId }, transaction: t });
+
+  const baseTotalAmount =
+    existingData._base_total_amount != null
+      ? Number(existingData._base_total_amount)
+      : saleRow ? Number(saleRow.total_amount) : null;
+
+  const baseSubtotalAmount =
+    existingData._base_subtotal_amount != null
+      ? Number(existingData._base_subtotal_amount)
+      : saleRow ? Number(saleRow.subtotal_amount) : null;
+
+  if (saleRow) {
+    const updates = {};
+    if (baseTotalAmount    != null) updates.total_amount    = parseFloat((baseTotalAmount    - totalAllRefunded).toFixed(2));
+    if (baseSubtotalAmount != null) updates.subtotal_amount = parseFloat((baseSubtotalAmount - totalAllRefunded).toFixed(2));
+    if (Object.keys(updates).length) await saleRow.update(updates, { transaction: t });
+  }
+
   await original.update(
-    { data: { ...existingData, returns } },
+    {
+      data: {
+        ...existingData,
+        items: updatedItems,
+        returns,
+        _base_total_amount:    baseTotalAmount,
+        _base_subtotal_amount: baseSubtotalAmount,
+      },
+    },
     { transaction: t },
   );
 }

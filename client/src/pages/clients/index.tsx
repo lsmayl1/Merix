@@ -5,6 +5,7 @@ import {
   useGetClientsQuery,
   useSetupClientMutation,
   useToggleClientStatusMutation,
+  useUpdateClientMutation,
 } from "../../redux/features/clients/clientsSlice.tsx";
 import { Table } from "../../components/metrics/table/index.tsx";
 
@@ -21,8 +22,12 @@ export const Clients = () => {
   const { data: clients = [], isLoading } = useGetClientsQuery(undefined, { pollingInterval: 30000 });
   const [setupClient, { isLoading: isCreating }] = useSetupClientMutation();
   const [toggleStatus] = useToggleClientStatusMutation();
+  const [updateClient, { isLoading: isSaving }]  = useUpdateClientMutation();
 
   const [showAdd, setShowAdd]   = useState(false);
+  const [editTarget, setEditTarget] = useState<any>(null);
+  const [editForm, setEditForm]     = useState({ name: "", email: "", phone: "" });
+  const [editError, setEditError]   = useState("");
   const [step, setStep]         = useState<1 | 2>(1);
   const [company, setCompany]   = useState(emptyCompany);
   const [owner, setOwner]       = useState(emptyOwner);
@@ -39,6 +44,24 @@ export const Clients = () => {
       return matchSearch && matchStatus;
     });
   }, [clients, search, statusFilter]);
+
+  const openEdit = (client: any) => {
+    setEditTarget(client);
+    setEditForm({ name: client.name || "", email: client.email || "", phone: client.phone || "" });
+    setEditError("");
+  };
+
+  const handleEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEditError("");
+    if (!editForm.name.trim()) { setEditError("Name is required."); return; }
+    try {
+      await updateClient({ id: editTarget.id, ...editForm }).unwrap();
+      setEditTarget(null);
+    } catch (err: any) {
+      setEditError(err?.data?.error || "Something went wrong.");
+    }
+  };
 
   const resetModal = () => {
     setShowAdd(false);
@@ -127,9 +150,20 @@ export const Clients = () => {
       headerClassName: "text-center",
       cellClassName: "text-center",
       cell: ({ row }) => (
-        <button onClick={() => navigate(`/companies/${row.original.id}`)} className="text-xs text-text-secondary hover:text-text-primary hover:underline">
-          View →
-        </button>
+        <div className="flex items-center justify-center gap-3">
+          <button
+            onClick={() => openEdit(row.original)}
+            className="text-xs text-text-secondary hover:text-text-primary hover:underline"
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => navigate(`/companies/${row.original.id}`)}
+            className="text-xs text-text-secondary hover:text-text-primary hover:underline"
+          >
+            View →
+          </button>
+        </div>
       ),
     }),
   ];
@@ -204,6 +238,65 @@ export const Clients = () => {
       <div className="bg-bg-surface border border-border rounded-lg p-4 flex-1 min-h-0 overflow-auto">
         <Table columns={columns} data={filteredClients} isLoading={isLoading} />
       </div>
+
+      {/* Edit Company modal */}
+      {editTarget && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-bg-surface rounded-xl shadow-modal border border-border p-6 w-full max-w-sm">
+            <h2 className="text-lg font-semibold text-text-primary mb-4">Edit Company</h2>
+            <form onSubmit={handleEdit} className="flex flex-col gap-3">
+              <div className="flex flex-col gap-1">
+                <label className={labelCls}>Name *</label>
+                <input
+                  value={editForm.name}
+                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                  className={inputCls}
+                  placeholder="Business name"
+                  required
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className={labelCls}>Email</label>
+                <input
+                  value={editForm.email}
+                  onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                  className={inputCls}
+                  placeholder="contact@business.com"
+                  type="email"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className={labelCls}>Phone</label>
+                <input
+                  value={editForm.phone}
+                  onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                  className={inputCls}
+                  placeholder="+994 50 000 00 00"
+                />
+              </div>
+              {editError && (
+                <p className="text-xs text-danger-text bg-danger-bg border border-danger rounded-lg px-3 py-2">{editError}</p>
+              )}
+              <div className="flex gap-2 mt-1">
+                <button
+                  type="button"
+                  onClick={() => setEditTarget(null)}
+                  className="flex-1 py-2 border border-border rounded-lg text-sm text-text-secondary hover:bg-bg-muted"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSaving}
+                  className="flex-1 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:bg-brand-hover disabled:opacity-50"
+                >
+                  {isSaving ? "Saving…" : "Save"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Create Company + Owner modal */}
       {showAdd && (

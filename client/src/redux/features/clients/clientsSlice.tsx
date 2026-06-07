@@ -70,6 +70,30 @@ export const ClientsApi = createApi({
     getClientLicenses: builder.query({
       query: (id: string) => `/clients/${id}/licenses`,
     }),
+    updateClient: builder.mutation({
+      query: ({ id, ...data }: { id: string; name?: string; email?: string; phone?: string }) => ({
+        url: `/clients/${id}`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: ["Clients"],
+    }),
+    issueLicense: builder.mutation({
+      query: ({ clientId, ...data }: { clientId: string; type: string; expiresAt: string; maxDevices?: number; gracePeriodDays?: number; notes?: string }) => ({
+        url: `/clients/${clientId}/licenses`,
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["Clients"],
+    }),
+    updateLicense: builder.mutation({
+      query: ({ clientId, licenseId, ...data }: { clientId: string; licenseId: string; [key: string]: any }) => ({
+        url: `/clients/${clientId}/licenses/${licenseId}`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: ["Clients"],
+    }),
     toggleClientStatus: builder.mutation({
       query: (id: string) => ({ url: `/clients/${id}/status`, method: "PATCH" }),
       invalidatesTags: ["Clients"],
@@ -93,5 +117,8 @@ export const {
   useGetClientStockMovementsQuery,
   useGetClientDevicesQuery,
   useGetClientLicensesQuery,
+  useUpdateClientMutation,
+  useIssueLicenseMutation,
+  useUpdateLicenseMutation,
   useToggleClientStatusMutation,
 } = ClientsApi;

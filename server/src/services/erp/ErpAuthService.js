@@ -203,6 +203,8 @@ export const refreshErpTokens = async ({ userId, deviceId }) => {
   if (!device || device.status !== "active") throw new AppError("Device not active", 401);
 
   const client = await Client.findByPk(user.clientId);
+  const license = await getLicense(user.clientId);
+
   const profile = {
     id: user.id,
     email: user.email,
@@ -223,11 +225,18 @@ export const refreshErpTokens = async ({ userId, deviceId }) => {
     tenantId: client?.id,
     role: user.role || "cashier",
     permissions: user.permissions || [],
-    licenseId: null,
+    licenseId: license?.id || null,
     deviceId,
   });
 
   await device.update({ lastSeenAt: new Date() });
 
-  return { accessToken, offlineToken, profile };
+  return {
+    accessToken,
+    offlineToken,
+    profile,
+    license: license
+      ? { licenseKey: license.licenseKey, expiresAt: license.expiresAt, type: license.type, status: license.status }
+      : null,
+  };
 };

@@ -18,10 +18,18 @@ const ChevronLeft = ({ className = "" }: { className?: string }) => (
   </svg>
 );
 
+const DemoIcon = ({ className = "" }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="4" width="18" height="16" rx="2" />
+    <path d="M8 2v4M16 2v4M3 10h18M8 14h2M14 14h2M8 18h2M14 18h2" />
+  </svg>
+);
+
 const NAV = [
-  { name: "Dashboard", link: "/dashboard", icon: <Dashboard /> },
-  { name: "Companies", link: "/companies", icon: <Companies /> },
-  { name: "Database",  link: "/database",  icon: <Database /> },
+  { name: "Dashboard",      link: "/dashboard",      icon: <Dashboard /> },
+  { name: "Companies",      link: "/companies",       icon: <Companies /> },
+  { name: "Demo Requests",  link: "/demo-requests",   icon: <DemoIcon /> },
+  { name: "Database",       link: "/database",        icon: <Database /> },
 ];
 
 const BOTTOM = [
