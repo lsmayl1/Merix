@@ -421,6 +421,159 @@ router.patch("/:id", async (req, res, next) => {
   }
 });
 
+// GET /api/clients/:id/reports — comprehensive report data
+router.get("/:id/reports", async (req, res, next) => {
+  try {
+    const clientId = req.params.id;
+
+    const [sales, products, customers, transactions, categories] = await Promise.all([
+      Sale.findAll({ where: { clientId } }),
+      ErpProduct.findAll({ where: { clientId } }),
+      ErpCustomer.findAll({ where: { clientId } }),
+      ErpTransaction.findAll({ where: { clientId } }),
+      ErpCategory.findAll({ where: { clientId } }),
+    ]);
+
+    // — Date boundaries ————————————————————————————————————————
+    const now        = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const todayEnd   = new Date(todayStart.getTime() + 86400000);
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const getTs = (s) => new Date(s.date || s.createdAt).getTime();
+
+    // — Sales ——————————————————————————————————————————————————
+    const saleRows    = sales.filter((s) => s.type !== "return");
+    const returnRows  = sales.filter((s) => s.type === "return");
+    const amt         = (s) => Math.abs(parseFloat(s.total_amount) || 0);
+
+    const totalCount   = saleRows.length;
+    const totalRevenue = saleRows.reduce((a, s) => a + amt(s), 0);
+    const avgOrder     = totalCount > 0 ? totalRevenue / totalCount : 0;
+
+    const todaySales   = saleRows.filter((s) => { const t = getTs(s); return t >= todayStart && t < todayEnd; });
+    const monthSales   = saleRows.filter((s) => getTs(s) >= monthStart.getTime());
+
+    const byPayment = {};
+    saleRows.forEach((s) => {
+      const m = s.paymentMethod || "cash";
+      if (!byPayment[m]) byPayment[m] = { method: m, count: 0, amount: 0 };
+      byPayment[m].count++;
+      byPayment[m].amount += amt(s);
+    });
+
+    // monthly revenue (last 24 months max)
+    const monthlyBuckets = {};
+    sales.forEach((s) => {
+      const a = amt(s);
+      const d = new Date(s.date || s.createdAt);
+      const key   = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const label = d.toLocaleString("en", { month: "short", year: "2-digit" });
+      if (!monthlyBuckets[key]) monthlyBuckets[key] = { month: label, revenue: 0, orders: 0 };
+      if (s.type === "return") { monthlyBuckets[key].revenue -= a; }
+      else { monthlyBuckets[key].revenue += a; monthlyBuckets[key].orders += 1; }
+    });
+    const monthly = Object.entries(monthlyBuckets)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([, v]) => ({ ...v, revenue: Math.max(0, parseFloat(v.revenue.toFixed(2))) }));
+
+    // sales by cashier (userId)
+    const byCashier = {};
+    saleRows.forEach((s) => {
+      const uid = s.userId || "unknown";
+      if (!byCashier[uid]) byCashier[uid] = { userId: uid, count: 0, revenue: 0 };
+      byCashier[uid].count++;
+      byCashier[uid].revenue += amt(s);
+    });
+    const cashierIds = Object.keys(byCashier).filter((id) => id !== "unknown");
+    const cashierUsers = cashierIds.length
+      ? await User.findAll({ where: { id: cashierIds }, attributes: ["id", "firstName", "lastName"] })
+      : [];
+    const cashierNameMap = {};
+    cashierUsers.forEach((u) => { cashierNameMap[u.id] = `${u.firstName} ${u.lastName}`; });
+    const byCashierArr = Object.values(byCashier)
+      .map((c) => ({ ...c, name: cashierNameMap[c.userId] || "Unknown", revenue: parseFloat(c.revenue.toFixed(2)) }))
+      .sort((a, b) => b.revenue - a.revenue);
+
+    // — Inventory ——————————————————————————————————————————————
+    const LOW_STOCK = 5;
+    const activeProducts = products.filter((p) => p.isActive !== false);
+    const lowStockList   = activeProducts.filter((p) => parseFloat(p.stock || 0) > 0 && parseFloat(p.stock || 0) <= LOW_STOCK);
+    const outOfStockList = activeProducts.filter((p) => parseFloat(p.stock || 0) <= 0);
+    const totalValue     = products.reduce((a, p) => a + parseFloat(p.stock || 0) * parseFloat(p.price || 0), 0);
+
+    const catMap = {};
+    categories.forEach((c) => { catMap[c.id] = c.name; });
+    const byCategory = {};
+    products.forEach((p) => {
+      const cat = catMap[p.categoryId] || "Uncategorized";
+      if (!byCategory[cat]) byCategory[cat] = { name: cat, count: 0, value: 0 };
+      byCategory[cat].count++;
+      byCategory[cat].value += parseFloat(p.stock || 0) * parseFloat(p.price || 0);
+    });
+
+    // — Customers ——————————————————————————————————————————————
+    const totalDebt = customers.reduce((a, c) => a + Math.max(0, parseFloat(c.balance || 0)), 0);
+    const debtors   = customers.filter((c) => parseFloat(c.balance || 0) > 0).length;
+    const topDebtors = customers
+      .filter((c) => parseFloat(c.balance || 0) > 0)
+      .sort((a, b) => parseFloat(b.balance) - parseFloat(a.balance))
+      .slice(0, 10)
+      .map((c) => ({ name: c.name, phone: c.phone, balance: parseFloat(parseFloat(c.balance).toFixed(2)) }));
+
+    // — Financial (ErpTransaction) —————————————————————————————
+    const income   = transactions.filter((t) => t.type === "income").reduce((a, t) => a + parseFloat(t.amount || 0), 0);
+    const expenses = transactions.filter((t) => t.type === "expense").reduce((a, t) => a + parseFloat(t.amount || 0), 0);
+    const txByType = {};
+    transactions.forEach((t) => {
+      const type = t.type || "other";
+      if (!txByType[type]) txByType[type] = { type, count: 0, total: 0 };
+      txByType[type].count++;
+      txByType[type].total += parseFloat(t.amount || 0);
+    });
+    const txByPayment = {};
+    transactions.forEach((t) => {
+      const m = t.paymentMethod || "cash";
+      if (!txByPayment[m]) txByPayment[m] = { method: m, count: 0, total: 0 };
+      txByPayment[m].count++;
+      txByPayment[m].total += parseFloat(t.amount || 0);
+    });
+
+    res.json({
+      sales: {
+        total:           { count: totalCount, revenue: parseFloat(totalRevenue.toFixed(2)), avgOrder: parseFloat(avgOrder.toFixed(2)) },
+        today:           { count: todaySales.length, revenue: parseFloat(todaySales.reduce((a, s) => a + amt(s), 0).toFixed(2)) },
+        thisMonth:       { count: monthSales.length, revenue: parseFloat(monthSales.reduce((a, s) => a + amt(s), 0).toFixed(2)) },
+        returns:         { count: returnRows.length, amount: parseFloat(returnRows.reduce((a, s) => a + amt(s), 0).toFixed(2)) },
+        byPaymentMethod: Object.values(byPayment).map((p) => ({ ...p, amount: parseFloat(p.amount.toFixed(2)) })),
+        monthly,
+        byCashier:       byCashierArr,
+      },
+      inventory: {
+        total:      { count: activeProducts.length, totalValue: parseFloat(totalValue.toFixed(2)) },
+        lowStock:   lowStockList.map((p) => ({ id: p.id, name: p.name, stock: parseFloat(p.stock || 0), unit: p.unit, price: parseFloat(p.price || 0) })),
+        outOfStock: outOfStockList.map((p) => ({ id: p.id, name: p.name })),
+        byCategory: Object.values(byCategory).map((c) => ({ ...c, value: parseFloat(c.value.toFixed(2)) })).sort((a, b) => b.value - a.value),
+      },
+      customers: {
+        total:      customers.length,
+        debtors,
+        totalDebt:  parseFloat(totalDebt.toFixed(2)),
+        topDebtors,
+      },
+      financial: {
+        income:    parseFloat(income.toFixed(2)),
+        expenses:  parseFloat(expenses.toFixed(2)),
+        netProfit: parseFloat((income - expenses).toFixed(2)),
+        byType:    Object.values(txByType).map((t) => ({ ...t, total: parseFloat(t.total.toFixed(2)) })),
+        byPayment: Object.values(txByPayment).map((t) => ({ ...t, total: parseFloat(t.total.toFixed(2)) })),
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // PATCH /api/clients/:id/status
 router.patch("/:id/status", async (req, res, next) => {
   try {

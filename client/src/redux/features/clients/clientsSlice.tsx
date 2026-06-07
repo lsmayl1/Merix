@@ -64,6 +64,9 @@ export const ClientsApi = createApi({
     getClientStockMovements: builder.query({
       query: (id: string) => `/clients/${id}/stock-movements`,
     }),
+    getClientReports: builder.query({
+      query: (id: string) => `/clients/${id}/reports`,
+    }),
     getClientDevices: builder.query({
       query: (id: string) => `/clients/${id}/devices`,
     }),
@@ -121,4 +124,5 @@ export const {
   useIssueLicenseMutation,
   useUpdateLicenseMutation,
   useToggleClientStatusMutation,
+  useGetClientReportsQuery,
 } = ClientsApi;

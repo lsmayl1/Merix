@@ -25,9 +25,17 @@ const DemoIcon = ({ className = "" }: { className?: string }) => (
   </svg>
 );
 
+const ReportsIcon = ({ className = "" }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 3v18h18" />
+    <path d="M18 17V9M13 17V5M8 17v-3" />
+  </svg>
+);
+
 const NAV = [
   { name: "Dashboard",      link: "/dashboard",      icon: <Dashboard /> },
   { name: "Companies",      link: "/companies",       icon: <Companies /> },
+  { name: "Reports",        link: "/reports",         icon: <ReportsIcon /> },
   { name: "Demo Requests",  link: "/demo-requests",   icon: <DemoIcon /> },
   { name: "Database",       link: "/database",        icon: <Database /> },
 ];

@@ -21,8 +21,6 @@ export const DemoRequests = () => {
   const [statusFilter, setStatusFilter] = useState("");
   const { data, isLoading } = useGetDemoRequestsQuery({ status: statusFilter || undefined });
   const [updateStatus] = useUpdateDemoRequestMutation();
-  const [expanded, setExpanded] = useState<string | null>(null);
-
   const rows = data?.data ?? [];
   const total = data?.total ?? 0;
 
@@ -62,6 +60,7 @@ export const DemoRequests = () => {
                 <th className="text-left px-4 py-3 font-medium text-text-secondary">Name</th>
                 <th className="text-left px-4 py-3 font-medium text-text-secondary">Company</th>
                 <th className="text-left px-4 py-3 font-medium text-text-secondary">Contact</th>
+                <th className="text-left px-4 py-3 font-medium text-text-secondary">Message</th>
                 <th className="text-left px-4 py-3 font-medium text-text-secondary">Date</th>
                 <th className="text-left px-4 py-3 font-medium text-text-secondary">Status</th>
                 <th className="text-left px-4 py-3 font-medium text-text-secondary">Actions</th>
@@ -70,15 +69,18 @@ export const DemoRequests = () => {
             <tbody>
               {rows.map((row: any) => (
                 <React.Fragment key={row.id}>
-                  <tr
-                    className="border-b border-border hover:bg-bg-muted cursor-pointer transition"
-                    onClick={() => setExpanded(expanded === row.id ? null : row.id)}
-                  >
+                  <tr className="border-b border-border hover:bg-bg-muted transition">
                     <td className="px-4 py-3 font-medium text-text-primary">{row.name}</td>
                     <td className="px-4 py-3 text-text-secondary">{row.company || "—"}</td>
                     <td className="px-4 py-3 text-text-secondary">
                       <div>{row.phone || ""}</div>
                       <div className="text-xs">{row.email || ""}</div>
+                    </td>
+                    <td className="px-4 py-3 text-text-secondary max-w-xs">
+                      {row.message
+                        ? <span className="text-sm italic">{row.message}</span>
+                        : <span className="text-text-muted text-xs">—</span>
+                      }
                     </td>
                     <td className="px-4 py-3 text-text-secondary whitespace-nowrap">{fmtDate(row.createdAt)}</td>
                     <td className="px-4 py-3">
@@ -86,7 +88,7 @@ export const DemoRequests = () => {
                         {STATUS_LABELS[row.status]}
                       </span>
                     </td>
-                    <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                    <td className="px-4 py-3">
                       <select
                         value={row.status}
                         onChange={(e) => updateStatus({ id: row.id, status: e.target.value })}
@@ -98,13 +100,6 @@ export const DemoRequests = () => {
                       </select>
                     </td>
                   </tr>
-                  {expanded === row.id && row.message && (
-                    <tr className="bg-bg-muted border-b border-border">
-                      <td colSpan={6} className="px-4 py-3 text-text-secondary text-sm italic">
-                        {row.message}
-                      </td>
-                    </tr>
-                  )}
                 </React.Fragment>
               ))}
             </tbody>
