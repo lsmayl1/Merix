@@ -3,10 +3,11 @@ import bcrypt from "bcrypt";
 import {
   Client, Sale, User, Company, Op,
   ErpProduct, ErpCategory, ErpSupplier, ErpCustomer,
-  ErpTransaction, ErpStockMovement, ClientDevice, License,
+  ErpTransaction, ErpStockMovement, ClientDevice, License, SyncRecord,
 } from "../../models/index.js";
 import { CalculateSale } from "../../services/report/SaleReport.js";
 import { DateFormat } from "../../utils/DateFormat.js";
+import { tenantEntityId } from "../../utils/tenantEntityId.js";
 
 const router = express.Router();
 
@@ -149,6 +150,37 @@ router.get("/:id/sales", async (req, res, next) => {
   }
 });
 
+// GET /api/clients/:id/sales/:saleId — full sale detail (items + payments from SyncRecord)
+router.get("/:id/sales/:saleId", async (req, res, next) => {
+  try {
+    const { id, saleId } = req.params;
+    const sale = await Sale.findOne({ where: { id: saleId, clientId: id } });
+    if (!sale) return res.status(404).json({ error: "Sale not found" });
+
+    const record = await SyncRecord.findOne({
+      where: { tenantId: id, entityType: "sale", entityId: String(saleId) },
+    });
+
+    const syncData = record?.data || {};
+
+    res.json({
+      id:                sale.id,
+      total_amount:      parseFloat(sale.total_amount)       || 0,
+      subtotal_amount:   parseFloat(sale.subtotal_amount)    || 0,
+      discount:          parseFloat(sale.discount)           || 0,
+      discounted_amount: parseFloat(sale.discounted_amount)  || 0,
+      paymentMethod:     sale.paymentMethod,
+      type:              sale.type,
+      date:              DateFormat(sale.date || sale.createdAt),
+      items:             syncData.items    || syncData.details || [],
+      payments:          syncData.payments || [],
+      returns:           syncData.returns  || [],
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // PATCH /api/clients/:id/users/:userId — update an employee under this company
 router.patch("/:id/users/:userId", async (req, res, next) => {
   try {
@@ -181,6 +213,49 @@ router.patch("/:id/users/:userId", async (req, res, next) => {
       email: user.email, phoneNumber: user.phoneNumber, role: user.role,
       status: user.status, clientId: user.clientId,
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/clients/:id/push-products — Admin pushes product catalog down to ERP
+router.post("/:id/push-products", async (req, res, next) => {
+  try {
+    const client = await Client.findByPk(req.params.id);
+    if (!client) return res.status(404).json({ error: "Client not found" });
+
+    const { products } = req.body;
+    if (!Array.isArray(products) || products.length === 0) {
+      return res.status(400).json({ error: "products array is required" });
+    }
+
+    let upserted = 0;
+    for (const p of products) {
+      if (!p.name) continue;
+      const pushKey = p.barcode || p.name;
+      const uuid = tenantEntityId(req.params.id, `push:${pushKey}`);
+      const row = {
+        clientId:   req.params.id,
+        name:       p.name,
+        price:      p.sellPrice ?? p.price ?? 0,
+        barcode:    p.barcode ?? null,
+        unit:       p.unit ?? null,
+        categoryId: p.category_id ? tenantEntityId(req.params.id, p.category_id) : null,
+        stock:      p.stock ?? 0,
+        isActive:   p.isActive ?? true,
+        rawData:    { ...p, admin_pushed: true },
+        syncedAt:   new Date(),
+      };
+      const existing = await ErpProduct.findByPk(uuid);
+      if (existing) {
+        await existing.update(row);
+      } else {
+        await ErpProduct.create({ ...row, id: uuid });
+      }
+      upserted++;
+    }
+
+    res.json({ success: true, pushed: upserted });
   } catch (err) {
     next(err);
   }

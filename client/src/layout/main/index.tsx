@@ -8,17 +8,14 @@ export const MainLayout = () => {
 
   useEffect(() => {
     const media = window.matchMedia("(max-width: 435px)");
-
     setCollapsed(media.matches);
-
     const listener = (e: MediaQueryListEvent) => setCollapsed(e.matches);
     media.addEventListener("change", listener);
-
     return () => media.removeEventListener("change", listener);
   }, []);
 
   return (
-    <div className="bg-[#f4f6fa] flex h-screen max-md:gap-0">
+    <div className="bg-bg-page flex h-screen overflow-hidden">
       <Sidebar
         collapsed={collapsed}
         setCollapsed={() => {
@@ -26,14 +23,11 @@ export const MainLayout = () => {
           setTimeout(() => window.dispatchEvent(new Event("resize")), 50);
         }}
       />
-      <div className="flex-1 gap-2 flex flex-col p-2 min-w-0">
-        <Header
-          collapsed={collapsed}
-          setCollapsed={() => setCollapsed(!collapsed)}
-        />
-        <div className="overflow-auto pr-1 my-container flex-1 min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
+        <Header collapsed={collapsed} setCollapsed={() => setCollapsed(!collapsed)} />
+        <main className="flex-1 overflow-auto p-4 min-h-0">
           <Outlet />
-        </div>
+        </main>
       </div>
     </div>
   );

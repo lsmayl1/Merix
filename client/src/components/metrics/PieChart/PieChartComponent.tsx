@@ -23,19 +23,19 @@ export const PieChartComponent = ({
     })), [data]);
 
   return (
-    <div className="flex flex-col gap-3 h-full bg-white border border-[#e2e8f0] rounded-xl p-4">
-      <span className="text-sm font-semibold text-[#64748b]">{title}</span>
+    <div className="flex flex-col gap-3 h-full bg-bg-surface border border-border rounded-xl p-4">
+      <span className="text-sm font-semibold text-text-secondary">{title}</span>
       <div className="flex items-center justify-center">
         <PieChart chartData={chartData} total={total} />
       </div>
-      <div className="flex flex-col gap-1.5 overflow-auto">
+      <div className="flex flex-col gap-1 overflow-auto">
         {chartData.map((dt, i) => (
-          <div key={i} className="flex items-center justify-between py-1 px-1 rounded-lg hover:bg-[#f8fafc]">
+          <div key={i} className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-bg-subtle transition-colors">
             <div className="flex items-center gap-2">
               <span className="size-2.5 rounded-full shrink-0" style={{ backgroundColor: dt.color }} />
-              <span className="text-xs text-[#64748b]">{dt.name}</span>
+              <span className="text-xs text-text-secondary">{dt.name}</span>
             </div>
-            <span className="text-xs font-semibold text-[#0f172a] tabular-nums">{dt.value} ₼</span>
+            <span className="text-xs font-semibold text-text-primary tabular-nums">{dt.value} ₼</span>
           </div>
         ))}
       </div>

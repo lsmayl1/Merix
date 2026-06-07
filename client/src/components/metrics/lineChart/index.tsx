@@ -12,20 +12,20 @@ const ChartTooltip = ({ active, payload, label }: any) => {
   const rev = payload.find((p: any) => p.dataKey === "revenue");
   const ord = payload.find((p: any) => p.dataKey === "orders");
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-lg px-3 py-2.5 shadow-lg text-xs">
-      <p className="font-semibold text-[#0f172a] mb-1.5">{label}</p>
+    <div className="bg-bg-surface border border-border rounded-lg px-3 py-2.5 shadow-modal text-xs">
+      <p className="font-semibold text-text-primary mb-1.5">{label}</p>
       {rev && (
         <div className="flex items-center gap-2 mb-1">
           <span className="size-2 rounded-sm bg-blue-500 shrink-0" />
-          <span className="text-[#64748b]">Revenue</span>
-          <span className="ml-auto font-semibold text-blue-600">{rev.value.toLocaleString()} ₼</span>
+          <span className="text-text-secondary">Revenue</span>
+          <span className="ml-auto font-semibold text-blue-500">{rev.value.toLocaleString()} ₼</span>
         </div>
       )}
       {ord && (
         <div className="flex items-center gap-2">
           <span className="size-2 rounded-full bg-emerald-500 shrink-0" />
-          <span className="text-[#64748b]">Sales</span>
-          <span className="ml-auto font-semibold text-emerald-600">{ord.value}</span>
+          <span className="text-text-secondary">Sales</span>
+          <span className="ml-auto font-semibold text-emerald-500">{ord.value}</span>
         </div>
       )}
     </div>
@@ -42,12 +42,12 @@ const ActiveDot = ({ cx, cy, stroke, activeDay, day }: any) =>
 
 const EmptyChart = () => (
   <div className="h-full flex flex-col items-center justify-center gap-3 text-center px-6">
-    <div className="size-12 rounded-full bg-[#f1f5f9] flex items-center justify-center">
-      <TrendingUp size={22} className="text-[#94a3b8]" />
+    <div className="size-12 rounded-full bg-bg-muted flex items-center justify-center">
+      <TrendingUp size={22} className="text-text-muted" />
     </div>
     <div>
-      <p className="text-sm font-semibold text-[#64748b]">No data</p>
-      <p className="text-xs text-[#94a3b8] mt-0.5">No sales found for the selected period.</p>
+      <p className="text-sm font-semibold text-text-secondary">No data</p>
+      <p className="text-xs text-text-muted mt-0.5">No sales found for the selected period.</p>
     </div>
   </div>
 );
@@ -74,11 +74,11 @@ export const LineChart = ({ data }: { data?: DataPoint[] }) => {
                 <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.01} />
               </linearGradient>
             </defs>
-            <CartesianGrid stroke="rgba(0,0,0,0.04)" strokeDasharray="4 4" vertical={false} />
-            <XAxis dataKey="date" tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
-            <YAxis yAxisId="rev" orientation="left" tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} width={38} />
-            <YAxis yAxisId="ord" orientation="right" tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} width={30} hide />
-            <Tooltip content={<ChartTooltip />} cursor={{ stroke: "rgba(0,0,0,0.05)", strokeWidth: 1, strokeDasharray: "4 4" }} />
+            <CartesianGrid stroke="rgba(0,0,0,0.05)" strokeDasharray="4 4" vertical={false} />
+            <XAxis dataKey="date" tick={{ fontSize: 11, fill: "var(--color-text-muted)" }} axisLine={false} tickLine={false} />
+            <YAxis yAxisId="rev" orientation="left" tick={{ fontSize: 11, fill: "var(--color-text-muted)" }} axisLine={false} tickLine={false} width={38} />
+            <YAxis yAxisId="ord" orientation="right" tick={{ fontSize: 11, fill: "var(--color-text-muted)" }} axisLine={false} tickLine={false} width={30} hide />
+            <Tooltip content={<ChartTooltip />} cursor={{ stroke: "var(--color-border)", strokeWidth: 1, strokeDasharray: "4 4" }} />
             <Area
               yAxisId="rev" type="monotone" dataKey="revenue"
               stroke="#3b82f6" strokeWidth={2} fill="url(#revenueGradAdmin)"
@@ -87,8 +87,8 @@ export const LineChart = ({ data }: { data?: DataPoint[] }) => {
             />
             <Line
               yAxisId="ord" type="monotone" dataKey="orders"
-              stroke="#00a63e" strokeWidth={1.5} strokeDasharray="5 4"
-              dot={(props: any) => <ActiveDot {...props} stroke="#00a63e" activeDay={activeDay} day={props.payload.date} />}
+              stroke="#10b981" strokeWidth={1.5} strokeDasharray="5 4"
+              dot={(props: any) => <ActiveDot {...props} stroke="#10b981" activeDay={activeDay} day={props.payload.date} />}
               activeDot={false}
             />
           </ComposedChart>

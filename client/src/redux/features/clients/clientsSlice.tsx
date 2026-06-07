@@ -21,6 +21,10 @@ export const ClientsApi = createApi({
         return url;
       },
     }),
+    getClientSaleById: builder.query({
+      query: ({ id, saleId }: { id: string; saleId: string }) =>
+        `/clients/${id}/sales/${saleId}`,
+    }),
     setupClient: builder.mutation({
       query: (data) => ({ url: "/setup", method: "POST", body: data }),
       invalidatesTags: ["Clients"],
@@ -77,6 +81,7 @@ export const {
   useGetClientsQuery,
   useGetClientByIdQuery,
   useGetClientSalesQuery,
+  useGetClientSaleByIdQuery,
   useSetupClientMutation,
   useCreateClientMutation,
   useAddClientUserMutation,

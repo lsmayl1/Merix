@@ -9,10 +9,12 @@ import { Clients as Companies }      from "./pages/clients/index.tsx";
 import { ClientDetail as CompanyDetail } from "./pages/clients/detail.tsx";
 import { Database }     from "./pages/database/index.tsx";
 import { Account }      from "./pages/account/index.tsx";
+import { LandingPage }  from "./pages/landing/index.tsx";
 
 export const App = () => (
   <Routes>
-    <Route path="/" element={<AuthLayout />}>
+    <Route path="/" element={<LandingPage />} />
+    <Route path="/login" element={<AuthLayout />}>
       <Route index element={<Login />} />
     </Route>
     <Route element={<PrivateRoute />}>

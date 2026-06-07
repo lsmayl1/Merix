@@ -1,8 +1,11 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
 @import "tailwindcss";
 
+/* html.dark activates dark mode via CSS variables */
+@variant dark (&:where(.dark, .dark *));
+
 /* ══════════════════════════════════════════════════════
-   Design tokens
+   Design tokens — Light mode
 ══════════════════════════════════════════════════════ */
 :root {
   --color-bg-page:    #f4f6fa;
@@ -23,6 +26,8 @@
   --color-warning:      #f59e0b;
   --color-warning-bg:   #fffbeb;
   --color-warning-text: #92400e;
+  --color-info-bg:      #eff6ff;
+  --color-info-text:    #1d4ed8;
 
   --color-text-primary:   #0f172a;
   --color-text-secondary: #64748b;
@@ -34,10 +39,52 @@
 
   --shadow-card:  0 1px 3px 0 rgb(0 0 0 / 0.07), 0 1px 2px -1px rgb(0 0 0 / 0.04);
   --shadow-modal: 0 20px 60px -10px rgb(0 0 0 / 0.25);
-
   --scrollbar-thumb: #cbd5e1;
 }
 
+/* ══════════════════════════════════════════════════════
+   Dark mode — html.dark
+══════════════════════════════════════════════════════ */
+html.dark {
+  color-scheme: dark;
+
+  --color-bg-page:    #0d1117;
+  --color-bg-surface: #161b22;
+  --color-bg-subtle:  #1c2128;
+  --color-bg-muted:   #21262d;
+
+  --color-brand:       #818cf8;
+  --color-brand-hover: #6366f1;
+  --color-brand-light: #1e1b4b;
+
+  --color-success:      #4ade80;
+  --color-success-bg:   #052e16;
+  --color-success-text: #86efac;
+  --color-danger:       #f87171;
+  --color-danger-bg:    #2d0a0a;
+  --color-danger-text:  #fca5a5;
+  --color-warning:      #fbbf24;
+  --color-warning-bg:   #1c1204;
+  --color-warning-text: #fde68a;
+  --color-info-bg:      #0f1c3f;
+  --color-info-text:    #93c5fd;
+
+  --color-text-primary:   #e6edf3;
+  --color-text-secondary: #8b949e;
+  --color-text-muted:     #6e7681;
+  --color-text-inverse:   #0d1117;
+
+  --color-border:       #30363d;
+  --color-border-focus: #818cf8;
+
+  --shadow-card:  0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.2);
+  --shadow-modal: 0 20px 60px -10px rgb(0 0 0 / 0.6);
+  --scrollbar-thumb: #30363d;
+}
+
+/* ══════════════════════════════════════════════════════
+   Tailwind theme
+══════════════════════════════════════════════════════ */
 @theme {
   --color-border: #e2e8f0;
   --color-bg:     #f4f6fa;
@@ -50,6 +97,9 @@
   --text-2xl:  1.5rem;
 }
 
+/* ══════════════════════════════════════════════════════
+   Utility classes (all use CSS vars → auto dark mode)
+══════════════════════════════════════════════════════ */
 @layer utilities {
   .bg-bg-page    { background-color: var(--color-bg-page); }
   .bg-bg-surface { background-color: var(--color-bg-surface); }
@@ -57,18 +107,33 @@
   .bg-bg-muted   { background-color: var(--color-bg-muted); }
 
   .bg-brand       { background-color: var(--color-brand); }
+  .bg-brand-hover { background-color: var(--color-brand-hover); }
   .bg-brand-light { background-color: var(--color-brand-light); }
+
+  .bg-success-bg { background-color: var(--color-success-bg); }
+  .bg-danger-bg  { background-color: var(--color-danger-bg); }
+  .bg-warning-bg { background-color: var(--color-warning-bg); }
+  .bg-info-bg    { background-color: var(--color-info-bg); }
 
   .text-text-primary   { color: var(--color-text-primary); }
   .text-text-secondary { color: var(--color-text-secondary); }
   .text-text-muted     { color: var(--color-text-muted); }
+  .text-text-inverse   { color: var(--color-text-inverse); }
   .text-brand          { color: var(--color-brand); }
   .text-success        { color: var(--color-success); }
+  .text-success-text   { color: var(--color-success-text); }
   .text-danger         { color: var(--color-danger); }
+  .text-danger-text    { color: var(--color-danger-text); }
+  .text-warning        { color: var(--color-warning); }
+  .text-warning-text   { color: var(--color-warning-text); }
+  .text-info-text      { color: var(--color-info-text); }
 
   .border-border { border-color: var(--color-border); }
-  .shadow-card   { box-shadow: var(--shadow-card); }
-  .shadow-modal  { box-shadow: var(--shadow-modal); }
+  .border-brand  { border-color: var(--color-brand); }
+  .border-danger { border-color: var(--color-danger); }
+
+  .shadow-card  { box-shadow: var(--shadow-card); }
+  .shadow-modal { box-shadow: var(--shadow-modal); }
 
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -82,6 +147,7 @@ body {
   color: var(--color-text-primary);
   background-color: var(--color-bg-page);
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 input, button, textarea, select { font-family: inherit; font-size: inherit; line-height: inherit; outline: none; }

@@ -10,7 +10,7 @@ export const AuthLayout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#f4f6fa] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-bg-page flex items-center justify-center p-4">
       <Outlet />
     </div>
   );

@@ -4,7 +4,7 @@ import sequelize from "../../config/index.js";
 const ErpSupplier = sequelize.define(
   "ErpSupplier",
   {
-    id:       { type: DataTypes.STRING, primaryKey: true },
+    id:       { type: DataTypes.UUID, primaryKey: true },
     clientId: { type: DataTypes.UUID, allowNull: false, field: "client_id" },
     name:     { type: DataTypes.STRING, allowNull: false },
     phone:    { type: DataTypes.STRING, allowNull: true },

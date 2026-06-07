@@ -12,15 +12,30 @@ const AccountIcon = ({ className = "" }: { className?: string }) => (
   </svg>
 );
 
+const ChevronLeft = ({ className = "" }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <path d="M15 18l-6-6 6-6" />
+  </svg>
+);
+
 const NAV = [
-  { name: "Dashboard",  link: "/dashboard",  icon: <Dashboard /> },
-  { name: "Companies",  link: "/companies",  icon: <Companies /> },
-  { name: "Database",   link: "/database",   icon: <Database /> },
+  { name: "Dashboard", link: "/dashboard", icon: <Dashboard /> },
+  { name: "Companies", link: "/companies", icon: <Companies /> },
+  { name: "Database",  link: "/database",  icon: <Database /> },
 ];
 
 const BOTTOM = [
   { name: "Account", link: "/account", icon: <AccountIcon /> },
 ];
+
+const navItem = (isActive: boolean, collapsed: boolean) =>
+  `flex items-center gap-3 rounded-lg px-2 py-2 text-sm font-medium transition-colors duration-150 ${
+    collapsed ? "justify-center" : ""
+  } ${
+    isActive
+      ? "bg-brand text-white shadow-sm"
+      : "text-text-secondary hover:bg-bg-muted hover:text-text-primary"
+  }`;
 
 export const Sidebar = ({
   collapsed,
@@ -29,39 +44,42 @@ export const Sidebar = ({
   collapsed: boolean;
   setCollapsed: () => void;
 }) => (
-  <div className={`flex flex-col flex-none transition-all duration-200 ${
-    collapsed ? "w-16" : "w-52"
-  } bg-white border-r border-[#e2e8f0] p-3`}>
-
-    {/* Logo */}
-    <div className={`flex items-center mb-6 px-1 ${collapsed ? "justify-center" : "justify-between"}`}>
-      <div className="flex items-center gap-2">
-        <LogoFrame className={collapsed ? "size-8 shrink-0" : "size-9 shrink-0"} />
+  <div
+    className={`flex flex-col flex-none transition-all duration-200 ${
+      collapsed ? "w-[60px]" : "w-52"
+    } bg-bg-surface border-r border-border`}
+  >
+    {/* Logo area */}
+    <div className={`flex items-center h-14 px-3 border-b border-border shrink-0 ${collapsed ? "justify-center" : "justify-between"}`}>
+      <div className="flex items-center gap-2.5">
+        <LogoFrame className="size-7 shrink-0" />
+        {!collapsed && (
+          <span className="text-sm font-bold text-text-primary tracking-tight">Merix</span>
+        )}
       </div>
       {!collapsed && (
-        <button onClick={setCollapsed}
-          className="size-7 flex items-center justify-center rounded-lg hover:bg-[#f1f5f9] text-[#94a3b8] hover:text-[#64748b] transition-colors">
-          <svg className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
+        <button
+          onClick={setCollapsed}
+          className="size-6 flex items-center justify-center rounded-md hover:bg-bg-muted text-text-muted hover:text-text-secondary transition-colors"
+        >
+          <ChevronLeft className="size-3.5" />
         </button>
       )}
     </div>
 
     {/* Main nav */}
-    <nav className="flex flex-col gap-0.5 flex-1">
+    <nav className="flex flex-col gap-0.5 flex-1 p-2 overflow-y-auto">
       {NAV.map((item) => (
-        <NavLink key={item.link} to={item.link} title={collapsed ? item.name : undefined}
-          className={({ isActive }) =>
-            `flex items-center gap-3 rounded-lg px-2 py-2 text-sm font-medium transition-colors ${
-              collapsed ? "justify-center" : ""
-            } ${isActive ? "bg-[#0f172a] text-white" : "text-[#64748b] hover:bg-[#f1f5f9] hover:text-[#0f172a]"}`
-          }
+        <NavLink
+          key={item.link}
+          to={item.link}
+          title={collapsed ? item.name : undefined}
+          className={({ isActive }) => navItem(isActive, collapsed)}
         >
           {({ isActive }) => (
             <>
               {React.cloneElement(item.icon, {
-                className: `size-5 shrink-0 ${isActive ? "text-white" : "text-[#94a3b8]"}`,
+                className: `size-[18px] shrink-0 ${isActive ? "text-white" : "text-text-muted"}`,
               })}
               {!collapsed && <span className="truncate">{item.name}</span>}
             </>
@@ -70,20 +88,19 @@ export const Sidebar = ({
       ))}
     </nav>
 
-    {/* Bottom nav — account */}
-    <div className="flex flex-col gap-0.5 pt-3 border-t border-[#e2e8f0]">
+    {/* Bottom nav */}
+    <div className="flex flex-col gap-0.5 p-2 border-t border-border shrink-0">
       {BOTTOM.map((item) => (
-        <NavLink key={item.link} to={item.link} title={collapsed ? item.name : undefined}
-          className={({ isActive }) =>
-            `flex items-center gap-3 rounded-lg px-2 py-2 text-sm font-medium transition-colors ${
-              collapsed ? "justify-center" : ""
-            } ${isActive ? "bg-[#0f172a] text-white" : "text-[#64748b] hover:bg-[#f1f5f9] hover:text-[#0f172a]"}`
-          }
+        <NavLink
+          key={item.link}
+          to={item.link}
+          title={collapsed ? item.name : undefined}
+          className={({ isActive }) => navItem(isActive, collapsed)}
         >
           {({ isActive }) => (
             <>
               {React.cloneElement(item.icon, {
-                className: `size-5 shrink-0 ${isActive ? "text-white" : "text-[#94a3b8]"}`,
+                className: `size-[18px] shrink-0 ${isActive ? "text-white" : "text-text-muted"}`,
               })}
               {!collapsed && <span className="truncate">{item.name}</span>}
             </>

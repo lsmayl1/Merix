@@ -1,5 +1,6 @@
 import express from "express";
 import { AppError } from "../../utils/AppError.js";
+import { tenantEntityId } from "../../utils/tenantEntityId.js";
 import {
   Sale, Company, SyncRecord, sequelize,
   ErpProduct, ErpCategory, ErpSupplier, ErpCustomer,
@@ -14,18 +15,18 @@ const router = express.Router();
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-/** Upsert helper: create if not found, update if found */
-async function upsert(Model, pkField, pkValue, row, t) {
-  const existing = await Model.findOne({ where: { [pkField]: pkValue, client_id: row.clientId }, transaction: t });
+/** Upsert by UUID primary key */
+async function upsert(Model, uuid, row, t) {
+  const existing = await Model.findByPk(uuid, { transaction: t });
   if (!existing) {
-    await Model.create(row, { transaction: t });
+    await Model.create({ ...row, id: uuid }, { transaction: t });
   } else {
     await existing.update(row, { transaction: t });
   }
 }
 
-async function destroy(Model, pkField, pkValue, clientId, t) {
-  const existing = await Model.findOne({ where: { [pkField]: pkValue, client_id: clientId }, transaction: t });
+async function destroy(Model, uuid, t) {
+  const existing = await Model.findByPk(uuid, { transaction: t });
   if (existing) await existing.destroy({ transaction: t });
 }
 
@@ -118,18 +119,18 @@ async function handleCompany(entityId, operation, data, tenantId, t) {
 }
 
 async function handleProduct(entityId, operation, data, tenantId, t) {
+  const uuid = tenantEntityId(tenantId, entityId);
   if (operation === "DELETE") {
-    await destroy(ErpProduct, "id", String(entityId), tenantId, t);
+    await destroy(ErpProduct, uuid, t);
     return;
   }
-  await upsert(ErpProduct, "id", String(entityId), {
-    id:         String(entityId),
+  await upsert(ErpProduct, uuid, {
     clientId:   tenantId,
     name:       data.name,
     price:      data.price ?? data.selling_price ?? 0,
     barcode:    data.barcode ?? null,
     unit:       data.unit ?? null,
-    categoryId: data.category_id ? String(data.category_id) : null,
+    categoryId: data.category_id ? tenantEntityId(tenantId, data.category_id) : null,
     stock:      data.current_stock ?? data.stock ?? 0,
     isActive:   data.is_active ?? true,
     rawData:    data,
@@ -138,26 +139,26 @@ async function handleProduct(entityId, operation, data, tenantId, t) {
 }
 
 async function handleCategory(entityId, operation, data, tenantId, t) {
+  const uuid = tenantEntityId(tenantId, entityId);
   if (operation === "DELETE") {
-    await destroy(ErpCategory, "id", String(entityId), tenantId, t);
+    await destroy(ErpCategory, uuid, t);
     return;
   }
-  await upsert(ErpCategory, "id", String(entityId), {
-    id:       String(entityId),
+  await upsert(ErpCategory, uuid, {
     clientId: tenantId,
     name:     data.name,
-    parentId: data.parent_id ? String(data.parent_id) : null,
+    parentId: data.parent_id ? tenantEntityId(tenantId, data.parent_id) : null,
     syncedAt: new Date(),
   }, t);
 }
 
 async function handleSupplier(entityId, operation, data, tenantId, t) {
+  const uuid = tenantEntityId(tenantId, entityId);
   if (operation === "DELETE") {
-    await destroy(ErpSupplier, "id", String(entityId), tenantId, t);
+    await destroy(ErpSupplier, uuid, t);
     return;
   }
-  await upsert(ErpSupplier, "id", String(entityId), {
-    id:       String(entityId),
+  await upsert(ErpSupplier, uuid, {
     clientId: tenantId,
     name:     data.name,
     phone:    data.phone ?? null,
@@ -168,12 +169,12 @@ async function handleSupplier(entityId, operation, data, tenantId, t) {
 }
 
 async function handleCustomer(entityId, operation, data, tenantId, t) {
+  const uuid = tenantEntityId(tenantId, entityId);
   if (operation === "DELETE") {
-    await destroy(ErpCustomer, "id", String(entityId), tenantId, t);
+    await destroy(ErpCustomer, uuid, t);
     return;
   }
-  await upsert(ErpCustomer, "id", String(entityId), {
-    id:       String(entityId),
+  await upsert(ErpCustomer, uuid, {
     clientId: tenantId,
     name:     data.name ?? data.full_name ?? "Unknown",
     phone:    data.phone ?? data.phoneNumber ?? null,
@@ -184,42 +185,74 @@ async function handleCustomer(entityId, operation, data, tenantId, t) {
 }
 
 async function handleTransaction(entityId, operation, data, tenantId, t) {
+  const uuid = tenantEntityId(tenantId, entityId);
   if (operation === "DELETE") {
-    await destroy(ErpTransaction, "id", String(entityId), tenantId, t);
+    await destroy(ErpTransaction, uuid, t);
     return;
   }
-  await upsert(ErpTransaction, "id", String(entityId), {
-    id:            String(entityId),
+  await upsert(ErpTransaction, uuid, {
     clientId:      tenantId,
     type:          data.type ?? null,
     amount:        data.amount ?? 0,
     paymentMethod: data.paymentMethod ?? data.payment_method ?? null,
-    categoryId:    data.category_id ? String(data.category_id) : null,
-    accountId:     data.account_id  ? String(data.account_id)  : null,
+    categoryId:    data.category_id ? tenantEntityId(tenantId, data.category_id) : null,
+    accountId:     data.account_id  ? tenantEntityId(tenantId, data.account_id)  : null,
     notes:         data.notes ?? null,
     date:          data.date  ?? null,
     syncedAt:      new Date(),
   }, t);
 }
 
+async function handleSaleReturn(entityId, operation, data, tenantId, t) {
+  if (operation === "DELETE") return;
+
+  const originalSaleId = String(data.sale_id);
+
+  const original = await SyncRecord.findOne({
+    where: { tenantId, entityType: "sale", entityId: originalSaleId },
+    transaction: t,
+  });
+
+  if (!original) return; // original sale not yet synced — will be updated on next sync
+
+  const existingData = original.data || {};
+  const returns = Array.isArray(existingData.returns) ? [...existingData.returns] : [];
+
+  const newReturn = {
+    return_id:      String(entityId),
+    sale_id:        originalSaleId,
+    date:           data.date ?? null,
+    reason:         data.reason ?? null,
+    total_refunded: data.total_refunded ?? 0,
+    items:          data.items ?? [],
+  };
+
+  const idx = returns.findIndex((r) => String(r.return_id) === String(entityId));
+  if (idx >= 0) returns[idx] = newReturn;
+  else returns.push(newReturn);
+
+  await original.update(
+    { data: { ...existingData, returns } },
+    { transaction: t },
+  );
+}
+
 async function handleStockMovement(entityId, operation, data, tenantId, t) {
   // Stock movements are immutable — only create, never update/delete
   if (operation !== "CREATE") return;
 
-  const exists = await ErpStockMovement.findOne({
-    where: { id: String(entityId), client_id: tenantId },
-    transaction: t,
-  });
+  const uuid = tenantEntityId(tenantId, entityId);
+  const exists = await ErpStockMovement.findByPk(uuid, { transaction: t });
   if (exists) return;
 
   await ErpStockMovement.create({
-    id:          String(entityId),
+    id:          uuid,
     clientId:    tenantId,
-    productId:   data.product_id ? String(data.product_id) : null,
+    productId:   data.product_id ? tenantEntityId(tenantId, data.product_id) : null,
     type:        data.type ?? data.transaction_type ?? null,
     quantity:    data.quantity ?? 0,
     unitCost:    data.unit_cost ?? data.cost_price ?? null,
-    referenceId: data.reference_id ? String(data.reference_id) : null,
+    referenceId: data.reference_id ? tenantEntityId(tenantId, data.reference_id) : null,
     notes:       data.notes ?? null,
     date:        data.date ?? null,
     syncedAt:    new Date(),
@@ -236,11 +269,12 @@ const ENTITY_HANDLERS = {
   supplier:          handleSupplier,
   customer:          handleCustomer,
   transaction:       handleTransaction,
-  stock_movement:    handleStockMovement,
-  stock_batch:       handleStockMovement, // stock batches treated as movements
-  finance_account:   null,               // stored in sync_records only
+  stock_movement:       handleStockMovement,
+  stock_batch:          handleStockMovement, // stock batches treated as movements
+  sale_return:          handleSaleReturn,
+  finance_account:      null,               // stored in sync_records only
   transaction_category: null,
-  user:              null,
+  user:                 null,
 };
 
 // ─── Process a single sync item ───────────────────────────────────────────────
