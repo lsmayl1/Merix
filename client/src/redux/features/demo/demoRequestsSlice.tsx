@@ -14,6 +14,14 @@ export const DemoRequestsApi = createApi({
       },
       providesTags: ["DemoRequests"],
     }),
+    createDemoRequest: builder.mutation({
+      query: (body: { name: string; company?: string; phone?: string; email?: string; message?: string }) => ({
+        url: "/demo-requests",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["DemoRequests"],
+    }),
     updateDemoRequest: builder.mutation({
       query: ({ id, ...data }: { id: string; status: string }) => ({
         url: `/demo-requests/${id}`,
@@ -25,4 +33,4 @@ export const DemoRequestsApi = createApi({
   }),
 });
 
-export const { useGetDemoRequestsQuery, useUpdateDemoRequestMutation } = DemoRequestsApi;
+export const { useGetDemoRequestsQuery, useCreateDemoRequestMutation, useUpdateDemoRequestMutation } = DemoRequestsApi;

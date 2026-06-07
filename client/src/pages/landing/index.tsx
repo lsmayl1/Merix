@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { useCreateDemoRequestMutation } from "../../redux/features/demo/demoRequestsSlice";
 
 const LogoName = ({ className }: { className?: string }) => (
   <svg
@@ -384,6 +385,7 @@ type DemoForm = { name: string; company: string; phone: string; email: string; m
 export const LandingPage = () => {
   const [lang, setLang] = useState<Lang>("az");
   const tr = TR[lang];
+  const [createDemoRequest] = useCreateDemoRequestMutation();
 
   const industries = [
     { icon:"🏪", title:tr.ind1Title, desc:tr.ind1Desc, features:[tr.ind1F1,tr.ind1F2,tr.ind1F3] },
@@ -401,6 +403,7 @@ export const LandingPage = () => {
     { q:tr.faq7Q, a:tr.faq7A }, { q:tr.faq8Q, a:tr.faq8A },
   ];
 
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [activeIndustry, setActiveIndustry] = useState<number | null>(null);
   const [activeModule, setActiveModule] = useState("pos");
@@ -420,12 +423,7 @@ export const LandingPage = () => {
     setTrialError("");
     setTrialState("loading");
     try {
-      const res = await fetch("http://localhost:3000/api/demo-requests", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(trialForm),
-      });
-      if (!res.ok) throw new Error("err");
+      await createDemoRequest(trialForm).unwrap();
       setTrialState("success");
     } catch {
       setTrialState("error");
@@ -447,12 +445,7 @@ export const LandingPage = () => {
     setDemoError("");
     setDemoState("loading");
     try {
-      const res = await fetch("http://localhost:3000/api/demo-requests", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(demoForm),
-      });
-      if (!res.ok) throw new Error("err");
+      await createDemoRequest(demoForm).unwrap();
       setDemoState("success");
     } catch {
       setDemoState("error");
@@ -665,9 +658,9 @@ export const LandingPage = () => {
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 bg-[#060A12]/95 backdrop-blur-sm border-b border-white/6 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <LogoName className="h-8 w-auto" />
-            <div className="hidden md:flex items-center space-x-8">
+          <div className="flex justify-between items-center h-14">
+            <LogoName className="h-6 w-auto" />
+            <div className="hidden md:flex items-center space-x-6">
               {([
                 ["#features", tr.navFeatures],
                 ["#benefits", tr.navBenefits],
@@ -683,10 +676,10 @@ export const LandingPage = () => {
               ))}
             </div>
             <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1 bg-white/5 border border-white/8 rounded-lg p-0.5">
+              <div className="flex items-center gap-0.5 bg-white/5 border border-white/8 rounded-lg p-0.5">
                 {(["az","en","ru"] as Lang[]).map((l) => (
                   <button key={l} onClick={() => setLang(l)}
-                    className={`px-2.5 py-1 rounded-md text-xs font-semibold uppercase transition-all duration-150 ${
+                    className={`px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase transition-all duration-150 ${
                       lang === l ? "bg-[#4F46E5] text-white shadow" : "text-white/45 hover:text-white/75"
                     }`}>
                     {l}
@@ -695,17 +688,50 @@ export const LandingPage = () => {
               </div>
               <Link
                 to="/login"
-                className="bg-[#4F46E5] text-white px-5 py-2.5 rounded-lg hover:bg-[#4338CA] transition font-medium text-sm"
+                className="hidden sm:block bg-[#4F46E5] text-white px-4 py-2 rounded-lg hover:bg-[#4338CA] transition font-medium text-xs"
               >
+                {tr.navLogin}
+              </Link>
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="md:hidden w-8 h-8 flex flex-col items-center justify-center gap-1.5 rounded-lg hover:bg-white/8 transition"
+              >
+                <span className={`block h-0.5 w-5 bg-white/70 transition-all duration-200 ${mobileMenuOpen ? "rotate-45 translate-y-2" : ""}`} />
+                <span className={`block h-0.5 w-5 bg-white/70 transition-all duration-200 ${mobileMenuOpen ? "opacity-0" : ""}`} />
+                <span className={`block h-0.5 w-5 bg-white/70 transition-all duration-200 ${mobileMenuOpen ? "-rotate-45 -translate-y-2" : ""}`} />
+              </button>
+            </div>
+          </div>
+        </div>
+        {/* Mobile drawer */}
+        {mobileMenuOpen && (
+          <div className="md:hidden bg-[#060A12] border-t border-white/6 px-4 py-4 space-y-1">
+            {([
+              ["#features", tr.navFeatures],
+              ["#benefits", tr.navBenefits],
+              ["#industries", tr.navIndustries],
+              ["#pricing", tr.navPricing],
+              ["#faq", tr.navFaq],
+              ["#demo", tr.navDemo],
+              ["#contact", tr.navContact],
+            ] as [string,string][]).map(([href, label]) => (
+              <a key={href} href={href} onClick={() => setMobileMenuOpen(false)}
+                className="block px-3 py-2.5 text-sm text-white/65 hover:text-white hover:bg-white/5 rounded-lg transition">
+                {label}
+              </a>
+            ))}
+            <div className="pt-3 border-t border-white/8">
+              <Link to="/login" onClick={() => setMobileMenuOpen(false)}
+                className="block w-full bg-[#4F46E5] text-white text-center px-4 py-2.5 rounded-lg hover:bg-[#4338CA] transition font-medium text-sm">
                 {tr.navLogin}
               </Link>
             </div>
           </div>
-        </div>
+        )}
       </nav>
 
       {/* Hero */}
-      <section className="relative pt-32 pb-28 overflow-hidden bg-[#080B14]">
+      <section className="relative pt-20 pb-14 md:pt-32 md:pb-28 overflow-hidden bg-[#080B14]">
 
         {/* Animated colour orbs */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -743,14 +769,14 @@ export const LandingPage = () => {
 
               {/* Headline */}
               <h1 style={{ animation:"fadeUp .55s .1s ease both" }}
-                  className="text-5xl sm:text-6xl md:text-[68px] font-extrabold leading-[1.06] tracking-tight mb-6 text-white">
+                  className="text-3xl sm:text-5xl md:text-[68px] font-extrabold leading-[1.06] tracking-tight mb-4 md:mb-6 text-white">
                 {tr.heroH1a}<br />
                 <span className="hero-shimmer">{tr.heroH1b}</span>
               </h1>
 
               {/* Sub */}
               <p style={{ animation:"fadeUp .55s .22s ease both" }}
-                 className="text-lg text-white/55 mb-10 leading-relaxed max-w-lg mx-auto lg:mx-0">
+                 className="text-sm md:text-lg text-white/55 mb-7 md:mb-10 leading-relaxed max-w-lg mx-auto lg:mx-0">
                 {tr.heroSub}
               </p>
 
@@ -780,7 +806,7 @@ export const LandingPage = () => {
 
               {/* Trust */}
               <p style={{ animation:"fadeUp .55s .44s ease both" }}
-                 className="text-white/30 text-sm mb-10">
+                 className="text-white/30 text-xs md:text-sm mb-6 md:mb-10">
                 {tr.heroTrust}
               </p>
 
@@ -802,7 +828,7 @@ export const LandingPage = () => {
             </div>
 
             {/* ── RIGHT: POS mockup ── */}
-            <div className="relative" style={{ animation:"mockupFloat 6s ease-in-out infinite, fadeUp .55s .3s ease both" }}>
+            <div className="relative hidden lg:block" style={{ animation:"mockupFloat 6s ease-in-out infinite, fadeUp .55s .3s ease both" }}>
 
               {/* Payment success toast */}
               <div style={{ animation:"notifPop .5s .8s ease both", opacity:0 }}
@@ -952,23 +978,23 @@ export const LandingPage = () => {
       </section>
 
       {/* ── Modules Showcase ── */}
-      <section id="modules" className="py-24 bg-[#080B14] relative overflow-hidden">
+      <section id="modules" className="py-12 md:py-24 bg-[#080B14] relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage:"radial-gradient(rgba(255,255,255,0.03) 1px,transparent 1px)", backgroundSize:"32px 32px" }} />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Header */}
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/5 border border-white/10 rounded-full text-xs font-medium text-white/60 mb-5">
-              <svg className="w-3.5 h-3.5 text-[#818CF8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16"/></svg>
+          <div className="text-center mb-6 md:mb-12">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded-full text-xs font-medium text-white/60 mb-4">
+              <svg className="w-3 h-3 text-[#818CF8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16"/></svg>
               {tr.modBadge}
             </div>
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">{tr.modTitle}</h2>
-            <p className="text-white/45 text-lg max-w-2xl mx-auto">{tr.modSub}</p>
+            <h2 className="text-2xl md:text-5xl font-bold text-white mb-2">{tr.modTitle}</h2>
+            <p className="text-white/45 text-sm md:text-lg max-w-2xl mx-auto">{tr.modSub}</p>
           </div>
 
           {/* Tab bar */}
-          <div className="flex gap-2 justify-center mb-8 flex-wrap">
+          <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide md:justify-center md:flex-wrap md:overflow-visible md:pb-0">
             {[
               { id:"pos",        label:"POS / Satış",     icon:"M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 21h6a2 2 0 002-2V7a2 2 0 00-2-2H9a2 2 0 00-2 2v12a2 2 0 002 2z" },
               { id:"inventory",  label:"Anbar",           icon:"M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" },
@@ -978,7 +1004,7 @@ export const LandingPage = () => {
               { id:"reports",    label:"Hesabatlar",      icon:"M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" },
             ].map((m) => (
               <button key={m.id} onClick={() => setActiveModule(m.id)}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                className={`shrink-0 flex items-center gap-1.5 px-3 md:px-5 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-all duration-200 ${
                   activeModule === m.id
                     ? "bg-[#4F46E5] text-white shadow-lg shadow-[#4F46E5]/30"
                     : "bg-white/5 text-white/55 border border-white/8 hover:bg-white/10 hover:text-white/80"
@@ -1004,79 +1030,102 @@ export const LandingPage = () => {
             </div>
 
             {/* Tab content */}
-            <div key={activeModule} style={{ animation:"tabFade .3s ease forwards", minHeight:"460px" }} className="bg-[#0B1120]">
+            <div key={activeModule} style={{ animation:"tabFade .3s ease forwards" }} className="bg-[#0B1120]">
 
               {/* ── POS ── */}
               {activeModule === "pos" && (
-                <div className="flex h-[460px]">
-                  {/* Left: products */}
-                  <div className="flex-1 flex flex-col border-r border-white/5 overflow-hidden">
-                    <div className="p-3 border-b border-white/5 flex items-center gap-2">
+                <div className="flex flex-col md:flex-row md:h-[460px]">
+                  {/* Products */}
+                  <div className="flex-1 flex flex-col border-b md:border-b-0 md:border-r border-white/5 overflow-hidden">
+                    {/* Category filter — scrollable on mobile */}
+                    <div className="p-2.5 border-b border-white/5 flex items-center gap-2 overflow-x-auto">
                       {["Hamısı","İçkilər","Çörək","Süd","Et","Meyvə"].map((c,i) => (
-                        <button key={c} className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition ${i===0?"bg-[#4F46E5] text-white":"bg-white/5 text-white/40 hover:text-white/70"}`}>{c}</button>
+                        <button key={c} className={`shrink-0 px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition ${i===0?"bg-[#4F46E5] text-white":"bg-white/5 text-white/40 hover:text-white/70"}`}>{c}</button>
                       ))}
-                      <div className="ml-auto flex items-center gap-2 bg-[#1E293B] rounded-lg px-3 py-1.5">
-                        <svg className="w-3.5 h-3.5 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                      <div className="shrink-0 ml-auto flex items-center gap-1.5 bg-[#1E293B] rounded-lg px-2.5 py-1">
+                        <svg className="w-3 h-3 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                         <span className="text-white/25 text-xs">Axtar...</span>
                       </div>
                     </div>
-                    <div className="flex-1 p-3 grid grid-cols-4 gap-2 content-start overflow-y-auto">
+                    {/* Product grid — 3 cols on mobile, 4 on desktop */}
+                    <div className="p-2.5 grid grid-cols-3 md:grid-cols-4 gap-2 content-start overflow-y-auto" style={{ maxHeight:"240px" }}>
                       {[
-                        { e:"🥛",n:"Süd 1L",     p:"₼1.50",bg:"bg-blue-500/15",  hot:true  },
-                        { e:"🍞",n:"Çörək",      p:"₼0.80",bg:"bg-yellow-500/15",hot:false },
-                        { e:"🥚",n:"Yumurta ×10",p:"₼2.40",bg:"bg-orange-500/15",hot:false },
-                        { e:"🧀",n:"Pendir",     p:"₼3.20",bg:"bg-amber-500/15", hot:false },
-                        { e:"💧",n:"Su 0.5L",    p:"₼0.50",bg:"bg-cyan-500/15",  hot:false },
-                        { e:"🥩",n:"Kolbasa",    p:"₼4.80",bg:"bg-red-500/15",   hot:false },
-                        { e:"🍫",n:"Şokolad",    p:"₼1.20",bg:"bg-pink-500/15",  hot:true  },
-                        { e:"🧃",n:"Şirə 1L",    p:"₼1.80",bg:"bg-green-500/15", hot:false },
-                        { e:"☕",n:"Qəhvə",      p:"₼2.90",bg:"bg-stone-500/15", hot:false },
-                        { e:"🥗",n:"Kəsmik",     p:"₼1.60",bg:"bg-teal-500/15",  hot:false },
-                        { e:"🍳",n:"Yağ 0.5L",   p:"₼3.90",bg:"bg-lime-500/15",  hot:false },
-                        { e:"🧂",n:"Duz 1kq",    p:"₼0.60",bg:"bg-slate-500/15", hot:false },
+                        { e:"🥛",n:"Süd 1L",    p:"₼1.50",bg:"bg-blue-500/15",  hot:true  },
+                        { e:"🍞",n:"Çörək",     p:"₼0.80",bg:"bg-yellow-500/15",hot:false },
+                        { e:"🥚",n:"Yumurta",   p:"₼2.40",bg:"bg-orange-500/15",hot:false },
+                        { e:"🧀",n:"Pendir",    p:"₼3.20",bg:"bg-amber-500/15", hot:false },
+                        { e:"💧",n:"Su 0.5L",   p:"₼0.50",bg:"bg-cyan-500/15",  hot:false },
+                        { e:"🥩",n:"Kolbasa",   p:"₼4.80",bg:"bg-red-500/15",   hot:false },
+                        { e:"🍫",n:"Şokolad",   p:"₼1.20",bg:"bg-pink-500/15",  hot:true  },
+                        { e:"🧃",n:"Şirə 1L",   p:"₼1.80",bg:"bg-green-500/15", hot:false },
+                        { e:"☕",n:"Qəhvə",     p:"₼2.90",bg:"bg-stone-500/15", hot:false },
+                        { e:"🥗",n:"Kəsmik",    p:"₼1.60",bg:"bg-teal-500/15",  hot:false },
+                        { e:"🍳",n:"Yağ 0.5L",  p:"₼3.90",bg:"bg-lime-500/15",  hot:false },
+                        { e:"🧂",n:"Duz 1kq",   p:"₼0.60",bg:"bg-slate-500/15", hot:false },
                       ].map((p) => (
-                        <div key={p.n} className="relative bg-[#0F172A] border border-white/6 rounded-xl p-2.5 cursor-pointer hover:border-[#4F46E5]/50 hover:bg-[#0F172A]/80 transition-all duration-150 group">
-                          {p.hot && <div className="absolute top-1.5 right-1.5 bg-[#EF4444] text-white text-[8px] font-bold px-1 py-0.5 rounded-full">HOT</div>}
-                          <div className={`w-9 h-9 ${p.bg} rounded-lg flex items-center justify-center text-xl mb-2`}>{p.e}</div>
-                          <p className="text-white text-[11px] font-medium leading-tight truncate">{p.n}</p>
-                          <p className="text-[#818CF8] text-[11px] font-bold mt-0.5">{p.p}</p>
+                        <div key={p.n} className="relative bg-[#0F172A] border border-white/6 rounded-xl p-2 cursor-pointer hover:border-[#4F46E5]/50 transition-all duration-150">
+                          {p.hot && <div className="absolute top-1 right-1 bg-[#EF4444] text-white text-[7px] font-bold px-1 py-0.5 rounded-full">HOT</div>}
+                          <div className={`w-8 h-8 ${p.bg} rounded-lg flex items-center justify-center text-lg mb-1.5`}>{p.e}</div>
+                          <p className="text-white text-[10px] font-medium leading-tight truncate">{p.n}</p>
+                          <p className="text-[#818CF8] text-[10px] font-bold mt-0.5">{p.p}</p>
                         </div>
                       ))}
                     </div>
                   </div>
-                  {/* Right: cart */}
-                  <div className="w-56 shrink-0 flex flex-col bg-[#060A12]">
-                    <div className="px-4 py-2.5 border-b border-white/5 flex items-center justify-between">
-                      <span className="text-white text-sm font-semibold">Sifariş #0042</span>
-                      <span className="text-white/30 text-xs">3 məhsul</span>
+                  {/* Cart — full panel on desktop, compact strip on mobile */}
+                  <div className="md:w-52 md:shrink-0 flex flex-col bg-[#060A12]">
+                    <div className="px-3 py-2 border-b border-white/5 flex items-center justify-between">
+                      <span className="text-white text-xs font-semibold">Sifariş #0042</span>
+                      <span className="text-white/30 text-[10px]">4 məhsul</span>
                     </div>
-                    <div className="flex-1 p-3 space-y-1.5 overflow-y-auto">
+                    {/* Cart items — hidden on mobile to save space, shown on md+ */}
+                    <div className="hidden md:block flex-1 p-3 space-y-1.5 overflow-y-auto">
                       {[
-                        { e:"🥛",n:"Süd 1L",   q:2,p:"₼3.00" },
-                        { e:"🥚",n:"Yumurta",  q:1,p:"₼2.40" },
-                        { e:"🧀",n:"Pendir",   q:1,p:"₼3.20" },
-                        { e:"🍫",n:"Şokolad",  q:3,p:"₼3.60" },
+                        { e:"🥛",n:"Süd 1L",  q:2,p:"₼3.00" },
+                        { e:"🥚",n:"Yumurta", q:1,p:"₼2.40" },
+                        { e:"🧀",n:"Pendir",  q:1,p:"₼3.20" },
+                        { e:"🍫",n:"Şokolad", q:3,p:"₼3.60" },
                       ].map((it) => (
-                        <div key={it.n} className="flex items-center gap-2 bg-[#0F172A] rounded-lg p-2 group">
-                          <span className="text-base shrink-0">{it.e}</span>
+                        <div key={it.n} className="flex items-center gap-2 bg-[#0F172A] rounded-lg p-2">
+                          <span className="text-sm shrink-0">{it.e}</span>
                           <div className="flex-1 min-w-0">
-                            <p className="text-white text-[11px] font-medium truncate">{it.n}</p>
+                            <p className="text-white text-[10px] font-medium truncate">{it.n}</p>
                             <div className="flex items-center gap-1 mt-0.5">
-                              <button className="w-4 h-4 rounded bg-white/5 text-white/40 text-[10px] flex items-center justify-center hover:bg-white/10">-</button>
+                              <button className="w-4 h-4 rounded bg-white/5 text-white/40 text-[10px] flex items-center justify-center">-</button>
                               <span className="text-white/50 text-[10px] w-3 text-center">{it.q}</span>
-                              <button className="w-4 h-4 rounded bg-white/5 text-white/40 text-[10px] flex items-center justify-center hover:bg-white/10">+</button>
+                              <button className="w-4 h-4 rounded bg-white/5 text-white/40 text-[10px] flex items-center justify-center">+</button>
                             </div>
                           </div>
-                          <span className="text-[#818CF8] text-[11px] font-semibold shrink-0">{it.p}</span>
+                          <span className="text-[#818CF8] text-[10px] font-semibold shrink-0">{it.p}</span>
                         </div>
                       ))}
                     </div>
+                    {/* Mobile: compact cart items list */}
+                    <div className="md:hidden p-2.5 flex gap-2 overflow-x-auto">
+                      {[
+                        { e:"🥛",n:"Süd×2",p:"₼3.00" },
+                        { e:"🥚",n:"Yum×1",p:"₼2.40" },
+                        { e:"🧀",n:"Pend×1",p:"₼3.20" },
+                        { e:"🍫",n:"Şok×3",p:"₼3.60" },
+                      ].map((it) => (
+                        <div key={it.n} className="shrink-0 bg-[#0F172A] rounded-lg px-2.5 py-2 flex items-center gap-1.5">
+                          <span className="text-sm">{it.e}</span>
+                          <div>
+                            <p className="text-white text-[10px] font-medium">{it.n}</p>
+                            <p className="text-[#818CF8] text-[10px] font-bold">{it.p}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {/* Total + pay */}
                     <div className="p-3 border-t border-white/5 space-y-2">
-                      <div className="flex items-center justify-between"><span className="text-white/40 text-xs">Endirim</span><span className="text-[#10B981] text-xs font-medium">-₼0.00</span></div>
-                      <div className="flex items-center justify-between"><span className="text-white text-sm font-semibold">Cəmi</span><span className="text-white font-bold">₼12.20</span></div>
-                      <div className="grid grid-cols-2 gap-1.5 pt-1">
-                        <button className="bg-[#1E293B] text-white/60 rounded-lg py-2.5 text-xs font-medium hover:bg-[#293548] transition flex items-center justify-center gap-1">💵 Nağd</button>
-                        <button className="bg-[#4F46E5] text-white rounded-lg py-2.5 text-xs font-semibold hover:bg-[#4338CA] transition flex items-center justify-center gap-1">💳 Kart</button>
+                      <div className="flex items-center justify-between">
+                        <span className="text-white text-sm font-semibold">Cəmi</span>
+                        <span className="text-white font-bold">₼12.20</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        <button className="bg-[#1E293B] text-white/60 rounded-lg py-2 text-xs font-medium flex items-center justify-center gap-1">💵 Nağd</button>
+                        <button className="bg-[#4F46E5] text-white rounded-lg py-2 text-xs font-semibold flex items-center justify-center gap-1">💳 Kart</button>
                       </div>
                     </div>
                   </div>
@@ -1085,22 +1134,19 @@ export const LandingPage = () => {
 
               {/* ── INVENTORY ── */}
               {activeModule === "inventory" && (
-                <div className="p-5">
-                  <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-2 bg-[#1E293B] rounded-xl px-4 py-2.5 min-w-[220px]">
-                        <svg className="w-4 h-4 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                        <span className="text-white/25 text-sm">Məhsul axtar...</span>
-                      </div>
-                      <select className="bg-[#1E293B] border border-white/8 text-white/50 text-sm rounded-xl px-3 py-2.5 focus:outline-none"><option>Bütün kateqoriyalar</option></select>
+                <div className="p-3 md:p-5">
+                  <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
+                    <div className="flex items-center gap-2 bg-[#1E293B] rounded-xl px-3 py-2 flex-1 min-w-0">
+                      <svg className="w-3.5 h-3.5 text-white/30 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                      <span className="text-white/25 text-xs truncate">Məhsul axtar...</span>
                     </div>
-                    <div className="flex gap-2">
-                      <button className="flex items-center gap-2 bg-[#1E293B] border border-white/8 text-white/60 text-sm px-4 py-2.5 rounded-xl hover:bg-white/10 transition"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>Excel idxal</button>
-                      <button className="flex items-center gap-2 bg-[#4F46E5] text-white text-sm px-4 py-2.5 rounded-xl hover:bg-[#4338CA] transition"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/></svg>Yeni məhsul</button>
-                    </div>
+                    <button className="shrink-0 flex items-center gap-1.5 bg-[#4F46E5] text-white text-xs px-3 py-2 rounded-xl">
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/></svg>
+                      Yeni
+                    </button>
                   </div>
                   {/* Stats row */}
-                  <div className="grid grid-cols-4 gap-3 mb-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
                     {[
                       { v:"148",  l:"Cəmi məhsul",   c:"text-white" },
                       { v:"12",   l:"Az ehtiyat",     c:"text-[#FBBF24]" },
@@ -1114,10 +1160,10 @@ export const LandingPage = () => {
                     ))}
                   </div>
                   {/* Table */}
-                  <div className="rounded-xl overflow-hidden border border-white/8">
-                    <table className="w-full text-xs">
+                  <div className="rounded-xl overflow-hidden border border-white/8 overflow-x-auto">
+                    <table className="w-full text-xs min-w-[500px]">
                       <thead><tr className="bg-[#0F172A] border-b border-white/5">
-                        {["Məhsul","Kateqoriya","Ehtiyat","Min","Partiya","Son tarix","Status"].map(h => <th key={h} className="text-left px-3 py-2.5 text-white/40 font-medium">{h}</th>)}
+                        {["Məhsul","Kateqoriya","Ehtiyat","Min","Partiya","Son tarix","Status"].map(h => <th key={h} className="text-left px-3 py-2 text-white/40 font-medium whitespace-nowrap">{h}</th>)}
                       </tr></thead>
                       <tbody>
                         {[
@@ -1151,36 +1197,36 @@ export const LandingPage = () => {
 
               {/* ── ANALYTICS ── */}
               {activeModule === "analytics" && (
-                <div className="p-5">
-                  <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+                <div className="p-3 md:p-5">
+                  <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
                     <div>
-                      <h3 className="text-white font-semibold">Analitika paneli</h3>
+                      <h3 className="text-white text-sm font-semibold">Analitika paneli</h3>
                       <p className="text-white/40 text-xs">Son yenilənmə: bu gün 14:32</p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 overflow-x-auto">
                       {["Bu gün","Bu həftə","Bu ay","3 ay"].map((p,i) => (
-                        <button key={p} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${i===2?"bg-[#4F46E5] text-white":"bg-[#1E293B] text-white/40 hover:text-white/70"}`}>{p}</button>
+                        <button key={p} className={`shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-medium transition ${i===2?"bg-[#4F46E5] text-white":"bg-[#1E293B] text-white/40 hover:text-white/70"}`}>{p}</button>
                       ))}
                     </div>
                   </div>
                   {/* KPI cards */}
-                  <div className="grid grid-cols-4 gap-3 mb-5">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
                     {[
                       { v:"₼8,420",l:"Gəlir",      d:"+12%",up:true,  c:"text-white" },
                       { v:"₼2,105",l:"Mənfəət",    d:"+8%", up:true,  c:"text-[#34D399]" },
                       { v:"147",   l:"Satış sayı", d:"-3%", up:false, c:"text-white" },
                       { v:"₼57.3", l:"Orta çek",   d:"+5%", up:true,  c:"text-[#818CF8]" },
                     ].map((k) => (
-                      <div key={k.l} className="bg-[#0F172A] rounded-xl p-4 border border-white/5">
-                        <p className="text-white/40 text-xs mb-2">{k.l}</p>
-                        <p className={`text-2xl font-bold ${k.c} mb-1`}>{k.v}</p>
-                        <span className={`inline-flex items-center gap-1 text-[11px] font-medium ${k.up?"text-[#34D399]":"text-[#EF4444]"}`}>
-                          {k.up?"↑":"↓"} {k.d} keçən aya nisbətən
+                      <div key={k.l} className="bg-[#0F172A] rounded-xl p-3 border border-white/5">
+                        <p className="text-white/40 text-xs mb-1">{k.l}</p>
+                        <p className={`text-xl font-bold ${k.c}`}>{k.v}</p>
+                        <span className={`inline-flex items-center gap-1 text-[10px] font-medium ${k.up?"text-[#34D399]":"text-[#EF4444]"}`}>
+                          {k.up?"↑":"↓"} {k.d}
                         </span>
                       </div>
                     ))}
                   </div>
-                  <div className="grid grid-cols-[1fr_260px] gap-4">
+                  <div className="flex flex-col md:grid md:grid-cols-[1fr_220px] gap-3">
                     {/* Bar chart */}
                     <div className="bg-[#0F172A] rounded-xl p-4 border border-white/5">
                       <p className="text-white/50 text-xs font-medium mb-4">Son 7 gün gəliri</p>
@@ -1208,8 +1254,8 @@ export const LandingPage = () => {
                       </div>
                     </div>
                     {/* Right panel */}
-                    <div className="flex flex-col gap-3">
-                      <div className="bg-[#0F172A] rounded-xl p-4 border border-white/5 flex-1">
+                    <div className="flex flex-col md:flex-col gap-3">
+                      <div className="bg-[#0F172A] rounded-xl p-3 border border-white/5 flex-1">
                         <p className="text-white/50 text-xs font-medium mb-3">Top məhsullar</p>
                         {[
                           { n:"Süd 1L",    pct:78, v:"₼1,240",c:"bg-[#4F46E5]" },
@@ -1250,20 +1296,18 @@ export const LandingPage = () => {
 
               {/* ── SUPPLIERS ── */}
               {activeModule === "suppliers" && (
-                <div className="p-5">
-                  <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-2 bg-[#1E293B] rounded-xl px-4 py-2.5 min-w-[220px]">
-                        <svg className="w-4 h-4 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                        <span className="text-white/25 text-sm">Təchizatçı axtar...</span>
-                      </div>
+                <div className="p-3 md:p-5">
+                  <div className="flex items-center justify-between mb-3 gap-2">
+                    <div className="flex items-center gap-2 bg-[#1E293B] rounded-xl px-3 py-2 flex-1 min-w-0">
+                      <svg className="w-3.5 h-3.5 text-white/30 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                      <span className="text-white/25 text-xs truncate">Axtar...</span>
                     </div>
-                    <button className="flex items-center gap-2 bg-[#4F46E5] text-white text-sm px-4 py-2.5 rounded-xl hover:bg-[#4338CA] transition">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/></svg>
-                      Yeni təchizatçı
+                    <button className="shrink-0 flex items-center gap-1.5 bg-[#4F46E5] text-white text-xs px-3 py-2 rounded-xl">
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/></svg>
+                      Yeni
                     </button>
                   </div>
-                  <div className="grid grid-cols-3 gap-3 mb-5">
+                  <div className="grid grid-cols-3 gap-2 mb-3">
                     {[
                       { v:"8",     l:"Aktiv təchizatçı", c:"text-white" },
                       { v:"₼4,230",l:"Ümumi borc",       c:"text-[#FBBF24]" },
@@ -1275,10 +1319,10 @@ export const LandingPage = () => {
                       </div>
                     ))}
                   </div>
-                  <div className="rounded-xl overflow-hidden border border-white/8">
-                    <table className="w-full text-xs">
+                  <div className="rounded-xl overflow-hidden border border-white/8 overflow-x-auto">
+                    <table className="w-full text-xs min-w-[460px]">
                       <thead><tr className="bg-[#0F172A] border-b border-white/5">
-                        {["Şirkət","Əlaqə","Bu ay","Borc","Son sifariş","Status"].map(h => <th key={h} className="text-left px-4 py-2.5 text-white/40 font-medium">{h}</th>)}
+                        {["Şirkət","Əlaqə","Bu ay","Borc","Son sifariş","Status"].map(h => <th key={h} className="text-left px-3 py-2 text-white/40 font-medium whitespace-nowrap">{h}</th>)}
                       </tr></thead>
                       <tbody>
                         {[
@@ -1309,26 +1353,26 @@ export const LandingPage = () => {
 
               {/* ── STAFF ── */}
               {activeModule === "staff" && (
-                <div className="p-5">
-                  <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
-                    <div className="grid grid-cols-3 gap-3">
+                <div className="p-3 md:p-5">
+                  <div className="flex items-center justify-between mb-3 gap-2">
+                    <div className="flex gap-2">
                       {[
-                        { v:"6",l:"Cəmi əməkdaş",  c:"text-white" },
-                        { v:"4",l:"Aktiv növbədə",  c:"text-[#34D399]" },
-                        { v:"2",l:"Oflayn",          c:"text-white/40" },
+                        { v:"6",l:"Cəmi", c:"text-white" },
+                        { v:"4",l:"Aktiv", c:"text-[#34D399]" },
+                        { v:"2",l:"Oflayn", c:"text-white/40" },
                       ].map((s) => (
-                        <div key={s.l} className="bg-[#0F172A] rounded-xl px-4 py-3 border border-white/5">
-                          <p className={`text-2xl font-bold ${s.c} mb-0.5`}>{s.v}</p>
-                          <p className="text-white/40 text-xs">{s.l}</p>
+                        <div key={s.l} className="bg-[#0F172A] rounded-xl px-3 py-2 border border-white/5 text-center">
+                          <p className={`text-lg font-bold ${s.c}`}>{s.v}</p>
+                          <p className="text-white/40 text-[10px]">{s.l}</p>
                         </div>
                       ))}
                     </div>
-                    <button className="flex items-center gap-2 bg-[#4F46E5] text-white text-sm px-4 py-2.5 rounded-xl hover:bg-[#4338CA] transition">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/></svg>
-                      Yeni əməkdaş
+                    <button className="shrink-0 flex items-center gap-1.5 bg-[#4F46E5] text-white text-xs px-3 py-2 rounded-xl">
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/></svg>
+                      Yeni
                     </button>
                   </div>
-                  <div className="grid grid-cols-3 gap-3 mb-4">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5 mb-4">
                     {[
                       { n:"Əli Həsənov",    r:"Admin",    online:true,  last:"İndi aktiv",       perm:["Satış","Anbar","Hesabat","Parametr"],  init:"ƏH", g:"from-[#4F46E5] to-[#7C3AED]" },
                       { n:"Aytən Quliyeva", r:"Kassir",   online:true,  last:"İndi aktiv",       perm:["Satış"],                               init:"AQ", g:"from-[#EC4899] to-[#F43F5E]" },
@@ -1360,42 +1404,42 @@ export const LandingPage = () => {
 
               {/* ── REPORTS ── */}
               {activeModule === "reports" && (
-                <div className="p-5">
-                  <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
-                    <div className="flex items-center gap-2">
+                <div className="p-3 md:p-5">
+                  <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
+                    <div className="flex items-center gap-1.5 overflow-x-auto">
                       {["Bu gün","Bu həftə","Bu ay","3 ay","İl","Xüsusi"].map((p,i) => (
-                        <button key={p} className={`px-3 py-2 rounded-lg text-xs font-medium transition ${i===2?"bg-[#4F46E5] text-white":"bg-[#1E293B] text-white/40 hover:text-white/70"}`}>{p}</button>
+                        <button key={p} className={`shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-medium transition ${i===2?"bg-[#4F46E5] text-white":"bg-[#1E293B] text-white/40 hover:text-white/70"}`}>{p}</button>
                       ))}
                     </div>
-                    <div className="flex gap-2">
-                      <button className="flex items-center gap-2 bg-[#1E293B] border border-white/8 text-white/60 text-sm px-4 py-2 rounded-xl hover:bg-white/10 transition">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+                    <div className="flex gap-1.5 shrink-0">
+                      <button className="flex items-center gap-1.5 bg-[#1E293B] border border-white/8 text-white/60 text-xs px-3 py-1.5 rounded-xl">
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
                         Excel
                       </button>
-                      <button className="flex items-center gap-2 bg-[#EF4444]/10 border border-[#EF4444]/20 text-[#EF4444] text-sm px-4 py-2 rounded-xl hover:bg-[#EF4444]/15 transition">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                      <button className="flex items-center gap-1.5 bg-[#EF4444]/10 border border-[#EF4444]/20 text-[#EF4444] text-xs px-3 py-1.5 rounded-xl">
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
                         PDF
                       </button>
                     </div>
                   </div>
-                  <div className="grid grid-cols-4 gap-3 mb-5">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
                     {[
-                      { v:"₼8,420", l:"Ümumi gəlir",   d:"+12% keçən aya",  c:"text-white",      up:true  },
-                      { v:"₼2,105", l:"Xalis mənfəət",  d:"+8% keçən aya",   c:"text-[#34D399]",  up:true  },
-                      { v:"147",    l:"Ödənilmiş satış",d:"-3 keçən aya",    c:"text-white",      up:false },
-                      { v:"₼6,315", l:"Xərc",           d:"+4% keçən aya",   c:"text-[#F472B6]",  up:false },
+                      { v:"₼8,420", l:"Gəlir",    d:"+12%", c:"text-white",     up:true  },
+                      { v:"₼2,105", l:"Mənfəət",  d:"+8%",  c:"text-[#34D399]", up:true  },
+                      { v:"147",    l:"Satış",     d:"-3%",  c:"text-white",     up:false },
+                      { v:"₼6,315", l:"Xərc",     d:"+4%",  c:"text-[#F472B6]", up:false },
                     ].map((k) => (
-                      <div key={k.l} className="bg-[#0F172A] rounded-xl p-4 border border-white/5">
+                      <div key={k.l} className="bg-[#0F172A] rounded-xl p-3 border border-white/5">
                         <p className="text-white/40 text-xs mb-1">{k.l}</p>
-                        <p className={`text-2xl font-bold ${k.c} mb-1`}>{k.v}</p>
-                        <span className={`text-[11px] ${k.up?"text-[#34D399]":"text-[#EF4444]"}`}>{k.up?"↑":"↓"} {k.d}</span>
+                        <p className={`text-xl font-bold ${k.c}`}>{k.v}</p>
+                        <span className={`text-[10px] ${k.up?"text-[#34D399]":"text-[#EF4444]"}`}>{k.up?"↑":"↓"} {k.d}</span>
                       </div>
                     ))}
                   </div>
-                  <div className="rounded-xl overflow-hidden border border-white/8">
-                    <table className="w-full text-xs">
+                  <div className="rounded-xl overflow-hidden border border-white/8 overflow-x-auto">
+                    <table className="w-full text-xs min-w-[400px]">
                       <thead><tr className="bg-[#0F172A] border-b border-white/5">
-                        {["Tarix","Satış sayı","Gəlir","Xərc","Mənfəət","Margin"].map(h => <th key={h} className="text-left px-4 py-2.5 text-white/40 font-medium">{h}</th>)}
+                        {["Tarix","Satış","Gəlir","Xərc","Mənfəət","Margin"].map(h => <th key={h} className="text-left px-3 py-2 text-white/40 font-medium whitespace-nowrap">{h}</th>)}
                       </tr></thead>
                       <tbody>
                         {[
@@ -1428,11 +1472,11 @@ export const LandingPage = () => {
       </section>
 
       {/* Problem */}
-      <section className="py-20 bg-[#0B1120]">
+      <section className="py-12 md:py-20 bg-[#0B1120]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-white mb-4">{tr.probTitle}</h2>
-            <p className="text-xl text-white/50 max-w-3xl mx-auto">{tr.probSub}</p>
+          <div className="text-center mb-8 md:mb-16">
+            <h2 className="text-2xl md:text-4xl font-bold text-white mb-3">{tr.probTitle}</h2>
+            <p className="text-sm md:text-xl text-white/50 max-w-3xl mx-auto">{tr.probSub}</p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {[
@@ -1455,11 +1499,11 @@ export const LandingPage = () => {
       </section>
 
       {/* Solution */}
-      <section className="py-20 bg-[#0F172A]">
+      <section className="py-12 md:py-20 bg-[#0F172A]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-white mb-4">{tr.solTitle}</h2>
-            <p className="text-xl text-white/50 max-w-3xl mx-auto">{tr.solSub}</p>
+          <div className="text-center mb-8 md:mb-16">
+            <h2 className="text-2xl md:text-4xl font-bold text-white mb-3">{tr.solTitle}</h2>
+            <p className="text-sm md:text-xl text-white/50 max-w-3xl mx-auto">{tr.solSub}</p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
@@ -1483,11 +1527,11 @@ export const LandingPage = () => {
       </section>
 
       {/* Features */}
-      <section id="features" className="py-20 bg-[#080B14]">
+      <section id="features" className="py-12 md:py-20 bg-[#080B14]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-white mb-4">{tr.featTitle}</h2>
-            <p className="text-xl text-white/50 max-w-3xl mx-auto">{tr.featSub}</p>
+          <div className="text-center mb-8 md:mb-16">
+            <h2 className="text-2xl md:text-4xl font-bold text-white mb-3">{tr.featTitle}</h2>
+            <p className="text-sm md:text-xl text-white/50 max-w-3xl mx-auto">{tr.featSub}</p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
@@ -1513,11 +1557,11 @@ export const LandingPage = () => {
       </section>
 
       {/* Benefits */}
-      <section id="benefits" className="py-20 bg-[#0B1120]">
+      <section id="benefits" className="py-12 md:py-20 bg-[#0B1120]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-white mb-4">{tr.benTitle}</h2>
-            <p className="text-xl text-white/50 max-w-3xl mx-auto">{tr.benSub}</p>
+          <div className="text-center mb-8 md:mb-16">
+            <h2 className="text-2xl md:text-4xl font-bold text-white mb-3">{tr.benTitle}</h2>
+            <p className="text-sm md:text-xl text-white/50 max-w-3xl mx-auto">{tr.benSub}</p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
@@ -1537,11 +1581,11 @@ export const LandingPage = () => {
       </section>
 
       {/* Industries */}
-      <section id="industries" className="py-20 bg-[#080B14]">
+      <section id="industries" className="py-12 md:py-20 bg-[#080B14]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-white mb-4">{tr.indTitle}</h2>
-            <p className="text-xl text-white/50 max-w-3xl mx-auto">{tr.indSub}</p>
+          <div className="text-center mb-8 md:mb-16">
+            <h2 className="text-2xl md:text-4xl font-bold text-white mb-3">{tr.indTitle}</h2>
+            <p className="text-sm md:text-xl text-white/50 max-w-3xl mx-auto">{tr.indSub}</p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {industries.map((industry, index) => (
@@ -1574,11 +1618,11 @@ export const LandingPage = () => {
       </section>
 
       {/* How It Works */}
-      <section className="py-20 bg-[#0B1120]">
+      <section className="py-12 md:py-20 bg-[#0B1120]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-white mb-4">{tr.howTitle}</h2>
-            <p className="text-xl text-white/50 max-w-3xl mx-auto">{tr.howSub}</p>
+          <div className="text-center mb-8 md:mb-16">
+            <h2 className="text-2xl md:text-4xl font-bold text-white mb-3">{tr.howTitle}</h2>
+            <p className="text-sm md:text-xl text-white/50 max-w-3xl mx-auto">{tr.howSub}</p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {[
@@ -1607,11 +1651,11 @@ export const LandingPage = () => {
       </section>
 
       {/* Testimonials */}
-      <section className="py-20 bg-[#080B14]">
+      <section className="py-12 md:py-20 bg-[#080B14]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-white mb-4">{tr.testTitle}</h2>
-            <p className="text-xl text-white/50 max-w-3xl mx-auto">{tr.testSub}</p>
+          <div className="text-center mb-8 md:mb-16">
+            <h2 className="text-2xl md:text-4xl font-bold text-white mb-3">{tr.testTitle}</h2>
+            <p className="text-sm md:text-xl text-white/50 max-w-3xl mx-auto">{tr.testSub}</p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {[
@@ -1653,13 +1697,13 @@ export const LandingPage = () => {
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className="py-20 bg-[#0B1120]">
+      <section id="pricing" className="py-12 md:py-20 bg-[#0B1120]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-white mb-4">{tr.priceTitle}</h2>
-            <p className="text-xl text-white/50 max-w-3xl mx-auto">{tr.priceSub}</p>
+          <div className="text-center mb-8 md:mb-16">
+            <h2 className="text-2xl md:text-4xl font-bold text-white mb-3">{tr.priceTitle}</h2>
+            <p className="text-sm md:text-xl text-white/50 max-w-3xl mx-auto">{tr.priceSub}</p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-5 md:gap-8 max-w-5xl mx-auto">
             {/* Starter */}
             <div className="bg-[#0F172A] rounded-2xl p-8 border border-white/8">
               <h3 className="text-xl font-semibold text-white mb-2">{tr.plan1Name}</h3>
@@ -1719,10 +1763,10 @@ export const LandingPage = () => {
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="py-20 bg-[#080B14]">
+      <section id="faq" className="py-12 md:py-20 bg-[#080B14]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-white mb-4">{tr.faqTitle}</h2>
+          <div className="text-center mb-8 md:mb-16">
+            <h2 className="text-2xl md:text-4xl font-bold text-white mb-3">{tr.faqTitle}</h2>
             <p className="text-xl text-white/50">{tr.faqSub}</p>
           </div>
           <div className="space-y-3">
@@ -1752,10 +1796,10 @@ export const LandingPage = () => {
       </section>
 
       {/* Demo Request */}
-      <section id="demo" className="py-20 bg-[#0B1120]">
+      <section id="demo" className="py-12 md:py-20 bg-[#0B1120]">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10">
-            <h2 className="text-4xl font-bold text-white mb-4">{tr.demoTitle}</h2>
+          <div className="text-center mb-7 md:mb-10">
+            <h2 className="text-2xl md:text-4xl font-bold text-white mb-3">{tr.demoTitle}</h2>
             <p className="text-xl text-white/50">{tr.demoSub}</p>
           </div>
 
@@ -1844,11 +1888,11 @@ export const LandingPage = () => {
       </section>
 
       {/* Contact */}
-      <section id="contact" className="py-20 bg-[#080B14]">
+      <section id="contact" className="py-12 md:py-20 bg-[#080B14]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14">
-            <h2 className="text-4xl font-bold text-white mb-4">{tr.contactTitle}</h2>
-            <p className="text-xl text-white/50 max-w-3xl mx-auto">{tr.contactSub}</p>
+          <div className="text-center mb-8 md:mb-14">
+            <h2 className="text-2xl md:text-4xl font-bold text-white mb-3">{tr.contactTitle}</h2>
+            <p className="text-sm md:text-xl text-white/50 max-w-3xl mx-auto">{tr.contactSub}</p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {contactLinks.map((contact) => (
@@ -1875,10 +1919,10 @@ export const LandingPage = () => {
       </section>
 
       {/* Final CTA */}
-      <section className="py-20 bg-gradient-to-br from-[#4F46E5] to-[#7C3AED]">
+      <section className="py-12 md:py-20 bg-gradient-to-br from-[#4F46E5] to-[#7C3AED]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">{tr.ctaTitle}</h2>
-          <p className="text-xl text-indigo-100 mb-10 max-w-2xl mx-auto">{tr.ctaSub}</p>
+          <h2 className="text-2xl md:text-5xl font-bold text-white mb-4">{tr.ctaTitle}</h2>
+          <p className="text-sm md:text-xl text-indigo-100 mb-7 md:mb-10 max-w-2xl mx-auto">{tr.ctaSub}</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
             <button
               onClick={() => setShowTrialModal(true)}
@@ -1898,12 +1942,12 @@ export const LandingPage = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-[#0F172A] py-12">
+      <footer className="bg-[#0F172A] py-10 md:py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div>
-              <span className="text-xl font-bold text-white block mb-4">Merix</span>
-              <p className="text-gray-400 text-sm">{tr.footerDesc}</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+            <div className="col-span-2 md:col-span-1">
+              <span className="text-lg font-bold text-white block mb-3">Merix</span>
+              <p className="text-gray-400 text-xs md:text-sm">{tr.footerDesc}</p>
             </div>
             <div>
               <h4 className="text-white font-semibold mb-4">{tr.footerProduct}</h4>
@@ -1930,7 +1974,7 @@ export const LandingPage = () => {
               </ul>
             </div>
           </div>
-          <div className="border-t border-[#1E293B] mt-12 pt-8 text-center text-gray-400 text-sm">
+          <div className="border-t border-[#1E293B] mt-8 md:mt-12 pt-6 md:pt-8 text-center text-gray-400 text-xs md:text-sm">
             © {new Date().getFullYear()} Merix. {tr.footerRights}
           </div>
         </div>

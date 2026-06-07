@@ -7,7 +7,7 @@ import type {
 import { getCookie, setCookie } from "./services/tokenService";
 import { setCredentials, logout } from "./services/authService";
 
-const API = "http://localhost:3000/api/";
+const API = "https://merix-production.up.railway.app/api/";
 
 const rawBaseQuery = fetchBaseQuery({
   baseUrl: API,
