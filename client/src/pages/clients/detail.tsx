@@ -21,7 +21,7 @@ import { SaleDetailsModal } from "./SaleDetailsModal.tsx";
 
 const col = createColumnHelper<any>();
 
-const ROLES    = ["admin", "manager", "cashier", "user"];
+const ROLES    = ["owner", "admin", "manager", "cashier", "user"];
 const STATUSES = ["active", "inactive", "suspended"];
 const inputCls = "border border-border rounded-lg px-3 py-2 text-sm focus:border-brand focus:outline-none w-full bg-bg-surface text-text-primary";
 const labelCls = "text-xs font-semibold text-text-secondary";
@@ -37,6 +37,7 @@ const statusBadge = (v: string) => {
 
 const roleBadge = (v: string) => {
   const c: Record<string, string> = {
+    owner:   "bg-amber-500/10 text-amber-600",
     admin:   "bg-[#faf5ff] text-[#7c3aed]",
     manager: "bg-info-bg text-info-text",
     cashier: "bg-success-bg text-success-text",

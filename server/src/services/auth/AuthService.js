@@ -74,14 +74,24 @@ const LoginUser = async (userData) => {
     if (!isPasswordValid) {
       throw new AppError("Invalid email or password", 401);
     }
-    const token = jwtService.signToken({ userId: user.id, role: "user" });
+    const token = jwtService.signToken({ userId: user.id, role: user.role, clientId: user.clientId });
     const refreshToken = jwtService.signRefreshToken(
-      { userId: user.id, role: "user" },
+      { userId: user.id, role: user.role, clientId: user.clientId },
       "7d"
     );
-    user.refreshToken = refreshToken;
     await user.save();
-    return { user, token, refreshToken };
+    return {
+      token,
+      refreshToken,
+      user: {
+        id:        user.id,
+        email:     user.email,
+        firstName: user.firstName,
+        lastName:  user.lastName,
+        role:      user.role,
+        clientId:  user.clientId,
+      },
+    };
   } catch (error) {
     throw error;
   }

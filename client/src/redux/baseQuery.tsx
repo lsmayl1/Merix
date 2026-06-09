@@ -7,7 +7,7 @@ import type {
 import { getCookie, setCookie } from "./services/tokenService";
 import { setCredentials, logout } from "./services/authService";
 
-const API = import.meta.env.VITE_API_URL || "https://merix-production.up.railway.app/api/";
+const API = import.meta.env.VITE_API_URL;
 
 const rawBaseQuery = fetchBaseQuery({
   baseUrl: API,

@@ -8,6 +8,7 @@ import { CompaniesApi } from "./features/companies/companiesSlice.tsx";
 import { DatabaseApi }  from "./features/database/databaseSlice.tsx";
 import { AccountApi }   from "./features/account/accountSlice.tsx";
 import { DemoRequestsApi } from "./features/demo/demoRequestsSlice.tsx";
+import { OwnerApi }        from "./features/owner/ownerSlice.tsx";
 
 export const store = configureStore({
   reducer: {
@@ -18,6 +19,7 @@ export const store = configureStore({
     [DatabaseApi.reducerPath]:  DatabaseApi.reducer,
     [AccountApi.reducerPath]:      AccountApi.reducer,
     [DemoRequestsApi.reducerPath]: DemoRequestsApi.reducer,
+    [OwnerApi.reducerPath]:        OwnerApi.reducer,
     authService,
   },
   middleware: (getDefaultMiddleware) =>
@@ -29,6 +31,7 @@ export const store = configureStore({
       DatabaseApi.middleware,
       AccountApi.middleware,
       DemoRequestsApi.middleware,
+      OwnerApi.middleware,
     ),
 });
 

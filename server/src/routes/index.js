@@ -8,7 +8,9 @@ import { router as CompanyController }  from "../controllers/companies/CompanyCo
 import { router as DatabaseController } from "../controllers/database/DatabaseController.js";
 import { router as AccountController }  from "../controllers/account/AccountController.js";
 import { router as DemoRequestController } from "../controllers/demo/DemoRequestController.js";
-import { authenticate }                 from "../middlewares/AuthMiddleware.js";
+import { router as OwnerController }      from "../controllers/owner/OwnerController.js";
+import { authenticate }                   from "../middlewares/AuthMiddleware.js";
+import { requireOwner }                   from "../middlewares/OwnerMiddleware.js";
 import express from "express";
 import bcrypt from "bcrypt";
 import { Client, Company, User } from "../models/index.js";
@@ -65,4 +67,5 @@ export default (app) => {
   app.use("/api/database", authenticate, DatabaseController);
   app.use("/api/account",  authenticate, AccountController);
   app.use("/api/demo-requests", DemoRequestController);
+  app.use("/api/owner",        authenticate, requireOwner, OwnerController);
 };

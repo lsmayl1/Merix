@@ -39,7 +39,7 @@ router.post("/refresh", async (req, res, next) => {
     if (!user) throw new AppError("User not found", 404);
 
     const newToken = jwtService.signToken(
-      { userId: user.id, role: user.role || "user" },
+      { userId: user.id, role: user.role, clientId: user.clientId },
       process.env.ACCESS_TOKEN_EXPIRES_IN || "1h",
     );
 
