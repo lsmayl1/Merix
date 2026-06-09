@@ -9,6 +9,7 @@ import { router as DatabaseController } from "../controllers/database/DatabaseCo
 import { router as AccountController }  from "../controllers/account/AccountController.js";
 import { router as DemoRequestController } from "../controllers/demo/DemoRequestController.js";
 import { router as OwnerController }      from "../controllers/owner/OwnerController.js";
+import { router as DownloadController }   from "../controllers/download/DownloadController.js";
 import { authenticate }                   from "../middlewares/AuthMiddleware.js";
 import { requireOwner }                   from "../middlewares/OwnerMiddleware.js";
 import express from "express";
@@ -68,4 +69,5 @@ export default (app) => {
   app.use("/api/account",  authenticate, AccountController);
   app.use("/api/demo-requests", DemoRequestController);
   app.use("/api/owner",        authenticate, requireOwner, OwnerController);
+  app.use("/api/download",     DownloadController);
 };

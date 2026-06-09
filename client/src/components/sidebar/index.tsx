@@ -39,6 +39,13 @@ const LogsIcon = ({ className = "" }: { className?: string }) => (
   </svg>
 );
 
+const DownloadIcon = ({ className = "" }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 3v13M7 11l5 5 5-5" />
+    <path d="M3 19h18" />
+  </svg>
+);
+
 const NAV = [
   { name: "Dashboard",      link: "/dashboard",      icon: <Dashboard /> },
   { name: "Companies",      link: "/companies",       icon: <Companies /> },
@@ -46,6 +53,7 @@ const NAV = [
   { name: "Demo Requests",  link: "/demo-requests",   icon: <DemoIcon /> },
   { name: "Database",       link: "/database",        icon: <Database /> },
   { name: "Server Logs",   link: "/server-logs",     icon: <LogsIcon /> },
+  { name: "Download",      link: "/download",         icon: <DownloadIcon /> },
 ];
 
 const BOTTOM = [

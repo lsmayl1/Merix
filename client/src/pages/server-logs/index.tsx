@@ -10,29 +10,31 @@ interface LogEntry {
 }
 
 const levelColor: Record<LogLevel, string> = {
-  info:  "text-slate-300",
-  warn:  "text-yellow-400",
+  info: "text-slate-300",
+  warn: "text-yellow-400",
   error: "text-red-400",
 };
 
 const levelBadge: Record<LogLevel, string> = {
-  info:  "text-slate-500",
-  warn:  "text-yellow-600",
+  info: "text-slate-500",
+  warn: "text-yellow-600",
   error: "text-red-500",
 };
 
-const WS_URL = (import.meta.env.VITE_API_URL as string)
+const WS_URL = (import.meta.env.VITE_API_URL ?? "http://localhost:3000/api")
   .replace(/^http/, "ws")
   .replace(/\/api$/, "");
 
 export const ServerLogs = () => {
-  const [logs, setLogs]       = useState<LogEntry[]>([]);
-  const [status, setStatus]   = useState<"connecting" | "connected" | "disconnected">("connecting");
-  const [paused, setPaused]   = useState(false);
-  const [filter, setFilter]   = useState<LogLevel | "all">("all");
-  const bottomRef             = useRef<HTMLDivElement>(null);
-  const pausedRef             = useRef(paused);
-  const wsRef                 = useRef<WebSocket | null>(null);
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [status, setStatus] = useState<
+    "connecting" | "connected" | "disconnected"
+  >("connecting");
+  const [paused, setPaused] = useState(false);
+  const [filter, setFilter] = useState<LogLevel | "all">("all");
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const pausedRef = useRef(paused);
+  const wsRef = useRef<WebSocket | null>(null);
 
   pausedRef.current = paused;
 
@@ -41,13 +43,13 @@ export const ServerLogs = () => {
     const ws = new WebSocket(`${WS_URL}/ws/logs?token=${token}`);
     wsRef.current = ws;
 
-    ws.onopen  = () => setStatus("connected");
+    ws.onopen = () => setStatus("connected");
     ws.onclose = () => setStatus("disconnected");
     ws.onerror = () => setStatus("disconnected");
 
     ws.onmessage = (e) => {
       if (pausedRef.current) return;
-      try {
+      try { 
         const entry: LogEntry = JSON.parse(e.data);
         setLogs((prev) => [...prev.slice(-999), entry]);
       } catch {}
@@ -60,11 +62,12 @@ export const ServerLogs = () => {
     if (!paused) bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [logs, paused]);
 
-  const visible = filter === "all" ? logs : logs.filter((l) => l.level === filter);
+  const visible =
+    filter === "all" ? logs : logs.filter((l) => l.level === filter);
 
   const statusDot: Record<typeof status, string> = {
-    connecting:   "bg-yellow-400",
-    connected:    "bg-green-400",
+    connecting: "bg-yellow-400",
+    connected: "bg-green-400",
     disconnected: "bg-red-500",
   };
 
@@ -74,7 +77,9 @@ export const ServerLogs = () => {
       <div className="flex items-center justify-between gap-3 flex-wrap shrink-0">
         <div className="flex items-center gap-2">
           <span className={`size-2 rounded-full ${statusDot[status]}`} />
-          <span className="text-sm text-text-secondary capitalize">{status}</span>
+          <span className="text-sm text-text-secondary capitalize">
+            {status}
+          </span>
         </div>
 
         <div className="flex items-center gap-2">
@@ -118,10 +123,14 @@ export const ServerLogs = () => {
             <span className="text-slate-600 shrink-0 select-none">
               {new Date(entry.ts).toLocaleTimeString()}
             </span>
-            <span className={`shrink-0 uppercase w-10 ${levelBadge[entry.level]}`}>
+            <span
+              className={`shrink-0 uppercase w-10 ${levelBadge[entry.level]}`}
+            >
               [{entry.level}]
             </span>
-            <span className={`break-all ${levelColor[entry.level]}`}>{entry.msg}</span>
+            <span className={`break-all ${levelColor[entry.level]}`}>
+              {entry.msg}
+            </span>
           </div>
         ))}
         <div ref={bottomRef} />

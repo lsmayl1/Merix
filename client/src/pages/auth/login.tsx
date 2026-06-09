@@ -29,7 +29,7 @@ export const Login = () => {
       const res = await login(data).unwrap();
       const { token, refreshToken, user } = res.data;
       dispatch(setCredentials({ token, refreshToken, role: user.role, clientId: user.clientId }));
-      navigate(user.role === "owner" ? "/owner/dashboard" : "/dashboard");
+      navigate("/dashboard");
     } catch (err: any) {
       setError("root", { message: err?.data?.message ?? "Invalid email or password" });
     }

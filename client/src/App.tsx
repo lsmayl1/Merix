@@ -18,12 +18,9 @@ import { ServerLogs }     from "./pages/server-logs/index.tsx";
 import { OwnerDashboard } from "./pages/owner/dashboard/index.tsx";
 import { OwnerSales }     from "./pages/owner/sales/index.tsx";
 import { OwnerReports }   from "./pages/owner/reports/index.tsx";
+import { DownloadPage }   from "./pages/download/index.tsx";
 
-const AdminRoute = () => {
-  const role = useSelector((s: any) => s.authService.role);
-  if (role === "owner") return <Navigate to="/owner/dashboard" replace />;
-  return <MainLayout />;
-};
+const AdminRoute = () => <MainLayout />;
 
 const OwnerRoute = () => {
   const role = useSelector((s: any) => s.authService.role);
@@ -47,6 +44,7 @@ export const App = () => (
         <Route path="/reports"       element={<Reports />} />
         <Route path="/database"      element={<Database />} />
         <Route path="/server-logs"   element={<ServerLogs />} />
+        <Route path="/download"      element={<DownloadPage />} />
         <Route path="/account"       element={<Account />} />
       </Route>
       {/* Owner routes */}
