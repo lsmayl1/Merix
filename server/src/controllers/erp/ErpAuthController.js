@@ -1,6 +1,7 @@
 import express from "express";
 import { AppError } from "../../utils/AppError.js";
 import { erpLogin, refreshErpTokens, validateErpSession } from "../../services/erp/ErpAuthService.js";
+import { provisionRemoteDb } from "../../services/erp/RemoteDbService.js";
 
 const router = express.Router();
 
@@ -47,6 +48,24 @@ router.post("/validate", async (req, res, next) => {
       throw new AppError("userId, deviceId, and tenantId are required", 400);
     }
     const result = await validateErpSession({ userId, deviceId, tenantId });
+    res.status(200).json({ success: true, ...result });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * POST /api/erp/auth/remote-db
+ * Called by MerixERP when its local database is unavailable.
+ * Validates user + device + license, provisions a per-tenant database
+ * on this server, and returns connection credentials for online mode.
+ * Body: { userId, deviceId }
+ */
+router.post("/remote-db", async (req, res, next) => {
+  try {
+    const { userId, deviceId } = req.body;
+    if (!userId || !deviceId) throw new AppError("userId and deviceId are required", 400);
+    const result = await provisionRemoteDb({ userId, deviceId });
     res.status(200).json({ success: true, ...result });
   } catch (err) {
     next(err);
