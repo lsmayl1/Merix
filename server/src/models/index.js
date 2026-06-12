@@ -5,6 +5,7 @@ import User from "./users/UserModel.js";
 import Client from "./clients/ClientModel.js";
 import Company from "./companies/CompanyModel.js";
 import SyncRecord from "./sync/SyncRecordModel.js";
+import ProcessedOperation from "./sync/ProcessedOperationModel.js";
 import ClientDevice from "./devices/ClientDeviceModel.js";
 import License from "./licenses/LicenseModel.js";
 import ErpProduct from "./erp/ProductModel.js";
@@ -37,7 +38,7 @@ License.belongsTo(Client, { foreignKey: "client_id", as: "client", constraints: 
 
 export {
   Sequelize, Op, sequelize,
-  Sale, User, Client, Company, SyncRecord, ClientDevice, License,
+  Sale, User, Client, Company, SyncRecord, ProcessedOperation, ClientDevice, License,
   ErpProduct, ErpCategory, ErpSupplier, ErpCustomer, ErpTransaction, ErpStockMovement,
   DemoRequest,
 };

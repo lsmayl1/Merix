@@ -15,9 +15,17 @@ import {
   useGetClientLicensesQuery,
   useIssueLicenseMutation,
   useUpdateLicenseMutation,
+  useGetClientReportsQuery,
 } from "../../redux/features/clients/clientsSlice.tsx";
 import { Table } from "../../components/metrics/table/index.tsx";
+import { LineChart } from "../../components/metrics/lineChart/index.tsx";
+import { PieChart } from "../../components/metrics/PieChart/index.tsx";
 import { SaleDetailsModal } from "./SaleDetailsModal.tsx";
+import {
+  ArrowLeft, LayoutDashboard, Users, Package, Receipt,
+  ArrowLeftRight, Truck, Contact, Boxes, MonitorSmartphone, KeyRound,
+  Mail, Phone, TrendingUp, ShoppingBag, Wallet, AlertTriangle,
+} from "lucide-react";
 
 const col = createColumnHelper<any>();
 
@@ -52,17 +60,39 @@ const money   = (v: any) => <span className="font-medium text-text-primary">{par
 const dateStr = (v: any) => v ? new Date(v).toLocaleDateString("en-GB") : "—";
 
 const TABS = [
-  { key: "overview",     label: "Overview" },
-  { key: "employees",    label: "Employees" },
-  { key: "products",     label: "Products" },
-  { key: "sales",        label: "Sales" },
-  { key: "transactions", label: "Transactions" },
-  { key: "suppliers",    label: "Suppliers" },
-  { key: "customers",    label: "Customers" },
-  { key: "stock",        label: "Stock Movements" },
-  { key: "devices",      label: "Devices" },
-  { key: "licenses",     label: "Licenses" },
+  { key: "overview",     label: "Overview",        icon: LayoutDashboard },
+  { key: "employees",    label: "Employees",       icon: Users },
+  { key: "products",     label: "Products",        icon: Package },
+  { key: "sales",        label: "Sales",           icon: Receipt },
+  { key: "transactions", label: "Transactions",    icon: ArrowLeftRight },
+  { key: "suppliers",    label: "Suppliers",       icon: Truck },
+  { key: "customers",    label: "Customers",       icon: Contact },
+  { key: "stock",        label: "Stock Movements", icon: Boxes },
+  { key: "devices",      label: "Devices",         icon: MonitorSmartphone },
+  { key: "licenses",     label: "Licenses",        icon: KeyRound },
 ] as const;
+
+const companyInitials = (name = "") =>
+  name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase() || "?";
+
+const PAY_COLORS: Record<string, string> = {
+  cash:   "#10b981",
+  card:   "#3b82f6",
+  credit: "#f59e0b",
+  mixed:  "#8b5cf6",
+};
+
+const KpiCard = ({ icon: Icon, label, value, accent }: { icon: any; label: string; value: any; accent: string }) => (
+  <div className="bg-bg-surface border border-border rounded-xl p-4 flex items-center gap-3">
+    <div className={`size-10 rounded-lg flex items-center justify-center shrink-0 ${accent}`}>
+      <Icon size={18} />
+    </div>
+    <div className="min-w-0">
+      <p className="text-xs text-text-secondary truncate">{label}</p>
+      <p className="text-lg font-semibold text-text-primary truncate tabular-nums">{value}</p>
+    </div>
+  </div>
+);
 
 type TabKey = (typeof TABS)[number]["key"];
 
@@ -224,6 +254,7 @@ export const ClientDetail = () => {
   const { data: stockMoves = [],  isLoading: stockLoading }     = useGetClientStockMovementsQuery(id!, { skip: tab !== "stock" });
   const { data: devices = [],     isLoading: devicesLoading }   = useGetClientDevicesQuery(id!,   { skip: tab !== "devices" });
   const { data: licenses = [],    isLoading: licensesLoading }  = useGetClientLicensesQuery(id!,  { skip: tab !== "licenses" });
+  const { data: reports,          isLoading: reportsLoading }   = useGetClientReportsQuery(id!,   { skip: tab !== "overview" });
 
   // ── Filtered data ──────────────────────────────────────────────────────────
   const filteredEmployees = useMemo(() => {
@@ -392,20 +423,29 @@ export const ClientDetail = () => {
   return (
     <div className="flex flex-col gap-4 h-full">
       {/* Page header */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-4 bg-bg-surface border border-border rounded-xl p-4 shrink-0">
         <button
           onClick={() => navigate("/companies")}
-          className="size-8 flex items-center justify-center rounded-lg border border-border hover:bg-bg-muted text-text-secondary transition-colors"
+          className="size-9 flex items-center justify-center rounded-lg border border-border hover:bg-bg-muted text-text-secondary transition-colors shrink-0"
+          title="Back to companies"
         >
-          <svg className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+          <ArrowLeft size={18} />
         </button>
-        <div>
-          <h1 className="text-xl font-semibold text-text-primary">{client.name}</h1>
-          <p className="text-sm text-text-secondary">
-            {client.email || ""}{client.email && client.phone ? " · " : ""}{client.phone || ""}
-          </p>
+        <div className="size-12 rounded-xl bg-brand text-white flex items-center justify-center text-lg font-bold shrink-0 select-none">
+          {companyInitials(client.name)}
         </div>
-        <span className={`ml-auto px-2 py-0.5 rounded-full text-xs font-medium ${
+        <div className="min-w-0">
+          <h1 className="text-xl font-semibold text-text-primary truncate">{client.name}</h1>
+          <div className="flex items-center gap-3 text-sm text-text-secondary mt-0.5">
+            {client.email && (
+              <span className="flex items-center gap-1 truncate"><Mail size={13} className="shrink-0" />{client.email}</span>
+            )}
+            {client.phone && (
+              <span className="flex items-center gap-1 truncate"><Phone size={13} className="shrink-0" />{client.phone}</span>
+            )}
+          </div>
+        </div>
+        <span className={`ml-auto px-2.5 py-1 rounded-full text-xs font-medium shrink-0 ${
           client.status === "active" ? "bg-success-bg text-success-text" : "bg-danger-bg text-danger-text"
         }`}>
           {client.status}
@@ -413,77 +453,174 @@ export const ClientDetail = () => {
       </div>
 
       {/* Tab navigation */}
-      <div className="flex gap-1 bg-bg-surface border border-border rounded-lg p-1 overflow-x-auto shrink-0">
-        {TABS.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => { setTab(t.key); if (t.key === "sales") setPage(1); }}
-            className={`px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
-              tab === t.key ? "bg-brand text-white" : "text-text-secondary hover:bg-bg-muted hover:text-text-primary"
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
+      <div className="flex gap-1 bg-bg-surface border border-border rounded-xl p-1 overflow-x-auto shrink-0">
+        {TABS.map((t) => {
+          const Icon = t.icon;
+          const active = tab === t.key;
+          return (
+            <button
+              key={t.key}
+              onClick={() => { setTab(t.key); if (t.key === "sales") setPage(1); }}
+              title={t.label}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
+                active ? "bg-brand text-white shadow-sm" : "text-text-secondary hover:bg-bg-muted hover:text-text-primary"
+              }`}
+            >
+              <Icon size={15} className="shrink-0" />
+              <span>{t.label}</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Tab content */}
       <div className="flex-1 min-h-0 flex flex-col gap-4">
 
         {/* ── Overview ── */}
-        {tab === "overview" && (
-          <>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-              {[
-                { label: "Employees",   value: client.users?.length ?? 0 },
-                { label: "Total Sales", value: summary.totalSales ?? 0 },
-                { label: "Revenue",     value: (summary.totalRevenue ?? "0.00") + " ₼" },
-                { label: "Cash",        value: (summary.totalCash ?? "0.00") + " ₼" },
-                { label: "Returns",     value: summary.returnSales ?? 0 },
-              ].map((kpi) => (
-                <div key={kpi.label} className="bg-bg-surface border border-border rounded-lg p-4">
-                  <p className="text-xs text-text-secondary mb-1">{kpi.label}</p>
-                  <p className="text-xl font-semibold text-text-primary">{kpi.value}</p>
+        {tab === "overview" && (() => {
+          const rep  = reports?.sales;
+          const inv  = reports?.inventory;
+          const fin  = reports?.financial;
+          const cust = reports?.customers;
+          const trendData = (rep?.monthly || []).map((m: any) => ({ date: m.month, revenue: m.revenue, orders: m.orders }));
+          const payData = (rep?.byPaymentMethod || []).map((p: any) => ({
+            name: p.method, value: p.amount, color: PAY_COLORS[p.method] || "#94a3b8",
+          }));
+          const fmt = (v: any) => `${parseFloat(v || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₼`;
+
+          return (
+            <div className="flex-1 min-h-0 overflow-auto flex flex-col gap-4 pr-0.5">
+              {/* ── Main KPIs ── */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <KpiCard icon={Wallet}     label="Total Revenue" value={fmt(rep?.total?.revenue ?? summary.totalRevenue)} accent="bg-emerald-500/10 text-emerald-600" />
+                <KpiCard icon={ShoppingBag} label="Total Sales"  value={rep?.total?.count ?? summary.totalSales ?? 0} accent="bg-blue-500/10 text-blue-600" />
+                <KpiCard icon={TrendingUp}  label="Avg Order"     value={fmt(rep?.total?.avgOrder)} accent="bg-violet-500/10 text-violet-600" />
+                <KpiCard icon={Receipt}     label="This Month"    value={fmt(rep?.thisMonth?.revenue)} accent="bg-amber-500/10 text-amber-600" />
+                <KpiCard icon={Users}       label="Employees"     value={client.users?.length ?? 0} accent="bg-sky-500/10 text-sky-600" />
+                <KpiCard icon={Package}     label="Stock Value"   value={fmt(inv?.total?.totalValue)} accent="bg-teal-500/10 text-teal-600" />
+                <KpiCard icon={AlertTriangle} label="Outstanding Debt" value={fmt(cust?.totalDebt)} accent="bg-rose-500/10 text-rose-600" />
+                <KpiCard icon={ArrowLeftRight} label="Net Profit" value={fmt(fin?.netProfit)} accent={`${(fin?.netProfit ?? 0) >= 0 ? "bg-emerald-500/10 text-emerald-600" : "bg-rose-500/10 text-rose-600"}`} />
+              </div>
+
+              {/* ── Charts ── */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                {/* Revenue trend */}
+                <div className="lg:col-span-2 bg-bg-surface border border-border rounded-xl p-4 flex flex-col">
+                  <div className="flex items-center justify-between mb-2">
+                    <h2 className="text-sm font-semibold text-text-primary flex items-center gap-2">
+                      <TrendingUp size={15} className="text-brand" /> Revenue Trend
+                    </h2>
+                    <span className="text-xs text-text-muted">Monthly</span>
+                  </div>
+                  <div className="h-64">
+                    <LineChart data={trendData} />
+                  </div>
                 </div>
-              ))}
+
+                {/* Payment methods */}
+                <div className="bg-bg-surface border border-border rounded-xl p-4 flex flex-col">
+                  <h2 className="text-sm font-semibold text-text-primary mb-2">Payment Methods</h2>
+                  {reportsLoading ? (
+                    <div className="flex-1 flex items-center justify-center text-xs text-text-muted">Loading…</div>
+                  ) : payData.length === 0 ? (
+                    <div className="flex-1 flex items-center justify-center text-xs text-text-muted">No sales yet</div>
+                  ) : (
+                    <div className="flex-1 flex flex-col items-center justify-center gap-3">
+                      <PieChart chartData={payData} total={{ label: "Revenue", value: rep?.total?.revenue ?? 0 }} />
+                      <div className="w-full flex flex-col gap-1.5">
+                        {payData.map((p: any) => (
+                          <div key={p.name} className="flex items-center gap-2 text-xs">
+                            <span className="size-2.5 rounded-sm shrink-0" style={{ backgroundColor: p.color }} />
+                            <span className="text-text-secondary capitalize">{p.name}</span>
+                            <span className="ml-auto font-medium text-text-primary tabular-nums">{fmt(p.value)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* ── Financial + Recent Sales ── */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* Financial summary */}
+                <div className="bg-bg-surface border border-border rounded-xl p-4">
+                  <h2 className="text-sm font-semibold text-text-primary mb-3">Financial Summary</h2>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="rounded-lg bg-emerald-500/10 p-3">
+                      <p className="text-xs text-emerald-600 mb-1">Income</p>
+                      <p className="text-base font-semibold text-emerald-700 tabular-nums">{fmt(fin?.income)}</p>
+                    </div>
+                    <div className="rounded-lg bg-rose-500/10 p-3">
+                      <p className="text-xs text-rose-600 mb-1">Expenses</p>
+                      <p className="text-base font-semibold text-rose-700 tabular-nums">{fmt(fin?.expenses)}</p>
+                    </div>
+                    <div className="rounded-lg bg-blue-500/10 p-3">
+                      <p className="text-xs text-blue-600 mb-1">Net Profit</p>
+                      <p className="text-base font-semibold text-blue-700 tabular-nums">{fmt(fin?.netProfit)}</p>
+                    </div>
+                  </div>
+                  {rep?.byCashier?.length > 0 && (
+                    <div className="mt-4">
+                      <h3 className="text-xs font-semibold text-text-secondary mb-2 uppercase tracking-wide">Top Cashiers</h3>
+                      <div className="flex flex-col gap-1.5">
+                        {rep.byCashier.slice(0, 4).map((c: any, i: number) => (
+                          <div key={i} className="flex items-center gap-2 text-xs">
+                            <span className="size-5 rounded bg-bg-muted text-text-secondary flex items-center justify-center font-semibold shrink-0">{i + 1}</span>
+                            <span className="text-text-primary truncate">{c.name}</span>
+                            <span className="text-text-muted">· {c.count} sales</span>
+                            <span className="ml-auto font-medium text-text-primary tabular-nums">{fmt(c.revenue)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Recent sales */}
+                <div className="bg-bg-surface border border-border rounded-xl p-4 flex flex-col">
+                  <h2 className="text-sm font-semibold text-text-primary mb-3 shrink-0">Recent Sales</h2>
+                  <Table columns={salesCols} data={salesData?.sales?.slice(0, 5) || []} isLoading={salesLoading} />
+                </div>
+              </div>
             </div>
-            <div className="bg-bg-surface border border-border rounded-lg p-4">
-              <h2 className="text-sm font-semibold text-text-primary mb-3">Recent Sales</h2>
-              <Table columns={salesCols} data={salesData?.sales?.slice(0, 5) || []} isLoading={salesLoading} />
-            </div>
-          </>
-        )}
+          );
+        })()}
 
         {/* ── Employees ── */}
         {tab === "employees" && (
-          <div className="bg-bg-surface border border-border rounded-lg p-4 flex-1 min-h-0 overflow-auto">
-            <div className="flex items-center justify-between mb-3">
+          <div className="bg-bg-surface border border-border rounded-lg p-4 flex-1 min-h-0 flex flex-col">
+            <div className="flex items-center justify-between mb-3 shrink-0">
               <h2 className="text-sm font-semibold text-text-primary">Employees ({client.users?.length ?? 0})</h2>
               <button onClick={() => setShowAddUser(true)} className="px-3 py-1.5 bg-brand hover:bg-brand-hover text-white text-xs font-medium rounded-lg transition-colors">
                 + Add Employee
               </button>
             </div>
-            <div className="flex items-center gap-2 mb-3 flex-wrap">
+            <div className="flex items-center gap-2 mb-3 flex-wrap shrink-0">
               <SearchInput value={empSearch} onChange={setEmpSearch} placeholder="Search by name or email…" />
               <FilterSelect value={empRole} onChange={setEmpRole} placeholder="All roles" options={ROLES.map((r) => ({ value: r, label: r }))} />
               {(empSearch || empRole) && <ClearBtn onClick={() => { setEmpSearch(""); setEmpRole(""); }} />}
               <Count shown={filteredEmployees.length} total={client.users?.length ?? 0} />
             </div>
-            <Table columns={employeeCols} data={filteredEmployees} isLoading={false} />
+            <div className="flex-1 min-h-0">
+              <Table columns={employeeCols} data={filteredEmployees} isLoading={false} />
+            </div>
           </div>
         )}
 
         {/* ── Products ── */}
         {tab === "products" && (
-          <div className="bg-bg-surface border border-border rounded-lg p-4 flex-1 min-h-0 overflow-auto">
-            <h2 className="text-sm font-semibold text-text-primary mb-3">Products ({products.length})</h2>
-            <div className="flex items-center gap-2 mb-3 flex-wrap">
+          <div className="bg-bg-surface border border-border rounded-lg p-4 flex-1 min-h-0 flex flex-col">
+            <h2 className="text-sm font-semibold text-text-primary mb-3 shrink-0">Products ({products.length})</h2>
+            <div className="flex items-center gap-2 mb-3 flex-wrap shrink-0">
               <SearchInput value={productSearch} onChange={setProductSearch} placeholder="Search by name or barcode…" />
               <FilterSelect value={productUnit} onChange={setProductUnit} placeholder="All units" options={[{ value: "piece", label: "Piece" }, { value: "kg", label: "kg" }]} />
               {(productSearch || productUnit) && <ClearBtn onClick={() => { setProductSearch(""); setProductUnit(""); }} />}
               <Count shown={filteredProducts.length} total={products.length} />
             </div>
-            <Table columns={productCols} data={filteredProducts} isLoading={productsLoading} />
+            <div className="flex-1 min-h-0">
+              <Table columns={productCols} data={filteredProducts} isLoading={productsLoading} />
+            </div>
           </div>
         )}
 
@@ -525,7 +662,7 @@ export const ClientDetail = () => {
                 )}
               </div>
             </div>
-            <div className="flex-1 min-h-0 overflow-auto">
+            <div className="flex-1 min-h-0">
               <Table columns={salesCols} data={filteredSales} isLoading={salesLoading} />
             </div>
             {salesData?.pageCount > 1 && (
@@ -540,84 +677,96 @@ export const ClientDetail = () => {
 
         {/* ── Transactions ── */}
         {tab === "transactions" && (
-          <div className="bg-bg-surface border border-border rounded-lg p-4 flex-1 min-h-0 overflow-auto">
-            <h2 className="text-sm font-semibold text-text-primary mb-3">Transactions ({transactions.length})</h2>
-            <div className="flex items-center gap-2 mb-3 flex-wrap">
+          <div className="bg-bg-surface border border-border rounded-lg p-4 flex-1 min-h-0 flex flex-col">
+            <h2 className="text-sm font-semibold text-text-primary mb-3 shrink-0">Transactions ({transactions.length})</h2>
+            <div className="flex items-center gap-2 mb-3 flex-wrap shrink-0">
               <FilterSelect value={txType} onChange={setTxType} placeholder="All types" options={[{ value: "income", label: "Income" }, { value: "expense", label: "Expense" }]} />
               {txType && <ClearBtn onClick={() => setTxType("")} />}
               <Count shown={filteredTransactions.length} total={transactions.length} />
             </div>
-            <Table columns={transactionCols} data={filteredTransactions} isLoading={txLoading} />
+            <div className="flex-1 min-h-0">
+              <Table columns={transactionCols} data={filteredTransactions} isLoading={txLoading} />
+            </div>
           </div>
         )}
 
         {/* ── Suppliers ── */}
         {tab === "suppliers" && (
-          <div className="bg-bg-surface border border-border rounded-lg p-4 flex-1 min-h-0 overflow-auto">
-            <h2 className="text-sm font-semibold text-text-primary mb-3">Suppliers ({suppliers.length})</h2>
-            <div className="flex items-center gap-2 mb-3 flex-wrap">
+          <div className="bg-bg-surface border border-border rounded-lg p-4 flex-1 min-h-0 flex flex-col">
+            <h2 className="text-sm font-semibold text-text-primary mb-3 shrink-0">Suppliers ({suppliers.length})</h2>
+            <div className="flex items-center gap-2 mb-3 flex-wrap shrink-0">
               <SearchInput value={supplierSearch} onChange={setSupplierSearch} placeholder="Search by name or email…" />
               {supplierSearch && <ClearBtn onClick={() => setSupplierSearch("")} />}
               <Count shown={filteredSuppliers.length} total={suppliers.length} />
             </div>
-            <Table columns={supplierCols} data={filteredSuppliers} isLoading={suppliersLoading} />
+            <div className="flex-1 min-h-0">
+              <Table columns={supplierCols} data={filteredSuppliers} isLoading={suppliersLoading} />
+            </div>
           </div>
         )}
 
         {/* ── Customers ── */}
         {tab === "customers" && (
-          <div className="bg-bg-surface border border-border rounded-lg p-4 flex-1 min-h-0 overflow-auto">
-            <h2 className="text-sm font-semibold text-text-primary mb-3">Customers ({customers.length})</h2>
-            <div className="flex items-center gap-2 mb-3 flex-wrap">
+          <div className="bg-bg-surface border border-border rounded-lg p-4 flex-1 min-h-0 flex flex-col">
+            <h2 className="text-sm font-semibold text-text-primary mb-3 shrink-0">Customers ({customers.length})</h2>
+            <div className="flex items-center gap-2 mb-3 flex-wrap shrink-0">
               <SearchInput value={customerSearch} onChange={setCustomerSearch} placeholder="Search by name or email…" />
               {customerSearch && <ClearBtn onClick={() => setCustomerSearch("")} />}
               <Count shown={filteredCustomers.length} total={customers.length} />
             </div>
-            <Table columns={customerCols} data={filteredCustomers} isLoading={customersLoading} />
+            <div className="flex-1 min-h-0">
+              <Table columns={customerCols} data={filteredCustomers} isLoading={customersLoading} />
+            </div>
           </div>
         )}
 
         {/* ── Stock Movements ── */}
         {tab === "stock" && (
-          <div className="bg-bg-surface border border-border rounded-lg p-4 flex-1 min-h-0 overflow-auto">
-            <h2 className="text-sm font-semibold text-text-primary mb-3">Stock Movements ({stockMoves.length})</h2>
-            <div className="flex items-center gap-2 mb-3 flex-wrap">
+          <div className="bg-bg-surface border border-border rounded-lg p-4 flex-1 min-h-0 flex flex-col">
+            <h2 className="text-sm font-semibold text-text-primary mb-3 shrink-0">Stock Movements ({stockMoves.length})</h2>
+            <div className="flex items-center gap-2 mb-3 flex-wrap shrink-0">
               <FilterSelect value={stockType} onChange={setStockType} placeholder="All types" options={[{ value: "in", label: "In" }, { value: "out", label: "Out" }, { value: "adjustment", label: "Adjustment" }, { value: "return", label: "Return" }]} />
               {stockType && <ClearBtn onClick={() => setStockType("")} />}
               <Count shown={filteredStock.length} total={stockMoves.length} />
             </div>
-            <Table columns={stockCols} data={filteredStock} isLoading={stockLoading} />
+            <div className="flex-1 min-h-0">
+              <Table columns={stockCols} data={filteredStock} isLoading={stockLoading} />
+            </div>
           </div>
         )}
 
         {/* ── Devices ── */}
         {tab === "devices" && (
-          <div className="bg-bg-surface border border-border rounded-lg p-4 flex-1 min-h-0 overflow-auto">
-            <h2 className="text-sm font-semibold text-text-primary mb-3">Devices ({devices.length})</h2>
-            <div className="flex items-center gap-2 mb-3 flex-wrap">
+          <div className="bg-bg-surface border border-border rounded-lg p-4 flex-1 min-h-0 flex flex-col">
+            <h2 className="text-sm font-semibold text-text-primary mb-3 shrink-0">Devices ({devices.length})</h2>
+            <div className="flex items-center gap-2 mb-3 flex-wrap shrink-0">
               <FilterSelect value={deviceStatus} onChange={setDeviceStatus} placeholder="All statuses" options={[{ value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }, { value: "suspended", label: "Suspended" }]} />
               {deviceStatus && <ClearBtn onClick={() => setDeviceStatus("")} />}
               <Count shown={filteredDevices.length} total={devices.length} />
             </div>
-            <Table columns={deviceCols} data={filteredDevices} isLoading={devicesLoading} />
+            <div className="flex-1 min-h-0">
+              <Table columns={deviceCols} data={filteredDevices} isLoading={devicesLoading} />
+            </div>
           </div>
         )}
 
         {/* ── Licenses ── */}
         {tab === "licenses" && (
-          <div className="bg-bg-surface border border-border rounded-lg p-4 flex-1 min-h-0 overflow-auto">
-            <div className="flex items-center justify-between mb-3">
+          <div className="bg-bg-surface border border-border rounded-lg p-4 flex-1 min-h-0 flex flex-col">
+            <div className="flex items-center justify-between mb-3 shrink-0">
               <h2 className="text-sm font-semibold text-text-primary">Licenses ({licenses.length})</h2>
               <button onClick={() => { setShowIssueLicense(true); setLicenseError(""); setLicenseForm({ type: "monthly", expiresAt: "", maxDevices: "1", gracePeriodDays: "7", notes: "" }); }} className="px-3 py-1.5 bg-brand hover:bg-brand-hover text-white text-xs font-medium rounded-lg transition-colors">
                 + Issue License
               </button>
             </div>
-            <div className="flex items-center gap-2 mb-3 flex-wrap">
+            <div className="flex items-center gap-2 mb-3 flex-wrap shrink-0">
               <FilterSelect value={licenseStatus} onChange={setLicenseStatus} placeholder="All statuses" options={[{ value: "active", label: "Active" }, { value: "expired", label: "Expired" }, { value: "suspended", label: "Suspended" }, { value: "cancelled", label: "Cancelled" }]} />
               {licenseStatus && <ClearBtn onClick={() => setLicenseStatus("")} />}
               <Count shown={filteredLicenses.length} total={licenses.length} />
             </div>
-            <Table columns={licenseCols} data={filteredLicenses} isLoading={licensesLoading} />
+            <div className="flex-1 min-h-0">
+              <Table columns={licenseCols} data={filteredLicenses} isLoading={licensesLoading} />
+            </div>
           </div>
         )}
       </div>

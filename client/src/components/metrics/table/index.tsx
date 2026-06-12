@@ -54,7 +54,7 @@ export const Table = ({
   };
 
   return (
-    <div className="w-full flex flex-col rounded-xl bg-bg-surface border border-border overflow-hidden">
+    <div className="w-full h-full flex flex-col rounded-xl bg-bg-surface border border-border overflow-hidden">
       {/* Table */}
       <div className="overflow-auto flex-1 min-h-0">
         <table className="w-full border-separate border-spacing-0">

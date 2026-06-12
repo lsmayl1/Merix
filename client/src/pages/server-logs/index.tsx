@@ -21,7 +21,7 @@ const levelBadge: Record<LogLevel, string> = {
   error: "text-red-500",
 };
 
-const WS_URL = (import.meta.env.VITE_API_URL ?? "http://localhost:3000/api")
+const WS_URL = (import.meta.env.VITE_API_URL ?? "http://87.106.224.203/api")
   .replace(/^http/, "ws")
   .replace(/\/api$/, "");
 
@@ -49,7 +49,7 @@ export const ServerLogs = () => {
 
     ws.onmessage = (e) => {
       if (pausedRef.current) return;
-      try { 
+      try {
         const entry: LogEntry = JSON.parse(e.data);
         setLogs((prev) => [...prev.slice(-999), entry]);
       } catch {}

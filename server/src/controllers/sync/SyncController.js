@@ -2,10 +2,11 @@ import express from "express";
 import { AppError } from "../../utils/AppError.js";
 import { tenantEntityId } from "../../utils/tenantEntityId.js";
 import {
-  Sale, Company, SyncRecord, sequelize,
+  Sale, Company, SyncRecord, ProcessedOperation, sequelize,
   ErpProduct, ErpCategory, ErpSupplier, ErpCustomer,
   ErpTransaction, ErpStockMovement,
 } from "../../models/index.js";
+import { validateSyncPayload } from "../../utils/syncValidation.js";
 
 // ─── Pull endpoint — ERP fetches its own data back from the Admin server ──────
 
@@ -329,9 +330,31 @@ async function processSyncItem(item, tenantId, branchId) {
   const { queueId, entityType, entityId, operation, version, data } = item;
   const entityKey = entityType?.toLowerCase();
 
+  // 1. Integrity validation — reject incomplete/corrupt data before any DB work.
+  //    Rejected items are NOT acknowledged, so the sender re-requests them.
+  const valid = validateSyncPayload(entityKey, operation, entityId, data);
+  if (!valid.valid) {
+    console.warn(`[sync] rejected [${entityKey}/${entityId}] queueId=${queueId}: ${valid.reason}`);
+    return { queueId, status: "rejected", reason: valid.reason };
+  }
+
   const t = await sequelize.transaction();
   try {
-    // Conflict detection
+    // 2. Idempotency fast-path — already applied by an earlier (committed) delivery?
+    //    Sequential retries after a lost ACK land here and are acknowledged
+    //    without re-applying the change.
+    if (queueId) {
+      const seen = await ProcessedOperation.findOne({
+        where: { tenantId, queueId: String(queueId) },
+        transaction: t,
+      });
+      if (seen) {
+        await t.commit();
+        return { queueId, status: "synced", deduped: true };
+      }
+    }
+
+    // 3. Conflict detection (last-write-wins by version — stale writes rejected)
     const existing = await SyncRecord.findOne({
       where: { tenantId, entityType: entityKey, entityId: String(entityId) },
       transaction: t,
@@ -351,13 +374,33 @@ async function processSyncItem(item, tenantId, branchId) {
       };
     }
 
-    // Run entity handler
+    // 4. Claim the idempotency key BEFORE applying anything. The unique
+    //    (tenant_id, queue_id) constraint is the hard exactly-once guarantee:
+    //    concurrent duplicates of the same key serialize on this insert — the
+    //    loser blocks until the winner commits, then gets a unique violation
+    //    and is acknowledged as a no-op dedup rather than re-applying.
+    if (queueId) {
+      try {
+        await ProcessedOperation.create(
+          { tenantId, queueId: String(queueId), entityType: entityKey, entityId: String(entityId), operation, status: "synced" },
+          { transaction: t },
+        );
+      } catch (dupErr) {
+        if (dupErr?.name === "SequelizeUniqueConstraintError") {
+          await t.rollback();
+          return { queueId, status: "synced", deduped: true };
+        }
+        throw dupErr;
+      }
+    }
+
+    // 5. Run entity handler (idempotent upsert by deterministic id)
     const handler = ENTITY_HANDLERS[entityKey];
     if (handler) {
       await handler(entityId, operation, data || {}, tenantId, t);
     }
 
-    // Upsert audit record
+    // 6. Upsert audit record
     if (existing) {
       await existing.update(
         { operation, version: version || 1, data, queueId, status: "synced", receivedAt: new Date() },
@@ -411,9 +454,15 @@ router.post("/batch", async (req, res, next) => {
     const summary = {
       total:     results.length,
       synced:    results.filter((r) => r.status === "synced").length,
+      deduped:   results.filter((r) => r.deduped).length,
       failed:    results.filter((r) => r.status === "failed").length,
+      rejected:  results.filter((r) => r.status === "rejected").length,
       conflicts: results.filter((r) => r.status === "conflict").length,
     };
+
+    if (summary.rejected || summary.failed || summary.conflicts) {
+      console.warn(`[sync] batch tenant=${tenantId} summary:`, JSON.stringify(summary));
+    }
 
     res.status(200).json({ success: true, summary, results });
   } catch (err) {
@@ -438,9 +487,10 @@ router.post("/", async (req, res, next) => {
     );
 
     if (result.status === "conflict") return res.status(409).json({ success: false, conflict: result.conflict });
+    if (result.status === "rejected") return res.status(422).json({ success: false, error: result.reason });
     if (result.status === "failed")   return res.status(500).json({ success: false, error: result.error });
 
-    res.status(200).json({ success: true, message: "Sync processed" });
+    res.status(200).json({ success: true, message: "Sync processed", deduped: !!result.deduped });
   } catch (err) {
     next(err);
   }
@@ -486,4 +536,4 @@ router.get("/pull", async (req, res, next) => {
   }
 });
 
-export { router };
+export { router, processSyncItem };

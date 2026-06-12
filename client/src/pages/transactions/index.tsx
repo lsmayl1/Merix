@@ -147,7 +147,7 @@ export const Transactions = () => {
           { label: "Expense", value: "6,500 ₼" },
         ]}
       />
-      <div className="border-gray-200 border rounded-lg p-2 overflow-auto flex flex-col ">
+      <div className="border-gray-200 border rounded-lg p-2 overflow-auto flex flex-col flex-1 min-h-0">
         <div className="flex gap-4 p-4 justify-end">
           <div className="flex gap-2 items-center">
             <h2>
